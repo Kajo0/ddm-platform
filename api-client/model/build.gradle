@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+}
+
+group 'pl.edu.pw.ddm.api'
+version '0.0.1-SNAPSHOT'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+}

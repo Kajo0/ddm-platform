@@ -58,7 +58,7 @@ class LocalInstanceCreator implements InstanceCreator {
 
         var masterId = masterContainer.getId();
         var nodes = new HashMap<String, InstanceConfig.InstanceNode>();
-        nodes.put(masterId, new InstanceConfig.InstanceNode(masterId, "master", "localhost", masterPort));
+        nodes.put(masterId, new InstanceConfig.InstanceNode(masterId, masterName, "master", "localhost", masterPort));
 
         // Create worker nodes
         for (int i = 1; i <= workers; ++i) {
@@ -79,7 +79,7 @@ class LocalInstanceCreator implements InstanceCreator {
                     .exec();
 
             var workerId = container.getId();
-            nodes.put(workerId, new InstanceConfig.InstanceNode(workerId, "worker", "localhost", port));
+            nodes.put(workerId, new InstanceConfig.InstanceNode(workerId, containerName, "worker", "localhost", port));
         }
 
         var data = new InstanceConfig.InstanceData(instanceId, networkName, nodes);
@@ -108,7 +108,6 @@ class LocalInstanceCreator implements InstanceCreator {
 
         return instanceConfig.remove(id) != null;
     }
-
 
     @PreDestroy
     void destroy() {

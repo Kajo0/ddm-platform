@@ -8,11 +8,11 @@ import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 
 @RestController
 @RequestMapping("coordinator/command")
-class CommandController {
+class InstanceCommandController {
 
     private final InstanceFacade instanceFacade;
 
-    CommandController(InstanceFacade instanceFacade) {
+    InstanceCommandController(InstanceFacade instanceFacade) {
         this.instanceFacade = instanceFacade;
     }
 
@@ -27,11 +27,11 @@ class CommandController {
     }
 
     @GetMapping("instance/destroy/{instanceId}")
-    void destroyInstance(@PathVariable String instanceId) {
+    String destroyInstance(@PathVariable String instanceId) {
         var req = InstanceFacade.DestroyRequest.builder()
                 .instanceId(instanceId)
                 .build();
-        instanceFacade.destroy(req);
+        return instanceFacade.destroy(req);
     }
 
     @GetMapping("instance/info")

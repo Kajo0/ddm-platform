@@ -48,6 +48,7 @@ class InstanceConfig {
     static class InstanceNode {
 
         private String id;
+        private String name;
         private String type;
         private String address;
         private String port;

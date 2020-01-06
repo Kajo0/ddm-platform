@@ -2,7 +2,7 @@ package pl.edu.pw.ddm.platform.core.instance;
 
 interface InstanceCreator {
 
-    String create();
+    String create(int workers);
 
     boolean destroy(String id);
 

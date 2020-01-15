@@ -1,9 +1,10 @@
 package pl.edu.pw.ddm.platform.algorithm.sample;
 
-import com.sun.tools.javac.util.List;
 import org.junit.Test;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+
+import java.util.List;
 
 public class AlgorithmTest {
 

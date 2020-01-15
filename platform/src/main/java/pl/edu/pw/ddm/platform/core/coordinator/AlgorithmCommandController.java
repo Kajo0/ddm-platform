@@ -1,7 +1,5 @@
 package pl.edu.pw.ddm.platform.core.coordinator;
 
-import java.io.IOException;
-
 import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
@@ -25,8 +23,8 @@ class AlgorithmCommandController {
         this.algorithmFacade = algorithmFacade;
     }
 
+    @SneakyThrows
     @PostMapping("load")
-    @SneakyThrows(IOException.class)
     String loadAlgorithm(@RequestParam("file") MultipartFile file) {
         Preconditions.checkState(MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE.equals(file.getContentType()),
                 "File is not octet-stream");

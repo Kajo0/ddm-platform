@@ -1,7 +1,6 @@
 package pl.edu.pw.ddm.platform.core.instance;
 
 import javax.annotation.PreDestroy;
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Collection;
 import java.util.HashMap;
@@ -131,7 +130,7 @@ class LocalInstanceCreator implements InstanceCreator {
                 });
     }
 
-    @SneakyThrows(IOException.class)
+    @SneakyThrows
     private Integer findOpenPort() {
         try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();

@@ -17,3 +17,9 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation project(':model')
 }
+
+test {
+    testLogging {
+        showStandardStreams = true
+    }
+}

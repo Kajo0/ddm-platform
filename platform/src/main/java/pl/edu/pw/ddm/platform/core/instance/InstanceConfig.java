@@ -1,7 +1,7 @@
 package pl.edu.pw.ddm.platform.core.instance;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 class InstanceConfig {
 
     @Getter
-    private final Map<String, InstanceData> instanceMap = new HashMap<>();
+    private final Map<String, InstanceData> instanceMap = new ConcurrentHashMap<>();
 
     InstanceData add(InstanceData data) {
         return instanceMap.put(data.id, data);

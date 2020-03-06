@@ -2,9 +2,7 @@ package pl.edu.pw.ddm.platform.core.instance;
 
 import javax.annotation.PreDestroy;
 import java.net.ServerSocket;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import com.github.dockerjava.api.model.HostConfig;
@@ -45,7 +43,7 @@ class LocalInstanceCreator implements InstanceCreator {
                 PortBinding.parse(masterPort + ":7077"))
                 .withNetworkMode(networkName);
         log.debug("Creating master '{}'.", masterName);
-        var masterContainer = client.createContainerCmd("bde2020/spark-master:2.4.4-hadoop2.7")
+        var masterContainer = client.createContainerCmd("ddm-platform-master")
                 .withName(masterName)
                 .withEnv("INIT_DAEMON_STEP=setup_spark")
                 .withHostConfig(hc)
@@ -67,7 +65,7 @@ class LocalInstanceCreator implements InstanceCreator {
 
             var containerName = "platform-spark-worker-" + i + "-" + instanceId;
             log.debug("Creating worker '{}'.", containerName);
-            var container = client.createContainerCmd("bde2020/spark-worker:2.4.4-hadoop2.7")
+            var container = client.createContainerCmd("ddm-platform-worker")
                     .withName(containerName)
                     .withEnv("SPARK_MASTER=spark://" + masterName + ":" + 7077)
                     .withHostConfig(hcw)
@@ -99,9 +97,13 @@ class LocalInstanceCreator implements InstanceCreator {
         instance.getNodes()
                 .values()
                 .parallelStream()
-                .forEach(node -> {
-                    log.info("Stopping container '{}'.", node);
-                    client.stopContainerCmd(node.getId())
+                .map(InstanceConfig.InstanceNode::getId)
+                .forEach(containerId -> {
+                    log.debug("Stopping container: '{}'.", containerId);
+                    client.stopContainerCmd(containerId)
+                            .exec();
+                    log.debug("Removing container: '{}'.", containerId);
+                    client.removeContainerCmd(containerId)
                             .exec();
                 });
 
@@ -113,21 +115,11 @@ class LocalInstanceCreator implements InstanceCreator {
         // TODO disable for persistent config
         log.info("PreDestroy " + this.getClass()
                 .getSimpleName());
-        var client = DockerClientBuilder.getInstance()
-                .build();
 
         instanceConfig.getInstanceMap()
-                .values()
-                .stream()
-                .map(InstanceConfig.InstanceData::getNodes)
-                .map(Map::values)
-                .flatMap(Collection::parallelStream)
-                .map(InstanceConfig.InstanceNode::getId)
-                .map(client::stopContainerCmd)
-                .forEach(cmd -> {
-                    log.debug("Stopping container: '{}'.", cmd.getContainerId());
-                    cmd.exec();
-                });
+                .keySet()
+                .parallelStream()
+                .forEach(this::destroy);
     }
 
     @SneakyThrows

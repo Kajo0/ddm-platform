@@ -7,26 +7,30 @@ import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
-import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
-import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+import pl.edu.pw.ddm.platform.interfaces.mining.Classifier;
 
-public class Algorithm implements LocalProcessor, GlobalProcessor {
+public class Algorithm implements LocalProcessor<LModel, GModel, Classifier>, GlobalProcessor<LModel, GModel> {
 
     @Override
-    public LocalModel process(DataProvider dataProvider, ParamProvider paramProvider) {
+    public LModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
         int rand = new Random().nextInt(10);
-        System.out.println("Algorithm local process: " + rand);
+        System.out.println("Algorithm 1. stage local process: " + rand);
         return new LModel(rand);
     }
 
     @Override
-    public GlobalModel process(Collection<LocalModel> localModels, DataProvider dataProvider,
-            ParamProvider paramProvider) {
+    public Classifier updateLocal(LModel localModel, GModel globalModel, DataProvider dataProvider, ParamProvider paramProvider) {
+        System.out.println("Algorithm 3. stage local process: " + (globalModel.getSum() / (double) localModel.getNum()));
+        return (sampleProvider, resultCollector) -> {
+        };
+    }
+
+    @Override
+    public GModel processGlobal(Collection<LModel> localModels, ParamProvider paramProvider) {
         int sum = localModels.stream()
-                .map(a -> (LModel) a)
                 .map(LModel::getNum)
                 .reduce(0, Integer::sum);
-        System.out.println("Algorithm global process: " + sum);
+        System.out.println("Algorithm 2. stage global process: " + sum);
         return new GModel(sum);
     }
 

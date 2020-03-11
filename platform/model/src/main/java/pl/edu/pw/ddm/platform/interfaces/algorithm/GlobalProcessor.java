@@ -2,13 +2,12 @@ package pl.edu.pw.ddm.platform.interfaces.algorithm;
 
 import java.util.Collection;
 
-import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
-public interface GlobalProcessor {
+public interface GlobalProcessor<LModel extends LocalModel, GModel extends GlobalModel> {
 
-    GlobalModel process(Collection<LocalModel> localModels, DataProvider dataProvider, ParamProvider paramProvider);
+    GModel processGlobal(Collection<LModel> localModels, ParamProvider paramProvider);
 
 }

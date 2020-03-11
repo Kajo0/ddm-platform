@@ -5,7 +5,7 @@ plugins {
 group 'pl.edu.pw.ddm.platform'
 version '0.0.1-SNAPSHOT'
 
-sourceCompatibility = JavaVersion.VERSION_12
+sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
     mavenCentral()

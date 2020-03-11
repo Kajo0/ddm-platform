@@ -3,3 +3,5 @@ rootProject.name = 'platform-core'
 include 'model'
 include 'sample'
 include 'agent'
+include 'spark-runner'
+

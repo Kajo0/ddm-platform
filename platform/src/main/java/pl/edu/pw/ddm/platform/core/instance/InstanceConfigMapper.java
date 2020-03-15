@@ -5,7 +5,7 @@ import org.mapstruct.factory.Mappers;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 @Mapper
-interface InstanceConfigMapper {
+public interface InstanceConfigMapper {
 
     InstanceConfigMapper INSTANCE = Mappers.getMapper(InstanceConfigMapper.class);
 

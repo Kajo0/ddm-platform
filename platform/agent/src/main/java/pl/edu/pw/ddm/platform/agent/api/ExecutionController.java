@@ -12,10 +12,16 @@ import pl.edu.pw.ddm.platform.agent.runner.AppRunner;
 @RequestMapping("agent/execution")
 class ExecutionController {
 
-    @GetMapping("run/{algorithmId}/{dataId}")
-    String run(@PathVariable String algorithmId, @PathVariable String dataId) {
+    private final AppRunner appRunner;
+
+    ExecutionController(AppRunner appRunner) {
+        this.appRunner = appRunner;
+    }
+
+    @GetMapping("run/{instanceId}/{algorithmId}/{dataId}")
+    String run(@PathVariable String instanceId, @PathVariable String algorithmId, @PathVariable String dataId) {
         try {
-            String executionId = AppRunner.run(algorithmId, dataId);
+            String executionId = appRunner.run(instanceId, algorithmId, dataId);
             return "executionId: " + executionId;
         } catch (IOException e) {
             e.printStackTrace();

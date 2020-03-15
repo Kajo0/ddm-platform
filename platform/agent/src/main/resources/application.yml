@@ -1,2 +1,6 @@
 server:
   port: 7100
+
+coordinator:
+  api:
+    addresses: http://localhost:7000/coordinator/command/instance/info/

@@ -107,6 +107,10 @@ class LocalInstanceCreator implements InstanceCreator {
                             .exec();
                 });
 
+        log.debug("Removing network: '{}'.", instance.getNetworkName());
+        client.removeNetworkCmd(instance.getNetworkName())
+                .exec();
+
         return instanceConfig.remove(id) != null;
     }
 

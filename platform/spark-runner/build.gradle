@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'scala'
 }
 
 group 'pl.edu.pw.ddm.platform'
@@ -13,6 +14,8 @@ repositories {
 
 dependencies {
     implementation project(':model')
+
+    implementation 'org.scala-lang:scala-library:2.12.10'
 
 //    compile group: 'org.apache.spark', name: 'spark-core_2.12', version: '2.4.5' // FIXME docker spark version check
     implementation 'org.apache.spark:spark-core_2.12:2.4.5'

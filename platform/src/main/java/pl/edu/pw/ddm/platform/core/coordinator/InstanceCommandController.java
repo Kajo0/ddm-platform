@@ -1,10 +1,13 @@
 package pl.edu.pw.ddm.platform.core.coordinator;
 
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
+import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 @RestController
 @RequestMapping("coordinator/command")
@@ -32,6 +35,14 @@ class InstanceCommandController {
                 .instanceId(instanceId)
                 .build();
         return instanceFacade.destroy(req);
+    }
+
+    @GetMapping("instance/info/{instanceId}")
+    List<InstanceAddrDto> instanceAddresses(@PathVariable String instanceId) {
+        var req = InstanceFacade.AddressRequest.builder()
+                .instanceId(instanceId)
+                .build();
+        return instanceFacade.addresses(req);
     }
 
     @GetMapping("instance/info")

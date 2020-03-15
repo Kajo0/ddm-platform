@@ -30,11 +30,12 @@ public class AppRunner {
     }
 
     // FIXME change
-    private static final String CENTRAL_RUNNER_JAR_PATH = "/home/mmarkiew/stud/ddm-platform/platform/spark-runner/build/libs/spark-runner-0.0.1-SNAPSHOT.jar";
+//    private static final String CENTRAL_RUNNER_JAR_PATH = "/home/mmarkiew/stud/ddm-platform/platform/spark-runner/build/libs/spark-runner-0.0.1-SNAPSHOT.jar";
+    private static final String CENTRAL_RUNNER_JAR_PATH = "/home/mmarkiew/stud/ddm-platform/app-runner-scala/target/scala-2.11/scala-app-runner_2.11-0.1.jar";
     // TODO properties this
 //    private static final String CENTRAL_RUNNER_JAR_PATH = "/spark-runner-0.0.1-SNAPSHOT.jar";
 //    private static final String CENTRAL_RUNNER_MAIN_CLASS = "pl.edu.pw.ddm.platform.runner.CentralRunner";
-    private static final String CENTRAL_RUNNER_MAIN_CLASS = "ScalaCentralRunner";
+    private static final String CENTRAL_RUNNER_MAIN_CLASS = "pl.edu.pw.ddm.platform.runner.ScalaCentralRunner";
 
     // TODO non static running apps map and block next one
     public String run(String instanceId, String algorithmId, String dataId) throws IOException {
@@ -57,6 +58,7 @@ public class AppRunner {
 //                .addJar("/path/to/Jar") // TODO algorithmId jar
                 .setAppResource(CENTRAL_RUNNER_JAR_PATH)
                 .addAppArgs(masterNode, workerNodes, algorithmId, dataId) // TODO num of workers etc
+                .addSparkArg("spark.locality.wait", "3600s")
                 .launch();
 
         return "execution ID / " + process.pid();

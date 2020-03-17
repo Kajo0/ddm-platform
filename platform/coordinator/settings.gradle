@@ -1,0 +1,5 @@
+rootProject.name = 'platform-coordinator'
+
+include 'model'
+include 'sample'
+

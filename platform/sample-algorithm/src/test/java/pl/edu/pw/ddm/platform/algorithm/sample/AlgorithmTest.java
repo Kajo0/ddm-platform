@@ -1,6 +1,6 @@
 package pl.edu.pw.ddm.platform.algorithm.sample;
 
-import java.util.List;
+import java.util.Arrays;
 
 import org.junit.Test;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
@@ -27,7 +27,7 @@ public class AlgorithmTest {
         LModel l4 = alg.processLocal(dp, pp);
 
         // Central process
-        GModel g = alg.processGlobal(List.of(l1, l2, l3, l4), pp);
+        GModel g = alg.processGlobal(Arrays.asList(l1, l2, l3, l4), pp);
 
         // Debug info
         System.out.println("Locals:");

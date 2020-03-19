@@ -3,8 +3,12 @@ package pl.edu.pw.ddm.platform.runner
 import java.net.InetAddress
 
 import org.apache.spark.SparkContext
+import org.reflections.Reflections
+import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor
+import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod
+import pl.edu.pw.ddm.platform.interfaces.model.{GlobalModel, LocalModel}
 
-import scala.collection.Seq
+import scala.collection.{JavaConversions, Seq}
 
 object ScalaCentralRunner {
 
@@ -65,4 +69,22 @@ object ScalaCentralRunner {
 
     sc.stop()
   }
+
+  def runAlg(): Unit = {
+    println("---------------------------------")
+    val reflections = new Reflections("pl.edu.pw.ddm.platform")
+    val classes = reflections.getSubTypesOf(classOf[LocalProcessor[_ <: LocalModel, _ <: GlobalModel, _ <: MiningMethod]])
+    JavaConversions.asScalaSet(classes)
+      .foreach {
+        println
+      }
+    val clazz = classes.stream()
+      .findFirst()
+      .get()
+    val ctor = clazz.getDeclaredConstructor()
+      .newInstance()
+    ctor.processLocal(null, null)
+    println("---------------------------------")
+  }
+
 }

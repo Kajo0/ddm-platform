@@ -30,12 +30,12 @@ public class AppRunner {
     }
 
     // FIXME change
-//    private static final String CENTRAL_RUNNER_JAR_PATH = "/home/mmarkiew/stud/ddm-platform/platform/app-runner-java/build/libs/app-runner-java-0.0.1-SNAPSHOT.jar";
-    private static final String CENTRAL_RUNNER_JAR_PATH = "/home/mmarkiew/stud/ddm-platform/platform/app-runner-scala/target/scala-2.11/app-runner-scala_2.11-0.1.jar";
+    private static final String CENTRAL_RUNNER_JAR_PATH = "/home/mmarkiew/stud/ddm-platform/platform/app-runner-java/build/libs/app-runner-java-0.0.1-SNAPSHOT-all.jar";
+//    private static final String CENTRAL_RUNNER_JAR_PATH = "/home/mmarkiew/stud/ddm-platform/platform/app-runner-scala/target/scala-2.11/app-runner-scala-assembly-0.1.jar";
     // TODO properties this
 //    private static final String CENTRAL_RUNNER_JAR_PATH = "/spark-runner-0.0.1-SNAPSHOT.jar";
-//    private static final String CENTRAL_RUNNER_MAIN_CLASS = "pl.edu.pw.ddm.platform.runner.CentralRunner";
-    private static final String CENTRAL_RUNNER_MAIN_CLASS = "pl.edu.pw.ddm.platform.runner.ScalaCentralRunner";
+    private static final String CENTRAL_RUNNER_MAIN_CLASS = "pl.edu.pw.ddm.platform.runner.CentralRunner";
+//    private static final String CENTRAL_RUNNER_MAIN_CLASS = "pl.edu.pw.ddm.platform.runner.ScalaCentralRunner";
 
     // TODO non static running apps map and block next one
     public String run(String instanceId, String algorithmId, String dataId) throws IOException {
@@ -46,6 +46,7 @@ public class AppRunner {
         String masterNode = nodeAddresses.getLeft();
         String workerNodes = nodeAddresses.getRight();
 
+
         Process process = new SparkLauncher()
                 .setSparkHome("/home/mmarkiew/dev/spark") // FIXME Spark home not found; set it explicitly or use the SPARK_HOME environment variable.
 //                .setSparkHome() // Spark home not found; set it explicitly or use the SPARK_HOME environment variable.
@@ -55,7 +56,7 @@ public class AppRunner {
                 .setMainClass(CENTRAL_RUNNER_MAIN_CLASS)
 //                .setDeployMode("cluster")
                 .redirectToLog(log.getName())
-//                .addJar("/path/to/Jar") // TODO algorithmId jar
+                .addJar("/home/mmarkiew/Desktop/sample-algorithm-0.0.1-SNAPSHOT.jar") // TODO algorithmId jar
                 .setAppResource(CENTRAL_RUNNER_JAR_PATH)
                 .addAppArgs(masterNode, workerNodes, algorithmId, dataId) // TODO num of workers etc
                 .addSparkArg("spark.locality.wait", "3600s")

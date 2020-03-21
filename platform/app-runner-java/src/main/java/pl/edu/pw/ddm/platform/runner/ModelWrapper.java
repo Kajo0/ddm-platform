@@ -28,8 +28,8 @@ class ModelWrapper implements Serializable {
         return new ModelWrapper(model, null, id, address);
     }
 
-    static ModelWrapper global(GlobalModel model) {
-        return new ModelWrapper(null, model, null, null);
+    static ModelWrapper global(GlobalModel model, String address) {
+        return new ModelWrapper(null, model, null, address);
     }
 
     LocalModel getLocalModel() {

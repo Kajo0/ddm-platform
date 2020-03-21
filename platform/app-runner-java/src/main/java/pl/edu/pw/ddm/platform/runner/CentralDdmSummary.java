@@ -34,8 +34,8 @@ class CentralDdmSummary {
 
     CentralDdmSummary printDispersionSummary() {
         System.out.println("====== Dispersion Summary:");
-        System.out.println("  Master address: " + masterAddr);
-        System.out.println("  Available worker count:   " + workerAddrs.size());
+        System.out.println("  Master address: " + masterAddr + " (" + globalModel.getAddress() + ")");
+        System.out.println("  Available worker count: " + workerAddrs.size());
         System.out.println("    Used for local processing:");
         nodeDispersionChecker(localModels);
         System.out.println("    Used for local update:");

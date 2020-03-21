@@ -5,9 +5,11 @@ import java.util.Iterator;
 
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
+import pl.edu.pw.ddm.platform.runner.models.StringLocalModel;
+import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 
 class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
 

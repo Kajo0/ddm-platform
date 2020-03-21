@@ -6,6 +6,9 @@ import java.util.Iterator;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
+import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
+import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 
 class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
@@ -15,7 +18,7 @@ class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrap
         PersistentIdStamper.save(id);
 //        LocalModel model = new StringLocalModel("time=" + System.currentTimeMillis());
 
-        LocalModel model = AlgorithmInitializer.initLocalProcessor()
+        LocalModel model = AlgorithmProcessorInitializer.initLocalProcessor()
                 .processLocal(null, null);
 
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);

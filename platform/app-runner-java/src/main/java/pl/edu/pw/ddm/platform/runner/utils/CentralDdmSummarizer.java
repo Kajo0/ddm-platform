@@ -1,10 +1,12 @@
-package pl.edu.pw.ddm.platform.runner;
+package pl.edu.pw.ddm.platform.runner.utils;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class CentralDdmSummary {
+import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
+
+public class CentralDdmSummarizer {
 
     private final List<ModelWrapper> localModels;
     private final ModelWrapper globalModel;
@@ -12,7 +14,7 @@ class CentralDdmSummary {
     private final String masterAddr;
     private final List<String> workerAddrs;
 
-    CentralDdmSummary(List<ModelWrapper> localModels, ModelWrapper globalModel, List<ModelWrapper> updatedAcks, String masterAddr, List<String> workerAddrs) {
+    public CentralDdmSummarizer(List<ModelWrapper> localModels, ModelWrapper globalModel, List<ModelWrapper> updatedAcks, String masterAddr, List<String> workerAddrs) {
         this.localModels = localModels;
         this.globalModel = globalModel;
         this.updatedAcks = updatedAcks;
@@ -20,7 +22,7 @@ class CentralDdmSummary {
         this.workerAddrs = workerAddrs;
     }
 
-    CentralDdmSummary printModelsSummary() {
+    public CentralDdmSummarizer printModelsSummary() {
         System.out.println("====== Models Summary:");
         System.out.println("  Local models:");
         localModels.forEach(System.out::println);
@@ -32,7 +34,7 @@ class CentralDdmSummary {
         return this;
     }
 
-    CentralDdmSummary printDispersionSummary() {
+    public CentralDdmSummarizer printDispersionSummary() {
         System.out.println("====== Dispersion Summary:");
         System.out.println("  Master address: " + masterAddr + " (" + globalModel.getAddress() + ")");
         System.out.println("  Available worker count: " + workerAddrs.size());

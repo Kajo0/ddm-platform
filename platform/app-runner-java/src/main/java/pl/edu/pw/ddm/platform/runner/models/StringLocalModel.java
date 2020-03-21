@@ -1,10 +1,10 @@
-package pl.edu.pw.ddm.platform.runner;
+package pl.edu.pw.ddm.platform.runner.models;
 
 import lombok.Value;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
 @Value
-class StringLocalModel implements LocalModel {
+public class StringLocalModel implements LocalModel {
 
     private String value;
 

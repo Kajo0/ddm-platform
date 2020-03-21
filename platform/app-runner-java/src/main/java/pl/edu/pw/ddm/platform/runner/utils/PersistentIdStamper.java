@@ -1,4 +1,4 @@
-package pl.edu.pw.ddm.platform.runner;
+package pl.edu.pw.ddm.platform.runner.utils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,12 +8,12 @@ import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-class PersistentIdStamper {
+public class PersistentIdStamper {
 
     private final static String PATH = "/metrics/id.txt";
 
     @SneakyThrows
-    Integer save(Integer id) {
+    public Integer save(Integer id) {
         // FIXME think about usability
         if (true) {
             return null;
@@ -29,7 +29,7 @@ class PersistentIdStamper {
     }
 
     @SneakyThrows
-    Integer read() {
+    public Integer read() {
         // FIXME think about usability
         if (true) {
             return 0;
@@ -46,7 +46,7 @@ class PersistentIdStamper {
         }
     }
 
-    Integer clear() {
+    public Integer clear() {
         // FIXME think about usability
         if (true) {
             return null;

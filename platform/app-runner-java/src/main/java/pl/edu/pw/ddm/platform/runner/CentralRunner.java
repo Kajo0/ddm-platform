@@ -14,6 +14,8 @@ import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
+import pl.edu.pw.ddm.platform.runner.utils.CentralDdmSummarizer;
 
 public final class CentralRunner {
 
@@ -67,7 +69,7 @@ public final class CentralRunner {
         processGlobal();
         updateLocal();
 
-        new CentralDdmSummary(localModels, globalModel, updatedAcks, masterAddr, workerAddrs)
+        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, masterAddr, workerAddrs)
                 .printModelsSummary()
                 .printDispersionSummary();
 

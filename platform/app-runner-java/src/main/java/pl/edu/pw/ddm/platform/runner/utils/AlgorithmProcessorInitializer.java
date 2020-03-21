@@ -1,4 +1,4 @@
-package pl.edu.pw.ddm.platform.runner;
+package pl.edu.pw.ddm.platform.runner.utils;
 
 import java.util.Set;
 
@@ -9,12 +9,12 @@ import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
 
 @UtilityClass
-class AlgorithmInitializer {
+public class AlgorithmProcessorInitializer {
 
     private static final String BASE_PACKAGE = "pl.edu.pw.ddm.platform";
 
     @SneakyThrows
-    LocalProcessor initLocalProcessor() {
+    public LocalProcessor initLocalProcessor() {
         Reflections reflections = new Reflections(BASE_PACKAGE);
         Set<Class<? extends LocalProcessor>> classes = reflections.getSubTypesOf(LocalProcessor.class);
         Class<? extends LocalProcessor> clazz = classes.stream()
@@ -26,7 +26,7 @@ class AlgorithmInitializer {
     }
 
     @SneakyThrows
-    GlobalProcessor initGlobalProcessor() {
+    public GlobalProcessor initGlobalProcessor() {
         Reflections reflections = new Reflections(BASE_PACKAGE);
         Set<Class<? extends GlobalProcessor>> classes = reflections.getSubTypesOf(GlobalProcessor.class);
         Class<? extends GlobalProcessor> clazz = classes.stream()
@@ -37,7 +37,7 @@ class AlgorithmInitializer {
                 .newInstance();
     }
 
-    static class ProcessorNotFoundException extends RuntimeException {
+    public static class ProcessorNotFoundException extends RuntimeException {
 
         ProcessorNotFoundException(String msg) {
             super(msg);

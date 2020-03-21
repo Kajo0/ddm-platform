@@ -1,4 +1,4 @@
-package pl.edu.pw.ddm.platform.runner;
+package pl.edu.pw.ddm.platform.runner.models;
 
 import static java.util.Optional.ofNullable;
 
@@ -13,7 +13,7 @@ import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
 @EqualsAndHashCode
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-class ModelWrapper implements Serializable {
+public class ModelWrapper implements Serializable {
 
     private final LocalModel localModel;
     private final GlobalModel globalModel;
@@ -24,19 +24,19 @@ class ModelWrapper implements Serializable {
     @Getter
     private final String address;
 
-    static ModelWrapper local(LocalModel model, String address, Integer id) {
+    public static ModelWrapper local(LocalModel model, String address, Integer id) {
         return new ModelWrapper(model, null, id, address);
     }
 
-    static ModelWrapper global(GlobalModel model, String address) {
+    public static ModelWrapper global(GlobalModel model, String address) {
         return new ModelWrapper(null, model, null, address);
     }
 
-    LocalModel getLocalModel() {
+    public LocalModel getLocalModel() {
         return ofNullable(localModel).orElseThrow(() -> new IllegalArgumentException("No local model"));
     }
 
-    GlobalModel getGlobalModel() {
+    public GlobalModel getGlobalModel() {
         return ofNullable(globalModel).orElseThrow(() -> new IllegalArgumentException("No global model"));
     }
 

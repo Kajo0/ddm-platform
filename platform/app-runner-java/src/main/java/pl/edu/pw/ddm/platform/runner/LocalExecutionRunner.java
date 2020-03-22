@@ -39,9 +39,10 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     }
 
     private String classify(Classifier classifier) {
+        // TODO pass correct dataId if here will be computing started
         NodeDataProvider dataProvider = new NodeDataProvider("20");
-        dataProvider.loadAll();
-        SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.all());
+        dataProvider.loadTest();
+        SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test());
         NodeResultCollector resultCollector = new NodeResultCollector();
 
         classifier.classify(sampleProvider, resultCollector);

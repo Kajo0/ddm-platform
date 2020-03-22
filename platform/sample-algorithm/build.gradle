@@ -22,10 +22,10 @@ publishing {
 }
 
 dependencies {
-    compileOnly 'pl.edu.pw.ddm.platform:model:0.0.1-SNAPSHOT'
+    compileOnly 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
-    testImplementation 'pl.edu.pw.ddm.platform:model:0.0.1-SNAPSHOT'
+    testImplementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
 }
 
 test {

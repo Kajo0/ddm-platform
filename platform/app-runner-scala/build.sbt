@@ -8,7 +8,7 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
 resolvers += Resolver.mavenLocal
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.5"
-libraryDependencies += "pl.edu.pw.ddm.platform" % "model" % "0.0.1-SNAPSHOT"
+libraryDependencies += "pl.edu.pw.ddm.platform" % "model-interface" % "0.0.1-SNAPSHOT"
 libraryDependencies += "org.reflections" % "reflections" % "0.9.12"
 
 assemblyMergeStrategy in assembly := {

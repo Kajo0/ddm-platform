@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+group 'pl.edu.pw.ddm.platform.algorithm.clustering.aoptkm'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+    compile 'com.google.guava:guava:28.2-jre'
+
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+}

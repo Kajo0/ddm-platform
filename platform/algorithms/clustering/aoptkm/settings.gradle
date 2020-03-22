@@ -1,0 +1,6 @@
+rootProject.name = 'aoptkm'
+
+include 'kmeans'
+include 'optics'
+include 'utils'
+

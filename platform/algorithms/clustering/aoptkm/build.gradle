@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group 'pl.edu.pw.ddm.platform.algorithm.clustering.aoptkm'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+dependencies {
+    compileOnly 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
+    implementation project(':kmeans')
+    implementation project(':optics')
+    implementation project(':utils')
+}

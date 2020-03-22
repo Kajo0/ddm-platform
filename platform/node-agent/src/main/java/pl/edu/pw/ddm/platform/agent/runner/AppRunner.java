@@ -56,7 +56,7 @@ public class AppRunner {
                 .setMainClass(CENTRAL_RUNNER_MAIN_CLASS)
 //                .setDeployMode("cluster")
                 .redirectToLog(log.getName())
-                .addJar("/home/mmarkiew/Desktop/sample-algorithm-0.0.1-SNAPSHOT.jar") // TODO algorithmId jar
+                .addJar("/home/mmarkiew/stud/ddm-platform/platform/sample-algorithm/build/libs/sample-algorithm-0.0.1-SNAPSHOT.jar") // TODO algorithmId jar
                 .setAppResource(CENTRAL_RUNNER_JAR_PATH)
                 .addAppArgs(masterNode, workerNodes, algorithmId, dataId) // TODO num of workers etc
                 .addSparkArg("spark.locality.wait", "3600s")

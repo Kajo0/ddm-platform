@@ -30,6 +30,7 @@ public final class CentralRunner {
     private List<ModelWrapper> localModels;
     private ModelWrapper globalModel;
     private List<ModelWrapper> updatedAcks;
+    private List<ModelWrapper> executionAcks;
 
     public CentralRunner(String masterAddr, List<String> workerAddrs, String algorithmId, String dataId) {
         this.masterAddr = masterAddr;
@@ -69,7 +70,9 @@ public final class CentralRunner {
         processGlobal();
         updateLocal();
 
-        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, masterAddr, workerAddrs)
+        executeMethod();
+
+        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, masterAddr, workerAddrs)
                 .printModelsSummary()
                 .printDispersionSummary();
 
@@ -103,6 +106,12 @@ public final class CentralRunner {
         List<GlobalModel> globals = Collections.nCopies(workerAddrs.size(), globalModel.getGlobalModel());
         updatedAcks = sc.parallelize(globals, workerAddrs.size())
                 .mapPartitions(new LocalUpdateRunner())
+                .collect();
+    }
+
+    private void executeMethod() {
+        executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
+                .mapPartitions(new LocalExecutionRunner())
                 .collect();
     }
 

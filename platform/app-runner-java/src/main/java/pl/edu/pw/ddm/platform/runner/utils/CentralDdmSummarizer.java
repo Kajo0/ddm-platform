@@ -11,13 +11,20 @@ public class CentralDdmSummarizer {
     private final List<ModelWrapper> localModels;
     private final ModelWrapper globalModel;
     private final List<ModelWrapper> updatedAcks;
+    private final List<ModelWrapper> executionAcks;
     private final String masterAddr;
     private final List<String> workerAddrs;
 
-    public CentralDdmSummarizer(List<ModelWrapper> localModels, ModelWrapper globalModel, List<ModelWrapper> updatedAcks, String masterAddr, List<String> workerAddrs) {
+    public CentralDdmSummarizer(List<ModelWrapper> localModels,
+                                ModelWrapper globalModel,
+                                List<ModelWrapper> updatedAcks,
+                                List<ModelWrapper> executionAcks,
+                                String masterAddr,
+                                List<String> workerAddrs) {
         this.localModels = localModels;
         this.globalModel = globalModel;
         this.updatedAcks = updatedAcks;
+        this.executionAcks = executionAcks;
         this.masterAddr = masterAddr;
         this.workerAddrs = workerAddrs;
     }
@@ -30,6 +37,8 @@ public class CentralDdmSummarizer {
         System.out.println(globalModel);
         System.out.println("  Updated acknowledges:");
         updatedAcks.forEach(System.out::println);
+        System.out.println("  Execution acknowledges:");
+        executionAcks.forEach(System.out::println);
 
         return this;
     }
@@ -42,6 +51,8 @@ public class CentralDdmSummarizer {
         nodeDispersionChecker(localModels);
         System.out.println("    Used for local update:");
         nodeDispersionChecker(updatedAcks);
+        System.out.println("    Used for execution update:");
+        nodeDispersionChecker(executionAcks);
 
         return this;
     }

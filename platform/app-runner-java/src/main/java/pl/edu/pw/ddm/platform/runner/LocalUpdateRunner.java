@@ -11,6 +11,7 @@ import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.StringLocalModel;
 import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
+import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 
@@ -19,11 +20,13 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
     @Override
     public Iterator<ModelWrapper> call(Iterator<GlobalModel> iterator) throws Exception {
         Integer id = PersistentIdStamper.read();
+
         LocalModel previousModel = ModelPersister.loadLocal();
         MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor()
                 .updateLocal(previousModel, iterator.next(), null, null);
+        MethodPersister.save(method);
 
-        LocalModel model = new StringLocalModel("time=" + System.currentTimeMillis());
+        LocalModel model = new StringLocalModel("ackTime=" + System.currentTimeMillis());
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);
         return new SingletonIterator(wrapper);
     }

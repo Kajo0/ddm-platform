@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 import org.reflections.Reflections;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 
 @UtilityClass
 public class AlgorithmProcessorInitializer {
@@ -33,6 +34,18 @@ public class AlgorithmProcessorInitializer {
                 .peek(System.out::println)
                 .findFirst()
                 .orElseThrow(() -> new ProcessorNotFoundException("global"));
+        return clazz.getDeclaredConstructor()
+                .newInstance();
+    }
+
+    @SneakyThrows
+    public MiningMethod initMiningMethod() {
+        Reflections reflections = new Reflections(BASE_PACKAGE);
+        Set<Class<? extends MiningMethod>> classes = reflections.getSubTypesOf(MiningMethod.class);
+        Class<? extends MiningMethod> clazz = classes.stream()
+                .peek(System.out::println)
+                .findFirst()
+                .orElseThrow(() -> new ProcessorNotFoundException("method"));
         return clazz.getDeclaredConstructor()
                 .newInstance();
     }

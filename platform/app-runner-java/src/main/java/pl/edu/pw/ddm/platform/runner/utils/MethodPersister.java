@@ -10,21 +10,19 @@ import java.nio.file.Paths;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
-import pl.edu.pw.ddm.platform.interfaces.model.BaseModel;
-import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 
 @UtilityClass
-public class ModelPersister {
+public class MethodPersister {
 
-    private final static String PATH = "/execution/";
-    private final static String LOCAL = "local_model.data";
+    private final static String PATH = "/execution/method.data";
 
     // TODO add executionId
     @SneakyThrows
-    public boolean saveLocal(BaseModel model) {
+    public boolean save(MiningMethod method) {
         boolean updated = false;
 
-        Path path = Paths.get(PATH, LOCAL);
+        Path path = Paths.get(PATH);
         Files.createDirectories(path.getParent());
         if (Files.exists(path)) {
             updated = removeLocal();
@@ -32,28 +30,28 @@ public class ModelPersister {
 
         try (FileOutputStream fos = new FileOutputStream(path.toFile());
              ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-            oos.writeObject(model);
+            oos.writeObject(method);
         }
 
         return updated;
     }
 
     @SneakyThrows
-    public LocalModel loadLocal() {
-        Path path = Paths.get(PATH, LOCAL);
+    public MiningMethod load() {
+        Path path = Paths.get(PATH);
         if (Files.notExists(path)) {
             return null;
         } else {
             try (FileInputStream fis = new FileInputStream(path.toFile());
                  ObjectInputStream ois = new ObjectInputStream(fis)) {
-                return (LocalModel) ois.readObject();
+                return (MiningMethod) ois.readObject();
             }
         }
     }
 
     @SneakyThrows
     public boolean removeLocal() {
-        Path path = Paths.get(PATH, LOCAL);
+        Path path = Paths.get(PATH);
         return Files.deleteIfExists(path);
     }
 

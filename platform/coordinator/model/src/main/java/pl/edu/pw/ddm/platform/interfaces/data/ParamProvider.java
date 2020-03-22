@@ -4,4 +4,6 @@ public interface ParamProvider {
 
     String provide(String name);
 
+    double provideNumeric(String name);
+
 }

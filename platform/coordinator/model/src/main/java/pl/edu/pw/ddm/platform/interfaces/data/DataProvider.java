@@ -1,3 +1,13 @@
 package pl.edu.pw.ddm.platform.interfaces.data;
 
-public interface DataProvider {}
+import java.util.Collection;
+
+public interface DataProvider {
+
+    Collection<Data> trainig();
+
+    Collection<Data> test();
+
+    Collection<Data> all();
+
+}

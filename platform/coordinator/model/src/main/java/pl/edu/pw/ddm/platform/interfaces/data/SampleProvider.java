@@ -1,4 +1,6 @@
 package pl.edu.pw.ddm.platform.interfaces.data;
 
-public interface SampleProvider {
+import java.util.Iterator;
+
+public interface SampleProvider extends Iterator<SampleData> {
 }

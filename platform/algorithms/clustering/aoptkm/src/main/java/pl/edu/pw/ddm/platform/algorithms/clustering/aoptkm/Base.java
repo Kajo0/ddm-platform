@@ -39,6 +39,10 @@ public abstract class Base {
     protected static final String CENTROIDS_SUFFIX = "_centroids.txt";
 
     public static void main(String[] args) {
+        args = new String[]{
+                "aoptkm",
+                "/home/mmarkiew/stud/ddm-platform/platform/algorithms/clustering/aoptkm/src/test/resources/config.properties"
+        };
         if (args.length < 2) {
             System.out.println(
                     "Required parameters: algorithm:aoptkm, config.properties");
@@ -252,7 +256,7 @@ public abstract class Base {
         Path pathIn = Paths.get(inputPath);
         try (Stream<String> stream = Files.lines(pathIn)) {
             stream.forEach(line -> {
-                Path path = Paths.get(pathIn.getParent().toString(), line);
+                Path path = Paths.get(line);
                 checkState(Files.exists(path));
                 nodes.put(path.getFileName().toString(),
                         ObjectDatasetReader.read(path.toString(), numeric, indexNumber, labelNumber, splitPattern));

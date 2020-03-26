@@ -1,8 +1,9 @@
 package pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distributed;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class DistributedCentroidData {
+public class DistributedCentroidData implements Serializable {
 
     private double value;
     private int numberOfPoints;

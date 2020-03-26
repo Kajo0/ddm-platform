@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.GModel;
+import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.LModel;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.kmeans.ObjectKmeansCluster;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.optics.ObjectOpticsPoint;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distributed.DistributedCentroidData;
@@ -20,46 +22,58 @@ public class AutoOpticsKm extends OpticsDkm {
 
     @Override
     public void run() {
-        List<List<DistributedCentroidData>> localModels = Lists.newArrayList();
+        List<LModel> localModels = Lists.newArrayList();
         List<List<ObjectPoint>> localAdditionalPoints = Lists.newArrayList();
 
         Map<String, List<ObjectPoint>> nodes = readNodes();
-
-
         // TODO FIXME remove
         List<ObjectPoint> allPoints = Lists.newArrayList();
         nodes.forEach((key, value) -> allPoints.addAll(value));
         // TODO FIXME remove
 
-
         // step 1.1 : local clustering
-        nodes.forEach((nodeName, pts) -> {
-
-            // step 1.3 : run clustering alg. on local data
-            startLog("AOPTKM local kmeans");
-            List<ObjectKmeansCluster> calcClusters = runKmeans(pts, null);
-            stopLog(null);
-            writePreLocalResult(nodeName, calcClusters);
-
-            // step 2 : create local model
-            List<DistributedCentroidData> model = Lists.newArrayList();
-            model.addAll(calcClusters.stream().map(c -> {
-                DistributedCentroidData data = DistributedUtils.calculateData(c.cluster, c.centroid, distanceFunc);
-                data.setValue(data.getM());
-                return data;
-            }).collect(Collectors.toList()));
-            localModels.add(model);
-
-
-//            localAdditionalPoints.add(getRandomAdditionalPoints(pts));
-            localAdditionalPoints.add(getOrderedAdditionalPoints(calcClusters));
-        });
+        nodes.entrySet()
+                .stream()
+                .map(entry -> localClustering(entry.getKey(), entry.getValue()))
+                .forEach(lm -> {
+                    localModels.add(lm);
+//                    localAdditionalPoints.add(getRandomAdditionalPoints(entry.getValue()));
+                    localAdditionalPoints.add(lm.getAdditionalPointsNearCentroids());
+                });
 
         // step 3 : create global model
+        GModel globalModel = globalClustering(localModels);
+        writeGlobalResult(allPoints, globalModel.getCentroids(), true);
+
+        // step 4 : assign local points to global clusters
+        writeLocalResults(nodes, globalModel.getCentroids());
+
+        writeCentroids(globalModel.getCentroids());
+    }
+
+    public LModel localClustering(String nodeName, List<ObjectPoint> pts) {
+        // step 1.3 : run clustering alg. on local data
+        startLog("AOPTKM local kmeans");
+        List<ObjectKmeansCluster> calcClusters = runKmeans(pts, null);
+        stopLog(null);
+//        writePreLocalResult(nodeName, calcClusters);
+
+        // step 2 : create local model
+        List<DistributedCentroidData> model = Lists.newArrayList();
+        model.addAll(calcClusters.stream().map(c -> {
+            DistributedCentroidData data = DistributedUtils.calculateData(c.cluster, c.centroid, distanceFunc);
+            data.setValue(data.getM());
+            return data;
+        }).collect(Collectors.toList()));
+
+        return new LModel(model, getOrderedAdditionalPoints(calcClusters));
+    }
+
+    public GModel globalClustering(List<LModel> localModels) {
         List<ObjectPoint> mergedCentroids = Lists.newArrayList();
         final double[] maxMeanSd = {0, 0, 0};
         final int[] minus = {0};
-        localModels.forEach(local -> local.forEach(data -> {
+        localModels.forEach(local -> local.getCentroids().forEach(data -> {
             if (data.getN() > 1 && !Double.isNaN(data.getSD())) {
                 mergedCentroids.add(new ObjectPoint(data.getCentroid()));
                 maxMeanSd[0] += data.getMax();
@@ -74,9 +88,7 @@ public class AutoOpticsKm extends OpticsDkm {
             maxMeanSd[i] /= div;
         }
 
-
-        localAdditionalPoints.forEach(mergedCentroids::addAll);
-
+        localModels.forEach(local -> mergedCentroids.addAll(local.getAdditionalPointsNearCentroids()));
 
         // step 3.1 : run global optics on local models
         eps = maxMeanSd[0];
@@ -113,12 +125,7 @@ public class AutoOpticsKm extends OpticsDkm {
 //        });
 //        recalcCentroids = DistributedUtils.mergeCentroids(list, distanceFunc);
 
-        writeGlobalResult(allPoints, recalcCentroids, true);
-
-        // step 4 : assign local points to global clusters
-        writeLocalResults(nodes, recalcCentroids);
-
-        writeCentroids(recalcCentroids);
+        return new GModel(recalcCentroids);
     }
 
     private List<ObjectPoint> mergeClosest(List<ObjectPoint> recalcCentroids) {

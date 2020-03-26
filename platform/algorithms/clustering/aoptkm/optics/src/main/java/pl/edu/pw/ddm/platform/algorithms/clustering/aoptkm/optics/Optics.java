@@ -2,10 +2,8 @@ package pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.optics;
 
 import java.util.List;
 import java.util.PriorityQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distance.DistanceFunction;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distance.EuclideanHammingFunction;
@@ -26,14 +24,15 @@ public class Optics {
     }
 
     public void optics() {
-        Stopwatch timer = Stopwatch.createStarted();
+        // TODO restore after guava collisions fixed
+//        Stopwatch timer = Stopwatch.createStarted();
 
         internalOptics();
 
-        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
-        if (System.getenv("LOG_TIME_OPTICS") != null) {
-            System.out.println("    OPTICS Time elapsed: " + elapsed + " ms");
-        }
+//        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
+//        if (System.getenv("LOG_TIME_OPTICS") != null) {
+//            System.out.println("    OPTICS Time elapsed: " + elapsed + " ms");
+//        }
     }
 
     private void internalOptics() {

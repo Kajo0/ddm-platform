@@ -6,11 +6,13 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.Classifier;
 import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.runner.data.NodeDataProvider;
+import pl.edu.pw.ddm.platform.runner.data.NodeParamProvider;
 import pl.edu.pw.ddm.platform.runner.data.NodeResultCollector;
 import pl.edu.pw.ddm.platform.runner.data.NodeSampleProvider;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
@@ -41,11 +43,11 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     private String classify(Classifier classifier) {
         // TODO pass correct dataId if here will be computing started
         NodeDataProvider dataProvider = new NodeDataProvider("20");
-        dataProvider.loadTest();
         SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test());
         NodeResultCollector resultCollector = new NodeResultCollector();
+        ParamProvider paramProvider = new NodeParamProvider();
 
-        classifier.classify(sampleProvider, resultCollector);
+        classifier.classify(sampleProvider, paramProvider, resultCollector);
         resultCollector.saveResults();
 
         String resultStr = resultCollector.getResults()
@@ -56,7 +58,19 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     }
 
     private String cluster(Clustering clustering) {
-        return "clustered";
+        // TODO pass correct dataId if here will be computing started
+        NodeDataProvider dataProvider = new NodeDataProvider("20");
+        NodeResultCollector resultCollector = new NodeResultCollector();
+        ParamProvider paramProvider = new NodeParamProvider();
+
+        clustering.cluster(dataProvider, paramProvider, resultCollector);
+        resultCollector.saveResults();
+
+        String resultStr = resultCollector.getResults()
+                .stream()
+                .map(NodeResultCollector.NodeResultData::toString)
+                .collect(Collectors.joining(", "));
+        return "clustered: " + resultStr;
     }
 
 }

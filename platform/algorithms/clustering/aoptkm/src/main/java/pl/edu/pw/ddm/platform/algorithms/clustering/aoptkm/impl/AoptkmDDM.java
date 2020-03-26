@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,13 +44,19 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, Gl
         AutoOpticsKm algorithm = new AutoOpticsKm(paramProvider);
         List<ObjectPoint> pts = toObjectPoints(dataProvider.all());
         algorithm.updateLocalClustering(pts, globalCentroids)
-                .forEach(kmeansCluster -> kmeansCluster.cluster.forEach(obj -> resultCollector.collect(String.valueOf(obj.index), kmeansCluster.centroid.clusterId)));
+                .forEach(kmeansCluster -> kmeansCluster.cluster.forEach(obj -> resultCollector.collect(String.valueOf(obj.index), String.valueOf(kmeansCluster.centroid.clusterId))));
     }
 
     private List<ObjectPoint> toObjectPoints(Collection<Data> data) {
         return data.stream()
-                .map(d -> new ObjectPoint(d.getAttributes(), Integer.parseInt(d.getId())))
+                .map(d -> new ObjectPoint(toObjectAttributes(d.getNumericAttributes()), (int) Double.parseDouble(d.getId())))
                 .collect(Collectors.toList());
+    }
+
+    private Object[] toObjectAttributes(double[] numericAttributes) {
+        return Arrays.stream(numericAttributes)
+                .boxed()
+                .toArray();
     }
 
 }

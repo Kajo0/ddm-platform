@@ -5,9 +5,12 @@ import java.util.Iterator;
 
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+import pl.edu.pw.ddm.platform.runner.data.NodeDataProvider;
+import pl.edu.pw.ddm.platform.runner.data.NodeParamProvider;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.StringLocalModel;
 import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
@@ -21,9 +24,13 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
     public Iterator<ModelWrapper> call(Iterator<GlobalModel> iterator) throws Exception {
         Integer id = PersistentIdStamper.read();
 
+        // TODO pass correct dataId if here will be computing started
+        NodeDataProvider dataProvider = new NodeDataProvider("20");
+        ParamProvider paramProvider = new NodeParamProvider();
+
         LocalModel previousModel = ModelPersister.loadLocal();
         MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor()
-                .updateLocal(previousModel, iterator.next(), null, null);
+                .updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
         MethodPersister.save(method);
 
         LocalModel model = new StringLocalModel("ackTime=" + System.currentTimeMillis());

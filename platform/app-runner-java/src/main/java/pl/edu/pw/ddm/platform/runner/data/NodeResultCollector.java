@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.runner.data;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,8 +37,9 @@ public class NodeResultCollector implements ResultCollector {
         Files.createDirectories(path.getParent());
         Files.deleteIfExists(path);
 
-        // TODO optimize
+        // TODO optimize and optimize sorting not only by integer indexes
         String data = results.stream()
+                .sorted(Comparator.comparing(r -> Integer.parseInt(r.getId())))
                 .map(r -> r.getId() + "," + r.getValue())
                 .collect(Collectors.joining("\n"));
 

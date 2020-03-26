@@ -7,11 +7,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distance.DistanceFunction;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distance.EuclideanHammingFunction;
@@ -38,14 +36,15 @@ public class Kmeans {
     }
 
     public void kmeans(List<ObjectPoint> centroids) {
-        Stopwatch timer = Stopwatch.createStarted();
+        // TODO restore after guava collisions fixed
+//        Stopwatch timer = Stopwatch.createStarted();
 
         internalKmeans(centroids);
 
-        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
-        if (System.getenv("LOG_TIME_KMEANS") != null) {
-            System.out.println("    K-means Time elapsed: " + elapsed + " ms");
-        }
+//        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
+//        if (System.getenv("LOG_TIME_KMEANS") != null) {
+//            System.out.println("    K-means Time elapsed: " + elapsed + " ms");
+//        }
     }
 
     private void internalKmeans(List<ObjectPoint> centroids) {

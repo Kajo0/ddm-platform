@@ -13,11 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -137,14 +135,15 @@ public abstract class Base {
     }
 
     public void internalRun() {
-        Stopwatch timer = Stopwatch.createStarted();
+        // TODO restore after guava collisions fixed
+//        Stopwatch timer = Stopwatch.createStarted();
 
         run();
 
-        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
-        if (System.getenv("LOG_TIME_DISTRIBUTED_ALL") != null) {
-            System.out.println("    All Distributed Time elapsed: " + elapsed + " ms");
-        }
+//        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
+//        if (System.getenv("LOG_TIME_DISTRIBUTED_ALL") != null) {
+//            System.out.println("    All Distributed Time elapsed: " + elapsed + " ms");
+//        }
     }
 
     public abstract void run();
@@ -355,7 +354,8 @@ public abstract class Base {
         }
     }
 
-    private Stopwatch timer;
+    // TODO restore after guava collisions fixed
+//    private Stopwatch timer;
 
     protected void startLog(String msg) {
         if (System.getenv("LOG_TIME_DISTRIBUTED_INTERNAL") == null) {
@@ -364,11 +364,11 @@ public abstract class Base {
         if (msg != null) {
             System.out.println("      Start log: " + msg);
         }
-        if (timer != null && timer.isRunning()) {
-            throw new RuntimeException("Timer not stopped!");
-        }
+//        if (timer != null && timer.isRunning()) {
+//            throw new RuntimeException("Timer not stopped!");
+//        }
 
-        timer = Stopwatch.createStarted();
+//        timer = Stopwatch.createStarted();
     }
 
     protected void stopLog(String msg) {
@@ -378,12 +378,12 @@ public abstract class Base {
         if (msg != null) {
             System.out.println("      Stop log: " + msg);
         }
-        if (timer == null) {
-            throw new RuntimeException("Timer not started!");
-        }
+//        if (timer == null) {
+//            throw new RuntimeException("Timer not started!");
+//        }
 
-        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
-        System.out.println("        Distributed internal Time elapsed: " + elapsed + " ms");
+//        long elapsed = timer.stop().elapsed(TimeUnit.MILLISECONDS);
+//        System.out.println("        Distributed internal Time elapsed: " + elapsed + " ms");
     }
 
 }

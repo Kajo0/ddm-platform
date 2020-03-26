@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'maven-publish'
 }
 
@@ -24,7 +25,7 @@ publishing {
 }
 
 dependencies {
-    compileOnly 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
+    implementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
     implementation project(':kmeans')
     implementation project(':optics')
     implementation project(':utils')

@@ -29,35 +29,46 @@ public class NodeDataProvider implements DataProvider {
         this.dataId = dataId;
     }
 
-    public void loadTraining() {
-        trainingSet = loadCsvData(TRAINING_DATA);
-    }
-
-    public void loadTest() {
-        testSet = loadCsvData(TEST_DATA);
-    }
-
-    public void loadAll() {
-        // TODO load
-        allSet = new LinkedList<>();
-        allSet = loadDummy();
-    }
-
     @Override
     public Collection<Data> training() {
+        if (trainingSet == null) {
+            loadTraining();
+        }
         return trainingSet;
     }
 
     @Override
     public Collection<Data> test() {
+        if (testSet == null) {
+            loadTest();
+        }
         return testSet;
     }
 
     @Override
     public Collection<Data> all() {
+        if (allSet == null) {
+            loadAll();
+        }
         return allSet;
     }
 
+    private void loadTraining() {
+        trainingSet = loadCsvData(TRAINING_DATA);
+    }
+
+    private void loadTest() {
+        testSet = loadCsvData(TEST_DATA);
+    }
+
+    private void loadAll() {
+        // TODO load
+        loadTraining();
+        loadTest();
+        allSet = new LinkedList<>();
+        allSet.addAll(trainingSet);
+        allSet.addAll(testSet);
+    }
 
     // TODO remove
     private Collection<Data> loadDummy() {

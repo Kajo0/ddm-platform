@@ -8,13 +8,34 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.GModel;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.LModel;
+import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.kmeans.Kmeans;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.kmeans.ObjectKmeansCluster;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.optics.ObjectOpticsPoint;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distributed.DistributedCentroidData;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distributed.DistributedUtils;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.point.ObjectPoint;
+import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 
 public class AutoOpticsKm extends OpticsDkm {
+
+    public AutoOpticsKm(ParamProvider paramProvider) {
+        super(paramProvider);
+
+        groups = paramProvider.provideNumeric("groups", 2.).intValue();
+        iterations = paramProvider.provideNumeric("iterations", 10.).intValue();
+        epsilon = paramProvider.provideNumeric("epsilon", 0.1);
+        indexNumber = paramProvider.provideNumeric("indexNumber", 0.).intValue();
+        labelNumber = paramProvider.provideNumeric("labelNumber", 1.).intValue();
+        splitPattern = paramProvider.provide("splitPattern", ",");
+
+        inputPath = null;
+        outputPath = "/tmp";
+
+        increaseModel = paramProvider.provideNumeric("increaseModel", null);
+        noOneGroup = Boolean.parseBoolean(paramProvider.provide("noOneGroup", "false"));
+        minKGroups = Boolean.parseBoolean(paramProvider.provide("minKGroups", "false"));
+        exactKGroups = Boolean.parseBoolean(paramProvider.provide("exactKGroups", "false"));
+    }
 
     public AutoOpticsKm(String[] args) {
         super(args);
@@ -46,6 +67,7 @@ public class AutoOpticsKm extends OpticsDkm {
         writeGlobalResult(allPoints, globalModel.getCentroids(), true);
 
         // step 4 : assign local points to global clusters
+        nodes.forEach((nodeName, pts) -> updateLocalClustering(pts, globalModel.getCentroids()));
         writeLocalResults(nodes, globalModel.getCentroids());
 
         writeCentroids(globalModel.getCentroids());
@@ -67,6 +89,15 @@ public class AutoOpticsKm extends OpticsDkm {
         }).collect(Collectors.toList()));
 
         return new LModel(model, getOrderedAdditionalPoints(calcClusters));
+    }
+
+    public List<ObjectKmeansCluster> updateLocalClustering(List<ObjectPoint> pts, List<ObjectPoint> globalCentroids) {
+        List<ObjectKmeansCluster> rClusters = Kmeans.prepareCentroidClusters(globalCentroids);
+        startLog("common local update");
+        Kmeans.assignPoints(pts, rClusters, distanceFunc);
+        stopLog(null);
+//        writeResult(rClusters, outputPath + "_" + "dummyNodeName");
+        return rClusters;
     }
 
     public GModel globalClustering(List<LModel> localModels) {

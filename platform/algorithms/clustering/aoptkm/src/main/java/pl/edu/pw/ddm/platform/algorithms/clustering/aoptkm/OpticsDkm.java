@@ -12,12 +12,19 @@ import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.optics.ObjectOpticsPo
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.optics.Optics;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.point.ObjectPoint;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.point.Point;
+import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 
 public class OpticsDkm extends Base {
 
     protected double eps;
     protected int minPts;
     protected double epsPrim;
+
+    public OpticsDkm(ParamProvider paramProvider) {
+        eps = paramProvider.provideNumeric("eps", 0.);
+        minPts = paramProvider.provideNumeric("minPts", 0.).intValue();
+        epsPrim = paramProvider.provideNumeric("epsPrim", 0.);
+    }
 
     public OpticsDkm(String[] args) {
         super(args);

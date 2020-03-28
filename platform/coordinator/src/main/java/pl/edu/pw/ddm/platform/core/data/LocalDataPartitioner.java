@@ -10,6 +10,8 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 @Service
 class LocalDataPartitioner implements DataPartitioner {
 
+    // TODO map of current scattered data
+
     @Override
     public String scatter(List<InstanceAddrDto> addresses, LocalDataLoader.DataDesc data, String strategy) {
         log.info("Scattering data '{}' with strategy '{}' into nodes '{}'.", data, strategy, addresses);

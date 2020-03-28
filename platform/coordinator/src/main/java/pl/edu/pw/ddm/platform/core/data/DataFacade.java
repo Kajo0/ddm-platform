@@ -1,8 +1,11 @@
 package pl.edu.pw.ddm.platform.core.data;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 
 @Service
@@ -19,7 +22,13 @@ public class DataFacade {
     }
 
     public String load(@NonNull LoadRequest request) {
-        return dataLoader.load(request.uri, request.deductType);
+        if (request.uri != null) {
+            return dataLoader.load(request.uri, request.deductType);
+        } else if (request.file != null) {
+            return dataLoader.load(request.file, request.deductType);
+        } else {
+            throw new IllegalStateException("No URI or file provided to load.");
+        }
     }
 
     public String scatter(@NonNull ScatterRequest request) {
@@ -36,11 +45,21 @@ public class DataFacade {
         return dataPartitioner.scatter(addr, data, request.strategy);
     }
 
+    // TODO remove debug
+    public String info() {
+        try {
+            return new ObjectMapper().writeValueAsString(dataLoader.allDataInfo());
+        } catch (JsonProcessingException e) {
+            return dataLoader.allDataInfo()
+                    .toString();
+        }
+    }
+
     @Builder
     public static class LoadRequest {
 
-        @NonNull
         private final String uri;
+        private final MultipartFile file;
 
         @Builder.Default
         private final boolean deductType = true;

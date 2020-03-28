@@ -38,9 +38,10 @@ class LocalInstanceCreator implements InstanceCreator {
         // Create master node
         var uiPort = findOpenPort().toString();
         var masterPort = findOpenPort().toString();
+        var agentPort = findOpenPort().toString();
         var masterName = "platform-spark-master-" + instanceId;
         var hc = new HostConfig().withPortBindings(PortBinding.parse(uiPort + ":8080"),
-                PortBinding.parse(masterPort + ":7077"))
+                PortBinding.parse(masterPort + ":7077"), PortBinding.parse(agentPort + ":7100"))
                 .withNetworkMode(networkName);
         log.debug("Creating master '{}'.", masterName);
         var masterContainer = client.createContainerCmd("ddm-platform-master")
@@ -55,12 +56,14 @@ class LocalInstanceCreator implements InstanceCreator {
 
         var masterId = masterContainer.getId();
         var nodes = new HashMap<String, InstanceConfig.InstanceNode>();
-        nodes.put(masterId, new InstanceConfig.InstanceNode(masterId, masterName, "master", "localhost", masterPort));
+        nodes.put(masterId, new InstanceConfig.InstanceNode(masterId, masterName, "master", "localhost", masterPort, uiPort, agentPort));
 
         // Create worker nodes
         for (int i = 1; i <= workers; ++i) {
             var port = findOpenPort().toString();
-            var hcw = new HostConfig().withPortBindings(PortBinding.parse(port + ":8081"))
+            var workerAgentPort = findOpenPort().toString();
+            var hcw = new HostConfig().withPortBindings(PortBinding.parse(port + ":8081"),
+                    PortBinding.parse(workerAgentPort + ":7100"))
                     .withNetworkMode(networkName);
 
             var containerName = "platform-spark-worker-" + i + "-" + instanceId;
@@ -76,7 +79,7 @@ class LocalInstanceCreator implements InstanceCreator {
                     .exec();
 
             var workerId = container.getId();
-            nodes.put(workerId, new InstanceConfig.InstanceNode(workerId, containerName, "worker", "localhost", port));
+            nodes.put(workerId, new InstanceConfig.InstanceNode(workerId, containerName, "worker", "localhost", port, null, workerAgentPort));
         }
 
         var data = new InstanceConfig.InstanceData(instanceId, networkName, nodes);
@@ -114,16 +117,21 @@ class LocalInstanceCreator implements InstanceCreator {
         return instanceConfig.remove(id) != null;
     }
 
+    @Override
+    public void destroyAll() {
+        instanceConfig.getInstanceMap()
+                .keySet()
+                .parallelStream()
+                .forEach(this::destroy);
+    }
+
     @PreDestroy
     void destroy() {
         // TODO disable for persistent config
         log.info("PreDestroy " + this.getClass()
                 .getSimpleName());
 
-        instanceConfig.getInstanceMap()
-                .keySet()
-                .parallelStream()
-                .forEach(this::destroy);
+        destroyAll();
     }
 
     @SneakyThrows

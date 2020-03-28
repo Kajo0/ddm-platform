@@ -6,4 +6,6 @@ interface InstanceCreator {
 
     boolean destroy(String id);
 
+    void destroyAll();
+
 }

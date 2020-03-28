@@ -10,5 +10,7 @@ public class InstanceAddrDto {
     private String type;
     private String address;
     private String port;
+    private String uiPort;
+    private String agentPort;
 
 }

@@ -38,6 +38,11 @@ class InstanceCommandController {
         return instanceFacade.destroy(req);
     }
 
+    @GetMapping("instance/destroy/all")
+    String destroyAll() {
+        return instanceFacade.destroyAll();
+    }
+
     @GetMapping("instance/info/{instanceId}")
     List<InstanceAddrDto> instanceAddresses(@PathVariable String instanceId) {
         var req = InstanceFacade.AddressRequest.builder()

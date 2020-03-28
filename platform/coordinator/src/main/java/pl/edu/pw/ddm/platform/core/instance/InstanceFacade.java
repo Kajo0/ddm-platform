@@ -29,6 +29,11 @@ public class InstanceFacade {
         return creator.destroy(request.instanceId) ? "ok" : "nook";
     }
 
+    public String destroyAll() {
+        creator.destroyAll();
+        return "ok";
+    }
+
     public List<InstanceAddrDto> addresses(@NonNull AddressRequest request) {
         // TODO NPE fix add checks somewhere
         return instanceConfig.get(request.instanceId)

@@ -13,4 +13,8 @@ public class InstanceAddrDto {
     private String uiPort;
     private String agentPort;
 
+    public String agentAddress() {
+        return address + ":" + agentPort;
+    }
+
 }

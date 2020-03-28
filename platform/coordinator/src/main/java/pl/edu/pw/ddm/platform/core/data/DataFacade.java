@@ -23,9 +23,9 @@ public class DataFacade {
 
     public String load(@NonNull LoadRequest request) {
         if (request.uri != null) {
-            return dataLoader.load(request.uri, request.deductType);
+            return dataLoader.save(request.uri, request.deductType);
         } else if (request.file != null) {
-            return dataLoader.load(request.file, request.deductType);
+            return dataLoader.save(request.file, request.deductType);
         } else {
             throw new IllegalStateException("No URI or file provided to load.");
         }

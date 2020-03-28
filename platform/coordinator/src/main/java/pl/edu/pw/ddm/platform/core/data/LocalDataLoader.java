@@ -11,13 +11,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import com.google.common.collect.Iterables;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +39,7 @@ class LocalDataLoader implements DataLoader {
 
     @SneakyThrows
     @Override
-    public String load(@NonNull String uri, boolean deductType) {
+    public String save(@NonNull String uri, boolean deductType) {
         // TODO load data
         var id = String.valueOf(uri.hashCode());
         String name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
@@ -54,7 +57,7 @@ class LocalDataLoader implements DataLoader {
 
     @SneakyThrows
     @Override
-    public String load(MultipartFile file, boolean deductType) {
+    public String save(MultipartFile file, boolean deductType) {
         var id = String.valueOf((System.currentTimeMillis() + file.getOriginalFilename()).hashCode());
         DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), deductType);
 
@@ -63,6 +66,24 @@ class LocalDataLoader implements DataLoader {
         }
 
         return id;
+    }
+
+    @SneakyThrows
+    @Override
+    public File load(String dataId) {
+        DataDesc desc = getDataDesc(dataId);
+        DataDesc.DataLocation location = desc.getLocation();
+        if (location.isPartitioned()) {
+            throw new NotImplementedException("Loading partitioned data not implemented yet.");
+        }
+        log.debug("Loading data with id '{}' from '{}'.", dataId, location.getLocations());
+
+        return Optional.of(location)
+                .map(DataDesc.DataLocation::getLocations)
+                .map(Iterables::getOnlyElement)
+                .map(Path::of)
+                .map(Path::toFile)
+                .get();
     }
 
     @Override

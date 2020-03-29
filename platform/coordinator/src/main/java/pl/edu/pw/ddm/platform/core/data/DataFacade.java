@@ -23,9 +23,9 @@ public class DataFacade {
 
     public String load(@NonNull LoadRequest request) {
         if (request.uri != null) {
-            return dataLoader.save(request.uri, request.deductType);
+            return dataLoader.save(request.uri, request.separator, request.idIndex, request.labelIndex, request.deductType);
         } else if (request.file != null) {
-            return dataLoader.save(request.file, request.deductType);
+            return dataLoader.save(request.file, request.separator, request.idIndex, request.labelIndex, request.deductType);
         } else {
             throw new IllegalStateException("No URI or file provided to load.");
         }
@@ -60,6 +60,12 @@ public class DataFacade {
 
         private final String uri;
         private final MultipartFile file;
+
+        @NonNull
+        private final String separator;
+
+        private final Integer idIndex;
+        private final Integer labelIndex;
 
         @Builder.Default
         private final boolean deductType = true;

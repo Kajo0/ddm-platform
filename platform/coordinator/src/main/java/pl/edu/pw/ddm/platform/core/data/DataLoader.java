@@ -7,9 +7,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 interface DataLoader {
 
-    String save(String uri, boolean deductType);
+    String save(String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType);
 
-    String save(MultipartFile file, boolean deductType);
+    String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType);
 
     File load(String dataId);
 

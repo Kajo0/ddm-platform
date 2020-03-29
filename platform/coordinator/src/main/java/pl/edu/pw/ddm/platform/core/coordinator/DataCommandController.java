@@ -24,20 +24,32 @@ class DataCommandController {
     // TODO add lazy loading used for scatter
 
     @PutMapping("load/uri")
-    String loadDataFromUri(@RequestParam String dataUri) {
+    String loadDataFromUri(@RequestParam String dataUri,
+                           @RequestParam String separator,
+                           @RequestParam(required = false) Integer idIndex,
+                           @RequestParam Integer labelIndex) {
         // TODO advance parametrization
         var req = DataFacade.LoadRequest.builder()
                 .uri(dataUri)
+                .separator(separator)
+                .idIndex(idIndex)
+                .labelIndex(labelIndex)
                 .deductType(true)
                 .build();
         return dataFacade.load(req);
     }
 
     @PostMapping("load/file")
-    String loadDataFile(@RequestParam("dataFile") MultipartFile dataFile) {
+    String loadDataFile(@RequestParam("dataFile") MultipartFile dataFile,
+                        @RequestParam String separator,
+                        @RequestParam(required = false) Integer idIndex,
+                        @RequestParam Integer labelIndex) {
         // TODO advance parametrization
         var req = DataFacade.LoadRequest.builder()
                 .file(dataFile)
+                .separator(separator)
+                .idIndex(idIndex)
+                .labelIndex(labelIndex)
                 .deductType(true)
                 .build();
         return dataFacade.load(req);

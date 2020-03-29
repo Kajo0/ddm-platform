@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
 import lombok.NonNull;
@@ -39,14 +41,14 @@ class LocalDataLoader implements DataLoader {
 
     @SneakyThrows
     @Override
-    public String save(@NonNull String uri, boolean deductType) {
+    public String save(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
         // TODO load data
         var id = String.valueOf(uri.hashCode());
         String name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
         // TODO improve without copy
         File file = File.createTempFile(name, "tmp");
         FileUtils.copyURLToFile(new URL(uri), file);
-        DataDesc data = saveAndPrepareDataDesc(id, FileUtils.readFileToByteArray(file), name, deductType);
+        DataDesc data = saveAndPrepareDataDesc(id, FileUtils.readFileToByteArray(file), name, separator, idIndex, labelIndex, deductType);
 
         if (dataMap.put(id, data) != null) {
             log.warn("Loaded probably the same data as before with id '{}'.", id);
@@ -57,9 +59,9 @@ class LocalDataLoader implements DataLoader {
 
     @SneakyThrows
     @Override
-    public String save(MultipartFile file, boolean deductType) {
+    public String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
         var id = String.valueOf((System.currentTimeMillis() + file.getOriginalFilename()).hashCode());
-        DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), deductType);
+        DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), separator, idIndex, labelIndex, deductType);
 
         if (dataMap.put(id, data) != null) {
             log.warn("Loaded probably the same data as before with id '{}'.", id);
@@ -76,10 +78,10 @@ class LocalDataLoader implements DataLoader {
         if (location.isPartitioned()) {
             throw new NotImplementedException("Loading partitioned data not implemented yet.");
         }
-        log.debug("Loading data with id '{}' from '{}'.", dataId, location.getLocations());
+        log.debug("Loading data with id '{}' from '{}'.", dataId, location.getFilesLocations());
 
         return Optional.of(location)
-                .map(DataDesc.DataLocation::getLocations)
+                .map(DataDesc.DataLocation::getFilesLocations)
                 .map(Iterables::getOnlyElement)
                 .map(Path::of)
                 .map(Path::toFile)
@@ -98,17 +100,31 @@ class LocalDataLoader implements DataLoader {
     }
 
     // TODO move to different component
-    private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, boolean deductType) throws IOException {
+    private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, String separator, Integer idIndex, Integer labelIndex, boolean deductType) throws IOException {
         // TODO check type inside file
         String type = FilenameUtils.getExtension(name);
         Path dataPath = Paths.get(DATA_PATH, id + "." + type);
         Files.write(dataPath, bytes);
 
+        if (idIndex == null) {
+            indexData(dataPath, separator);
+            idIndex = 0;
+            ++labelIndex;
+        }
+
         // TODO check if header and remove
-        long lines = Files.lines(dataPath).count();
+        // TODO optimize if added index
+        long lines = Files.lines(dataPath)
+                .filter(Predicate.not(String::isBlank))
+                .count();
         long size = bytes.length;
-        int columns = 0; // TODO count
-        String[] types = new String[columns]; // TODO check
+        // TODO optimize
+        int attributesCount = Files.lines(dataPath)
+                .findFirst()
+                .map(l -> l.split(separator))
+                .map(c -> c.length)
+                .orElseThrow(() -> new IllegalArgumentException("Cannot count attributes by splitting first line using separator: " + separator));
+        String[] types = new String[attributesCount]; // TODO check types
 
         var location = new DataDesc.DataLocation(List.of(dataPath.toString()), List.of(size), List.of(lines));
 
@@ -118,7 +134,16 @@ class LocalDataLoader implements DataLoader {
             log.debug("Deducting type for data '{}'.", name);
         }
 
-        return new DataDesc(id, name, type, size, lines, columns, types, location);
+        return new DataDesc(id, name, type, size, lines, separator, idIndex, labelIndex, attributesCount, types, location);
+    }
+
+    private void indexData(Path dataPath, String separator) throws IOException {
+        int[] i = new int[]{0};
+        String lines = Files.lines(dataPath)
+                .filter(Predicate.not(String::isBlank))
+                .map(l -> (i[0]++) + separator + l)
+                .collect(Collectors.joining(System.lineSeparator()));
+        Files.writeString(dataPath, lines);
     }
 
     @PreDestroy
@@ -128,7 +153,7 @@ class LocalDataLoader implements DataLoader {
         dataMap.values()
                 .stream()
                 .map(DataDesc::getLocation)
-                .map(DataDesc.DataLocation::getLocations)
+                .map(DataDesc.DataLocation::getFilesLocations)
                 .flatMap(Collection::parallelStream)
                 .forEach(location -> {
                     try {
@@ -146,21 +171,35 @@ class LocalDataLoader implements DataLoader {
         private String id;
         private String originalName;
         private String type;
-        private Long size;
-        private Long samples;
-        private Integer columns;
-        private String[] colType;
+        private Long sizeInBytes;
+        private Long numberOfSamples;
+        private String separator;
+        private Integer idIndex;
+        private Integer labelIndex;
+        private Integer attributesAmount;
+        private String[] colTypes;
         private DataLocation location;
+
+        int dataAttributes() {
+            int minus = 0;
+            if (idIndex != null) {
+                ++minus;
+            }
+            if (labelIndex != null) {
+                ++minus;
+            }
+            return attributesAmount - minus;
+        }
 
         @Value
         static class DataLocation {
 
-            private List<String> locations;
-            private List<Long> sizes;
-            private List<Long> samples;
+            private List<String> filesLocations;
+            private List<Long> sizesInBytes;
+            private List<Long> numbersOfSamples;
 
             boolean isPartitioned() {
-                return locations.size() > 1;
+                return filesLocations.size() > 1;
             }
         }
     }

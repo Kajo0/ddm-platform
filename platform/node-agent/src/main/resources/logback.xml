@@ -5,7 +5,7 @@
 
     <timestamp key="byDay" datePattern="yyyy-MM-dd"/>
 
-    <property name="MAIN_LOG_FILE" value="./logs/platform"/>
+    <property name="MAIN_LOG_FILE" value="./logs/node-agent"/>
     <property name="ROLL_FILE_EXT" value="-%d{yyyy-MM-dd}.log.gz"/>
     <property name="FILE_EXT" value=".log"/>
 

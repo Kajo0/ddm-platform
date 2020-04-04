@@ -3,4 +3,16 @@ server:
 
 coordinator:
   api:
-    addresses: http://localhost:7000/coordinator/command/instance/info/
+    host: ${COORDINATOR_HOST:http://localhost}
+    port: ${COORDINATOR_PORT:7000}
+    addresses: /coordinator/command/instance/info/
+
+spark:
+  home: ${SPARK_HOME:/home/mmarkiew/dev/spark}
+
+apps:
+  runner:
+    path: /home/mmarkiew/stud/ddm-platform/platform/app-runner-java/build/libs/app-runner-java-0.0.1-SNAPSHOT-all.jar
+    main-class: pl.edu.pw.ddm.platform.runner.CentralRunner
+  algorithms:
+    - /home/mmarkiew/stud/ddm-platform/platform/algorithms/clustering/aoptkm/build/libs/aoptkm-1.0-SNAPSHOT-all.jar

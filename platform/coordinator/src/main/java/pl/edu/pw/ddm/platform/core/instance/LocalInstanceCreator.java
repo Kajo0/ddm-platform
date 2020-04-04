@@ -10,16 +10,25 @@ import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.core.DockerClientBuilder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 class LocalInstanceCreator implements InstanceCreator {
 
-    private final InstanceConfig instanceConfig;
+    private static final String SPARK_MASTER_UI_PORT = "8080";
+    private static final String SPARK_WORKER_UI_PORT = "8081";
+    private static final String SPARK_MASTER_PORT = "7077";
+    private static final String NODE_AGENT_PORT = "7100";
 
-    LocalInstanceCreator(InstanceConfig instanceConfig) {
+    private final InstanceConfig instanceConfig;
+    private final String port;
+
+    LocalInstanceCreator(InstanceConfig instanceConfig,
+                         @Value("${server.port}") String port) {
         this.instanceConfig = instanceConfig;
+        this.port = port;
     }
 
     @Override
@@ -40,13 +49,13 @@ class LocalInstanceCreator implements InstanceCreator {
         var masterPort = findOpenPort().toString();
         var agentPort = findOpenPort().toString();
         var masterName = "platform-spark-master-" + instanceId;
-        var hc = new HostConfig().withPortBindings(PortBinding.parse(uiPort + ":8080"),
-                PortBinding.parse(masterPort + ":7077"), PortBinding.parse(agentPort + ":7100"))
+        var hc = new HostConfig().withPortBindings(PortBinding.parse(uiPort + ":" + SPARK_MASTER_UI_PORT),
+                PortBinding.parse(masterPort + ":" + SPARK_MASTER_PORT), PortBinding.parse(agentPort + ":" + NODE_AGENT_PORT))
                 .withNetworkMode(networkName);
         log.debug("Creating master '{}'.", masterName);
         var masterContainer = client.createContainerCmd("ddm-platform-master")
                 .withName(masterName)
-                .withEnv("INIT_DAEMON_STEP=setup_spark")
+                .withEnv("INIT_DAEMON_STEP=setup_spark", "COORDINATOR_HOST=", "COORDINATOR_PORT=" + port)
                 .withHostConfig(hc)
                 .exec();
         // FIXME clean on error
@@ -62,15 +71,15 @@ class LocalInstanceCreator implements InstanceCreator {
         for (int i = 1; i <= workers; ++i) {
             var port = findOpenPort().toString();
             var workerAgentPort = findOpenPort().toString();
-            var hcw = new HostConfig().withPortBindings(PortBinding.parse(port + ":8081"),
-                    PortBinding.parse(workerAgentPort + ":7100"))
+            var hcw = new HostConfig().withPortBindings(PortBinding.parse(port + ":" + SPARK_WORKER_UI_PORT),
+                    PortBinding.parse(workerAgentPort + ":" + NODE_AGENT_PORT))
                     .withNetworkMode(networkName);
 
             var containerName = "platform-spark-worker-" + i + "-" + instanceId;
             log.debug("Creating worker '{}'.", containerName);
             var container = client.createContainerCmd("ddm-platform-worker")
                     .withName(containerName)
-                    .withEnv("SPARK_MASTER=spark://" + masterName + ":" + 7077)
+                    .withEnv("SPARK_MASTER=spark://" + masterName + ":" + SPARK_MASTER_PORT, "COORDINATOR_HOST=", "COORDINATOR_PORT=" + port)
                     .withHostConfig(hcw)
                     .exec();
             // FIXME clean on error

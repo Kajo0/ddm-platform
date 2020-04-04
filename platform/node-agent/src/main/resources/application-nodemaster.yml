@@ -1,0 +1,5 @@
+apps:
+  runner:
+    path: /apps/app-runner-java.jar
+  algorithms:
+    - /apps/aoptkm.jar

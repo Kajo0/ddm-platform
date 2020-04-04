@@ -68,7 +68,7 @@ class LocalDataPartitioner implements DataPartitioner {
             body.add("attributesAmount", dataDesc.getAttributesAmount());
             body.add("colTypes", dataDesc.getColTypes());
 
-            String url = InstanceAgentAddressFactory.sendData(addressDto, dataDesc.getId());
+            String url = InstanceAgentAddressFactory.sendData(addressDto);
             ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
             log.debug("Scattering data post response: '{}'.", response.getBody());
             Files.delete(tempDataFile);

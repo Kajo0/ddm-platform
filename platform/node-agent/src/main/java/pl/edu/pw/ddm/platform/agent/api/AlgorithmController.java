@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("agent/algorithm")
 class AlgorithmController {
 
+    // TODO in spark version doesn't necessary
     @PostMapping("load/{algorithmId}")
     String load(@RequestParam("dataFile") MultipartFile dataFile, @PathVariable String algorithmId) {
         return "algorithm loaded with id " + algorithmId;

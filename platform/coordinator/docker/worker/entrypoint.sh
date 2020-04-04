@@ -1,5 +1,5 @@
 #!/bin/bash
 
-java -jar /apps/node-agent.jar &
+java -jar -Dspring.profiles.active=nodemaster /apps/node-agent.jar &
 
 bash /worker.sh

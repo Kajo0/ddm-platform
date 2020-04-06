@@ -7,11 +7,11 @@ import pl.edu.pw.ddm.platform.agent.data.dto.DataDesc;
 
 public interface DataLoader {
 
-    public boolean save(byte[] bytes, DataType type, DataDesc dataDesc);
+    boolean save(byte[] bytes, DataType type, DataDesc dataDesc);
 
     @Getter
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    public enum DataType {
+    enum DataType {
         TRAIN("train"),
         TEST("test"),
         DESCRIPTION("desc");

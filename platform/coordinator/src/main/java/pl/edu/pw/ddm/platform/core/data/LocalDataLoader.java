@@ -30,7 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 class LocalDataLoader implements DataLoader {
 
-    private static final String DATA_PATH = "/tmp/coordinator/data";
+    private static final String DATA_PATH = "/coordinator/data";
 
     LocalDataLoader() throws IOException {
         // TODO save on PreDestroy and collect or keep removed
@@ -42,7 +42,6 @@ class LocalDataLoader implements DataLoader {
     @SneakyThrows
     @Override
     public String save(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
-        // TODO load data
         var id = String.valueOf(uri.hashCode());
         String name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
         // TODO improve without copy

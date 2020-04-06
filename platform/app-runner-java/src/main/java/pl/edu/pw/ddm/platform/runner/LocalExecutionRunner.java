@@ -21,6 +21,12 @@ import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 
 class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
+    private final String dataId;
+
+    LocalExecutionRunner(String dataId) {
+        this.dataId = dataId;
+    }
+
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
         MiningMethod method = MethodPersister.load();
@@ -41,8 +47,7 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     }
 
     private String classify(Classifier classifier) {
-        // TODO pass correct dataId if here will be computing started
-        NodeDataProvider dataProvider = new NodeDataProvider("20");
+        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
         SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test());
         NodeResultCollector resultCollector = new NodeResultCollector();
         ParamProvider paramProvider = new NodeParamProvider();
@@ -58,8 +63,7 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     }
 
     private String cluster(Clustering clustering) {
-        // TODO pass correct dataId if here will be computing started
-        NodeDataProvider dataProvider = new NodeDataProvider("20");
+        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
         NodeResultCollector resultCollector = new NodeResultCollector();
         ParamProvider paramProvider = new NodeParamProvider();
 

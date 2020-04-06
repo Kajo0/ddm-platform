@@ -20,12 +20,17 @@ import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 
 class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
 
+    private final String dataId;
+
+    LocalUpdateRunner(String dataId) {
+        this.dataId = dataId;
+    }
+
     @Override
     public Iterator<ModelWrapper> call(Iterator<GlobalModel> iterator) throws Exception {
         Integer id = PersistentIdStamper.read();
 
-        // TODO pass correct dataId if here will be computing started
-        NodeDataProvider dataProvider = new NodeDataProvider("20");
+        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
         ParamProvider paramProvider = new NodeParamProvider();
 
         LocalModel previousModel = ModelPersister.loadLocal();

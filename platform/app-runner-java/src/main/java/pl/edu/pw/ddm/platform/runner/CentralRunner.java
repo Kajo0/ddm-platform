@@ -89,7 +89,7 @@ public final class CentralRunner {
     private void processLocal() {
         // FIXME not using preferred locations
         localModels = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalProcessRunner())
+                .mapPartitions(new LocalProcessRunner(dataId))
                 .collect();
     }
 
@@ -105,13 +105,13 @@ public final class CentralRunner {
     private void updateLocal() {
         List<GlobalModel> globals = Collections.nCopies(workerAddrs.size(), globalModel.getGlobalModel());
         updatedAcks = sc.parallelize(globals, workerAddrs.size())
-                .mapPartitions(new LocalUpdateRunner())
+                .mapPartitions(new LocalUpdateRunner(dataId))
                 .collect();
     }
 
     private void executeMethod() {
         executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalExecutionRunner())
+                .mapPartitions(new LocalExecutionRunner(dataId))
                 .collect();
     }
 

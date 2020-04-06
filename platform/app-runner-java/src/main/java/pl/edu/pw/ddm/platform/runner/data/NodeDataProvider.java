@@ -1,13 +1,15 @@
 package pl.edu.pw.ddm.platform.runner.data;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import lombok.SneakyThrows;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
@@ -15,18 +17,18 @@ import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 
 public class NodeDataProvider implements DataProvider {
 
-    private static final String TRAINING_DATA = "/execution/training_data.txt";
-    private static final String TEST_DATA = "/execution/test_data.txt";
-    private static final String SEPARATOR = ",";
+    private static final String DATA_PATH = "/execution/data/";
 
-    // TODO use dataId
     private final String dataId;
+    private final DataDesc dataDesc;
+
     private Collection<Data> trainingSet;
     private Collection<Data> testSet;
     private Collection<Data> allSet;
 
     public NodeDataProvider(String dataId) {
         this.dataId = dataId;
+        this.dataDesc = loadDescription();
     }
 
     @Override
@@ -53,12 +55,29 @@ public class NodeDataProvider implements DataProvider {
         return allSet;
     }
 
+    @SneakyThrows
+    private DataDesc loadDescription() {
+        Properties prop = new Properties();
+        File file = Paths.get(DATA_PATH + dataId + "/desc").toFile();
+        try (FileInputStream fis = new FileInputStream(file)) {
+            prop.load(fis);
+        }
+
+        return DataDesc.builder()
+                .separator(prop.getProperty("separator"))
+                .idIndex(Integer.valueOf(prop.getProperty("idIndex")))
+                .labelIndex(Integer.valueOf(prop.getProperty("labelIndex")))
+                .attributesAmount(Integer.valueOf(prop.getProperty("attributesAmount")))
+                .colTypes(prop.getProperty("colTypes").split(","))
+                .build();
+    }
+
     private void loadTraining() {
-        trainingSet = loadCsvData(TRAINING_DATA);
+        trainingSet = loadCsvData(DATA_PATH + dataId + "/train");
     }
 
     private void loadTest() {
-        testSet = loadCsvData(TEST_DATA);
+        testSet = loadCsvData(DATA_PATH + dataId + "/test");
     }
 
     private void loadAll() {
@@ -70,31 +89,44 @@ public class NodeDataProvider implements DataProvider {
         allSet.addAll(testSet);
     }
 
-    // TODO remove
-    private Collection<Data> loadDummy() {
-        return IntStream.range(0, Integer.parseInt(dataId))
-                .mapToObj(i -> new NodeData(i + ".", "-" + i, new double[]{i, i}))
-                .collect(Collectors.toList());
-    }
-
     @SneakyThrows
     private Collection<Data> loadCsvData(String file) {
         // TODO improve loading data
         Path path = Paths.get(file);
+        if (Files.notExists(path)) {
+            // TODO log
+            return Collections.emptyList();
+        }
+
         return Files.readAllLines(path)
                 .stream()
                 .map(this::toDoubleArray)
-                .map(attrs -> new NodeData("" + attrs[0], "" + attrs[1], Arrays.copyOfRange(attrs, 2, attrs.length)))
+                .map(this::toNodeData)
                 .collect(Collectors.toList());
     }
 
     private double[] toDoubleArray(String line) {
-        String[] attrs = line.split(SEPARATOR);
+        String[] attrs = line.split(dataDesc.getSeparator());
         double[] result = new double[attrs.length];
         for (int i = 0; i < attrs.length; ++i) {
             result[i] = Double.parseDouble(attrs[i]);
         }
         return result;
+    }
+
+    private NodeData toNodeData(double[] values) {
+        // TODO Array.copy as label always will be placed at the end such as index on the first place
+        double[] attributes = new double[dataDesc.getAttributesAmount()];
+        for (int i = 0, j = 0; i < values.length; ++i) {
+            if (i != dataDesc.getIdIndex() && i != dataDesc.getLabelIndex()) {
+                attributes[j] = values[i];
+            }
+        }
+
+        double id = values[dataDesc.getIdIndex()];
+        Double label = dataDesc.getLabelIndex() != null ? values[dataDesc.getLabelIndex()] : null;
+
+        return new NodeData(String.valueOf(id), String.valueOf(label), attributes);
     }
 
 }

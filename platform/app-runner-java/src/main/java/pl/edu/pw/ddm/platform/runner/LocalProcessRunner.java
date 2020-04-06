@@ -16,13 +16,18 @@ import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 
 class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
+    private final String dataId;
+
+    LocalProcessRunner(String dataId) {
+        this.dataId = dataId;
+    }
+
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
         Integer id = iterator.next();
         PersistentIdStamper.save(id);
 
-        // TODO pass correct dataId if here will be computing started
-        NodeDataProvider dataProvider = new NodeDataProvider("20");
+        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
         ParamProvider paramProvider = new NodeParamProvider();
 
         LocalModel model = AlgorithmProcessorInitializer.initLocalProcessor()

@@ -3,7 +3,7 @@ package pl.edu.pw.ddm.platform.core.coordinator;
 import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.util.MimeTypeUtils;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,8 +26,8 @@ class AlgorithmCommandController {
     @SneakyThrows
     @PostMapping("load")
     String loadAlgorithm(@RequestParam("file") MultipartFile file) {
-        Preconditions.checkState(MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE.equals(file.getContentType()),
-                "File is not octet-stream");
+        Preconditions.checkState("application/x-java-archive".equals(file.getContentType()),
+                "File is not application/x-java-archive");
         Preconditions.checkState(FilenameUtils.isExtension(file.getOriginalFilename(), "jar"), "File is not .jar");
 
         var req = AlgorithmFacade.LoadRequest.builder()
@@ -44,6 +44,11 @@ class AlgorithmCommandController {
                 .algorithmId(algorithmId)
                 .build();
         return algorithmFacade.broadcast(req);
+    }
+
+    @GetMapping(value = "info", produces = MediaType.APPLICATION_JSON_VALUE)
+    String loadedAlgorithmsInfo() {
+        return algorithmFacade.info();
     }
 
 }

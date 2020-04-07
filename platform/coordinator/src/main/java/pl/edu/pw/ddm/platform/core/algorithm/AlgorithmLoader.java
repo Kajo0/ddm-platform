@@ -1,12 +1,28 @@
 package pl.edu.pw.ddm.platform.core.algorithm;
 
+import java.io.File;
+import java.util.Map;
+
+import lombok.Value;
+
 interface AlgorithmLoader {
 
-    String load(String url);
+    String save(String name, byte[] jar);
 
-    String load(String name, byte[] jar);
+    File load(String algorithmId);
 
-    // FIXME move interface class
-    InMemoryAlgorithmLoader.AlgorithmDesc getAlgorithm(String algorithmId);
+    AlgorithmDesc getAlgorithm(String algorithmId);
+
+    Map<String, AlgorithmDesc> allAlgorithmsInfo();
+
+    @Value
+    class AlgorithmDesc {
+
+        private String id;
+        private String name;
+        private String type;
+        private Long sizeInBytes;
+        private String location;
+    }
 
 }

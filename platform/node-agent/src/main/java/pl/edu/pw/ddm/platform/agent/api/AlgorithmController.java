@@ -1,20 +1,28 @@
 package pl.edu.pw.ddm.platform.agent.api;
 
-import org.springframework.web.bind.annotation.PathVariable;
+import java.io.IOException;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import pl.edu.pw.ddm.platform.agent.algorithm.AlgorithmLoader;
 
 @RestController
 @RequestMapping("agent/algorithm")
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class AlgorithmController {
 
-    // TODO in spark version doesn't necessary
-    @PostMapping("load/{algorithmId}")
-    String load(@RequestParam("dataFile") MultipartFile dataFile, @PathVariable String algorithmId) {
-        return "algorithm loaded with id " + algorithmId;
+    private final AlgorithmLoader algorithmLoader;
+
+    @PostMapping(value = "load")
+    String load(@RequestParam("algorithmFile") MultipartFile algorithmFile,
+                @RequestParam("algorithmId") String algorithmId) throws IOException {
+        algorithmLoader.save(algorithmFile.getBytes(), algorithmId);
+        return "ok";
     }
 
 }

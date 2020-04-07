@@ -2,6 +2,7 @@ package pl.edu.pw.ddm.platform.agent.runner;
 
 import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
@@ -28,6 +29,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import pl.edu.pw.ddm.platform.agent.algorithm.AlgorithmLoader;
 
 @Slf4j
 @Service
@@ -37,6 +39,7 @@ public class AppRunner {
     private static final String SPARK_MASTER_PORT = "7077";
 
     private final RestTemplate restTemplate;
+    private final AlgorithmLoader algorithmLoader;
     private final CoordinatorApiConfig coordinatorApiConfig;
     private final String sparkHome;
     private final String runnerJarPath;
@@ -47,11 +50,13 @@ public class AppRunner {
     private String coordinatorBaseUrl;
 
     AppRunner(RestTemplate restTemplate,
+              AlgorithmLoader algorithmLoader,
               AppAlgorithmsConfig algorithmsConfig,
               CoordinatorApiConfig coordinatorApiConfig,
               Environment env,
               @Value("${spark.home}") String sparkHome) {
         this.restTemplate = restTemplate;
+        this.algorithmLoader = algorithmLoader;
         this.sparkHome = sparkHome;
         this.coordinatorApiConfig = coordinatorApiConfig;
         this.runnerJarPath = algorithmsConfig.getRunner().getPath();
@@ -62,7 +67,7 @@ public class AppRunner {
         this.coordinatorBaseUrl = coordinatorApiConfig.getBaseUrl();
     }
 
-    // TODO non static running apps map and block next one
+    // TODO running apps map and block next one
     public String run(String instanceId, String algorithmId, String dataId) throws IOException {
         String executionId = UUID.randomUUID()
                 .toString(); // TODO random;
@@ -81,10 +86,12 @@ public class AppRunner {
                 .addAppArgs(masterNode, workerNodes, algorithmId, dataId)
                 .addSparkArg("spark.locality.wait", "3600s");
 
-        // TODO add only executing algorithm
-        for (String jar : algorithmsJarsPaths) {
-            launcher.addJar(jar);
-        }
+        File algFile = algorithmLoader.load(algorithmId);
+        launcher.addJar(algFile.toString());
+        // TODO optionally add predefined if requested
+//        for (String jar : algorithmsJarsPaths) {
+//            launcher.addJar(jar);
+//        }
 
         log.info("Launching spark process on master '{}' for algorithm '{}' and data '{}'.", masterNode, algorithmId, dataId);
         Process process = launcher.launch();

@@ -17,4 +17,12 @@ public class InstanceAddrDto {
         return address + ":" + agentPort;
     }
 
+    public boolean isMaster() {
+        return "master".equals(type);
+    }
+
+    public boolean isWorker() {
+        return "worker".equals(type);
+    }
+
 }

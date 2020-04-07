@@ -2,6 +2,8 @@ package pl.edu.pw.ddm.platform.agent.api;
 
 import java.io.IOException;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,13 +14,10 @@ import pl.edu.pw.ddm.platform.agent.data.dto.DataDesc;
 
 @RestController
 @RequestMapping("agent/data")
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class DataController {
 
     private final DataLoader dataLoader;
-
-    DataController(DataLoader dataLoader) {
-        this.dataLoader = dataLoader;
-    }
 
     @PostMapping(value = "load")
     String load(@RequestParam("dataFile") MultipartFile dataFile,

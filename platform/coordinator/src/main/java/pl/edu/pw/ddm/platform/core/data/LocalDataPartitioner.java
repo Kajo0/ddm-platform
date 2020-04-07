@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
@@ -28,26 +30,22 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 @Slf4j
 @Service
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalDataPartitioner implements DataPartitioner {
     // TODO map of current scattered data
 
     private final DataLoader dataLoader;
     private final RestTemplate restTemplate;
 
-    LocalDataPartitioner(DataLoader dataLoader, RestTemplate restTemplate) {
-        this.dataLoader = dataLoader;
-        this.restTemplate = restTemplate;
-    }
-
     @SneakyThrows
     @Override
-    public String scatter(List<InstanceAddrDto> addresses, LocalDataLoader.DataDesc dataDesc, String strategy) {
+    public String scatter(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy) {
         log.info("Scattering data '{}' with strategy '{}' into nodes '{}'.", dataDesc, strategy, addresses);
         // TODO eval strategy
         // TODO it may be path as well for FileSystemResource
         File dataFile = dataLoader.load(dataDesc.getId());
         List<InstanceAddrDto> workers = addresses.stream()
-                .filter(addressDto -> "worker".equals(addressDto.getType()))
+                .filter(InstanceAddrDto::isWorker)
                 .collect(Collectors.toList());
         List<Path> tempFiles = uniformDistribution(workers.size(), dataDesc, dataFile);
 
@@ -77,7 +75,7 @@ class LocalDataPartitioner implements DataPartitioner {
         return "ok_process-id";
     }
 
-    private List<Path> uniformDistribution(int workers, LocalDataLoader.DataDesc dataDesc, File dataFile) throws IOException {
+    private List<Path> uniformDistribution(int workers, DataLoader.DataDesc dataDesc, File dataFile) throws IOException {
         List<Path> tempFiles = IntStream.range(0, workers)
                 .mapToObj(wi -> {
                     try {

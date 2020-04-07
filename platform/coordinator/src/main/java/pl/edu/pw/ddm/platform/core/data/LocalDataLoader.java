@@ -18,31 +18,32 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterables;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import pl.edu.pw.ddm.platform.core.util.IdGenerator;
 
 @Slf4j
 @Service
 class LocalDataLoader implements DataLoader {
 
+    // TODO move to properties
     private static final String DATA_PATH = "/coordinator/data";
+
+    private final Map<String, DataDesc> dataMap = new HashMap<>();
 
     LocalDataLoader() throws IOException {
         // TODO save on PreDestroy and collect or keep removed
         Files.createDirectories(Paths.get(DATA_PATH));
     }
 
-    private final Map<String, DataDesc> dataMap = new HashMap<>();
-
     @SneakyThrows
     @Override
     public String save(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
-        var id = String.valueOf(uri.hashCode());
+        var id = IdGenerator.generate(uri);
         String name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
         // TODO improve without copy
         File file = File.createTempFile(name, "tmp");
@@ -59,7 +60,7 @@ class LocalDataLoader implements DataLoader {
     @SneakyThrows
     @Override
     public String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
-        var id = String.valueOf((System.currentTimeMillis() + file.getOriginalFilename()).hashCode());
+        var id = IdGenerator.generate(System.currentTimeMillis() + file.getOriginalFilename());
         DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), separator, idIndex, labelIndex, deductType);
 
         if (dataMap.put(id, data) != null) {
@@ -162,45 +163,6 @@ class LocalDataLoader implements DataLoader {
                         log.error("Failed to remove file data: '{}'.", location);
                     }
                 });
-    }
-
-    @Value
-    static class DataDesc {
-
-        private String id;
-        private String originalName;
-        private String type;
-        private Long sizeInBytes;
-        private Long numberOfSamples;
-        private String separator;
-        private Integer idIndex;
-        private Integer labelIndex;
-        private Integer attributesAmount;
-        private String[] colTypes;
-        private DataLocation location;
-
-        int dataAttributes() {
-            int minus = 0;
-            if (idIndex != null) {
-                ++minus;
-            }
-            if (labelIndex != null) {
-                ++minus;
-            }
-            return attributesAmount - minus;
-        }
-
-        @Value
-        static class DataLocation {
-
-            private List<String> filesLocations;
-            private List<Long> sizesInBytes;
-            private List<Long> numbersOfSamples;
-
-            boolean isPartitioned() {
-                return filesLocations.size() > 1;
-            }
-        }
     }
 
 }

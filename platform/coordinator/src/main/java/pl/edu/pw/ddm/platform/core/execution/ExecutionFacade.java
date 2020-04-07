@@ -29,7 +29,7 @@ public class ExecutionFacade {
                 .build();
         InstanceAddrDto masterAddr = instanceFacade.addresses(req)
                 .stream()
-                .filter(addressDto -> "master".equals(addressDto.getType()))
+                .filter(InstanceAddrDto::isMaster)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No master node for instance: " + request.instanceId));
 

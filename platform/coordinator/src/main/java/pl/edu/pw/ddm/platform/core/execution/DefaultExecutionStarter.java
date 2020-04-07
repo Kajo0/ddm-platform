@@ -22,10 +22,10 @@ class DefaultExecutionStarter implements ExecutionStarter {
         log.info("Starting algorithm with id '{}' and data with id '{}' on master node '{}'.", algorithmId, dataId, masterAddr);
 
         String url = InstanceAgentAddressFactory.startExecution(masterAddr, instanceId, algorithmId, dataId);
-        String response = restTemplate.getForObject(url, String.class);
-        log.debug("Execution start data response: '{}'.", response);
+        String executionId = restTemplate.getForObject(url, String.class);
+        log.debug("Execution start data executionId: '{}'.", executionId);
 
-        return "ok-started " + response;
+        return executionId;
     }
 
 }

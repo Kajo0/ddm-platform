@@ -15,10 +15,17 @@ import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
 
 public class NodeResultCollector implements ResultCollector {
 
-    private final static String PATH = "/execution/results.txt";
+    private final static String PATH = "/execution";
+    private final static String RESULTS = "results.txt";
+
+    private final String executionId;
 
     @Getter
     private List<NodeResultData> results = new LinkedList<>();
+
+    public NodeResultCollector(String executionId) {
+        this.executionId = executionId;
+    }
 
     @Override
     public void collect(String id, String result) {
@@ -33,7 +40,7 @@ public class NodeResultCollector implements ResultCollector {
 
     @SneakyThrows
     public void saveResults() {
-        Path path = Paths.get(PATH);
+        Path path = Paths.get(PATH, executionId, RESULTS);
         Files.createDirectories(path.getParent());
         Files.deleteIfExists(path);
 

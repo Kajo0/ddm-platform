@@ -4,6 +4,8 @@ import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
@@ -19,13 +21,11 @@ import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.StringModel;
 import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
     private final String dataId;
-
-    LocalExecutionRunner(String dataId) {
-        this.dataId = dataId;
-    }
+    private final String executionId;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
@@ -49,7 +49,7 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     private String classify(Classifier classifier) {
         NodeDataProvider dataProvider = new NodeDataProvider(dataId);
         SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test());
-        NodeResultCollector resultCollector = new NodeResultCollector();
+        NodeResultCollector resultCollector = new NodeResultCollector(executionId);
         ParamProvider paramProvider = new NodeParamProvider();
 
         classifier.classify(sampleProvider, paramProvider, resultCollector);
@@ -64,7 +64,7 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
 
     private String cluster(Clustering clustering) {
         NodeDataProvider dataProvider = new NodeDataProvider(dataId);
-        NodeResultCollector resultCollector = new NodeResultCollector();
+        NodeResultCollector resultCollector = new NodeResultCollector(executionId);
         ParamProvider paramProvider = new NodeParamProvider();
 
         clustering.cluster(dataProvider, paramProvider, resultCollector);

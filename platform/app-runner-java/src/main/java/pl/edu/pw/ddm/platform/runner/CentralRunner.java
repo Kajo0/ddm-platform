@@ -23,6 +23,7 @@ public final class CentralRunner {
     private final List<String> workerAddrs;
     private final String algorithmId;
     private final String dataId;
+    private final String executionId;
 
     private final JavaSparkContext sc;
     private final List<Integer> nodeStubList;
@@ -32,11 +33,12 @@ public final class CentralRunner {
     private List<ModelWrapper> updatedAcks;
     private List<ModelWrapper> executionAcks;
 
-    public CentralRunner(String masterAddr, List<String> workerAddrs, String algorithmId, String dataId) {
+    public CentralRunner(String masterAddr, List<String> workerAddrs, String algorithmId, String dataId, String executionId) {
         this.masterAddr = masterAddr;
         this.workerAddrs = workerAddrs;
         this.algorithmId = algorithmId;
         this.dataId = dataId;
+        this.executionId = executionId;
 
         this.nodeStubList = IntStream.range(0, workerAddrs.size())
                 .boxed()
@@ -50,15 +52,16 @@ public final class CentralRunner {
     public static void main(String[] args) {
         // TODO args with num dataId and maybe start parameters
         if (args.length < 4) {
-            System.err.println("No args provided. [masterAddr, workerAddrs, algorithmId, dataId]");
+            System.err.println("No args provided. [masterAddr, workerAddrs, algorithmId, dataId, executionId]");
             System.exit(1);
         }
         String masterAddr = args[0];
         List<String> workerAddrs = Arrays.asList(args[1].split(","));
         String algorithmId = args[2];
         String dataId = args[3];
+        String executionId = args[4];
 
-        new CentralRunner(masterAddr, workerAddrs, algorithmId, dataId)
+        new CentralRunner(masterAddr, workerAddrs, algorithmId, dataId, executionId)
                 .run();
     }
 
@@ -89,7 +92,7 @@ public final class CentralRunner {
     private void processLocal() {
         // FIXME not using preferred locations
         localModels = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalProcessRunner(dataId))
+                .mapPartitions(new LocalProcessRunner(dataId, executionId))
                 .collect();
     }
 
@@ -105,13 +108,13 @@ public final class CentralRunner {
     private void updateLocal() {
         List<GlobalModel> globals = Collections.nCopies(workerAddrs.size(), globalModel.getGlobalModel());
         updatedAcks = sc.parallelize(globals, workerAddrs.size())
-                .mapPartitions(new LocalUpdateRunner(dataId))
+                .mapPartitions(new LocalUpdateRunner(dataId, executionId))
                 .collect();
     }
 
     private void executeMethod() {
         executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalExecutionRunner(dataId))
+                .mapPartitions(new LocalExecutionRunner(dataId, executionId))
                 .collect();
     }
 

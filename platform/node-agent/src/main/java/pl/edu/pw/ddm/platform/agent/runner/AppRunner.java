@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringTokenizer;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,6 +29,7 @@ import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.edu.pw.ddm.platform.agent.algorithm.AlgorithmLoader;
+import pl.edu.pw.ddm.platform.agent.util.IdGenerator;
 
 @Slf4j
 @Service
@@ -49,6 +49,8 @@ public class AppRunner {
 
     private String coordinatorBaseUrl;
 
+    private Process runningApp;
+
     AppRunner(RestTemplate restTemplate,
               AlgorithmLoader algorithmLoader,
               AppAlgorithmsConfig algorithmsConfig,
@@ -67,10 +69,12 @@ public class AppRunner {
         this.coordinatorBaseUrl = coordinatorApiConfig.getBaseUrl();
     }
 
-    // TODO running apps map and block next one
     public String run(String instanceId, String algorithmId, String dataId) throws IOException {
-        String executionId = UUID.randomUUID()
-                .toString(); // TODO random;
+        if (isProgramRunning()) {
+            throw new IllegalStateException("App already running");
+        }
+
+        String executionId = IdGenerator.generate();
 
         Pair<String, String> nodeAddresses = getNodesAddresses(instanceId);
         String masterNode = nodeAddresses.getLeft();
@@ -83,7 +87,7 @@ public class AppRunner {
                 .setAppResource(runnerJarPath)
                 .setMainClass(runnerMainClass)
                 .redirectToLog(log.getName())
-                .addAppArgs(masterNode, workerNodes, algorithmId, dataId)
+                .addAppArgs(masterNode, workerNodes, algorithmId, dataId, executionId)
                 .addSparkArg("spark.locality.wait", "3600s");
 
         File algFile = algorithmLoader.load(algorithmId);
@@ -94,8 +98,13 @@ public class AppRunner {
 //        }
 
         log.info("Launching spark process on master '{}' for algorithm '{}' and data '{}'.", masterNode, algorithmId, dataId);
-        Process process = launcher.launch();
-        return "execution ID / " + process.toString();
+        runningApp = launcher.launch();
+
+        return executionId;
+    }
+
+    public boolean isProgramRunning() {
+        return runningApp != null && runningApp.isAlive();
     }
 
     /**

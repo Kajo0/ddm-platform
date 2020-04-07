@@ -3,6 +3,8 @@ package pl.edu.pw.ddm.platform.runner;
 import java.net.InetAddress;
 import java.util.Iterator;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
@@ -14,13 +16,11 @@ import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
     private final String dataId;
-
-    LocalProcessRunner(String dataId) {
-        this.dataId = dataId;
-    }
+    private final String executionId;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
@@ -32,7 +32,7 @@ class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrap
 
         LocalModel model = AlgorithmProcessorInitializer.initLocalProcessor()
                 .processLocal(dataProvider, paramProvider);
-        ModelPersister.saveLocal(model);
+        ModelPersister.saveLocal(model, executionId);
 
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);
         return new SingletonIterator(wrapper);

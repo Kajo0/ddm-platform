@@ -3,6 +3,8 @@ package pl.edu.pw.ddm.platform.runner;
 import java.net.InetAddress;
 import java.util.Iterator;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
@@ -18,13 +20,11 @@ import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
 
     private final String dataId;
-
-    LocalUpdateRunner(String dataId) {
-        this.dataId = dataId;
-    }
+    private final String executionId;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<GlobalModel> iterator) throws Exception {
@@ -33,7 +33,7 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         NodeDataProvider dataProvider = new NodeDataProvider(dataId);
         ParamProvider paramProvider = new NodeParamProvider();
 
-        LocalModel previousModel = ModelPersister.loadLocal();
+        LocalModel previousModel = ModelPersister.loadLocal(executionId);
         MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor()
                 .updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
         MethodPersister.save(method);

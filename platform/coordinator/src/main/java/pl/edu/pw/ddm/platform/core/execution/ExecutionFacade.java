@@ -13,6 +13,7 @@ import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
+import pl.edu.pw.ddm.platform.core.util.ProfileConstants;
 
 @Slf4j
 @Service
@@ -34,7 +35,7 @@ public class ExecutionFacade {
                 .orElseThrow(() -> new IllegalArgumentException("No master node for instance: " + request.instanceId));
 
         // TODO debug - remove on release
-        if (env.acceptsProfiles(Profiles.of("localmaster"))) {
+        if (env.acceptsProfiles(Profiles.of(ProfileConstants.LOCAL_MASTER))) {
             try {
                 masterAddr.setAddress(InetAddress.getLocalHost().getHostAddress());
                 masterAddr.setAgentPort("7100");

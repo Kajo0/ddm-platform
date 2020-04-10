@@ -60,7 +60,7 @@ class LocalDataLoader implements DataLoader {
     @SneakyThrows
     @Override
     public String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
-        var id = IdGenerator.generate(System.currentTimeMillis() + file.getOriginalFilename());
+        var id = IdGenerator.generate(file.getOriginalFilename() + file.getSize());
         DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), separator, idIndex, labelIndex, deductType);
 
         if (dataMap.put(id, data) != null) {

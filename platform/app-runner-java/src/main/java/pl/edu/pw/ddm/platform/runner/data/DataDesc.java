@@ -12,16 +12,21 @@ class DataDesc {
     private Integer labelIndex;
     private Integer attributesAmount;
     private String[] colTypes;
+    private String[] attributesColTypes;
 
-    int dataAttributes() {
-        int minus = 0;
-        if (idIndex != null) {
-            ++minus;
+    String[] getAttributesColTypes() {
+        if (attributesColTypes != null) {
+            return attributesColTypes;
         }
-        if (labelIndex != null) {
-            ++minus;
+
+        attributesColTypes = new String[attributesAmount];
+        for (int i = 0, j = 0; i < colTypes.length; ++i) {
+            if (i != idIndex && i != labelIndex) {
+                attributesColTypes[j++] = colTypes[i];
+            }
         }
-        return attributesAmount - minus;
+
+        return attributesColTypes;
     }
 
 }

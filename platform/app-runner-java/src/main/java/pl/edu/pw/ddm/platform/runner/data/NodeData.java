@@ -1,16 +1,24 @@
 package pl.edu.pw.ddm.platform.runner.data;
 
-import lombok.AllArgsConstructor;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.NotImplementedException;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.SampleData;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class NodeData implements Data {
 
     private final String id;
     private final String label;
-    private final double[] attributes;
+    private final String[] attributes;
+    // TODO think how to optimize
+    private final String[] colTypes;
+
+    protected double[] numericAttributes;
 
     @Override
     public String getId() {
@@ -24,19 +32,33 @@ public class NodeData implements Data {
 
     @Override
     public String[] getAttributes() {
-        // TODO implement
-        throw new NotImplementedException("Not implemented yet.");
-    }
-
-    @Override
-    public double[] getNumericAttributes() {
         return attributes;
     }
 
     @Override
+    public double[] getNumericAttributes() {
+        if (numericAttributes != null) {
+            return numericAttributes;
+        }
+
+        long numericCount = Stream.of(colTypes)
+                .filter(Objects::nonNull)
+                .filter("numeric"::equals)
+                .count();
+        if (numericCount != attributes.length) {
+            throw new IllegalArgumentException("Not all but " + numericCount + " attributes of " + attributes.length + " are numeric: " + Arrays.toString(colTypes));
+        }
+
+        numericAttributes = new double[attributes.length];
+        for (int i = 0; i < attributes.length; ++i) {
+            numericAttributes[i] = Double.parseDouble(attributes[i]);
+        }
+        return numericAttributes;
+    }
+
+    @Override
     public String getAttribute(int col) {
-        // TODO implement
-        throw new NotImplementedException("Not implemented yet.");
+        return attributes[col];
     }
 
     @Override
@@ -47,7 +69,14 @@ public class NodeData implements Data {
 
     @Override
     public double getNumericAttribute(int col) {
-        return attributes[col];
+        if (numericAttributes != null) {
+            return numericAttributes[col];
+        } else if ("numeric".equals(colTypes[col])) {
+            // TODO optimize
+            return Double.parseDouble(getAttribute(col));
+        } else {
+            throw new IllegalArgumentException("Data column " + col + " is not numeric.");
+        }
     }
 
     @Override
@@ -58,7 +87,7 @@ public class NodeData implements Data {
 
     SampleData toSample() {
         // TODO think about purpose
-        return new NodeSampleData(id, label, attributes);
+        return new NodeSampleData(id, label, attributes, colTypes, numericAttributes);
     }
 
 }

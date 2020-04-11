@@ -98,35 +98,31 @@ public class NodeDataProvider implements DataProvider {
             return Collections.emptyList();
         }
 
+        String[] attrColTypes = dataDesc.getAttributesColTypes();
         return Files.readAllLines(path)
                 .stream()
-                .map(this::toDoubleArray)
-                .map(this::toNodeData)
+                .map(this::toArray)
+                .map(values -> toNodeData(values, attrColTypes))
                 .collect(Collectors.toList());
     }
 
-    private double[] toDoubleArray(String line) {
-        String[] attrs = line.split(dataDesc.getSeparator());
-        double[] result = new double[attrs.length];
-        for (int i = 0; i < attrs.length; ++i) {
-            result[i] = Double.parseDouble(attrs[i]);
-        }
-        return result;
+    private String[] toArray(String line) {
+        return line.split(dataDesc.getSeparator());
     }
 
-    private NodeData toNodeData(double[] values) {
+    private NodeData toNodeData(String[] values, String[] attrColTypes) {
         // TODO Array.copy as label always will be placed at the end such as index on the first place
-        double[] attributes = new double[dataDesc.getAttributesAmount()];
+        String[] attributes = new String[dataDesc.getAttributesAmount()];
         for (int i = 0, j = 0; i < values.length; ++i) {
             if (i != dataDesc.getIdIndex() && i != dataDesc.getLabelIndex()) {
-                attributes[j] = values[i];
+                attributes[j++] = values[i];
             }
         }
 
-        double id = values[dataDesc.getIdIndex()];
-        Double label = dataDesc.getLabelIndex() != null ? values[dataDesc.getLabelIndex()] : null;
+        String id = values[dataDesc.getIdIndex()];
+        String label = dataDesc.getLabelIndex() != null ? values[dataDesc.getLabelIndex()] : null;
 
-        return new NodeData(String.valueOf(id), String.valueOf(label), attributes);
+        return new NodeData(String.valueOf(id), String.valueOf(label), attributes, attrColTypes);
     }
 
 }

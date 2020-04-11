@@ -158,7 +158,7 @@ def setupDefault(workers=2):
     algorithmId = loadJar('./samples/aoptkm.jar')
     dataId = loadData('./samples/iris.data', 4, ',', None)
     instanceId = createInstance(workers)
-    time.sleep(workers * 4)
+    time.sleep(workers * 5)
     broadcastJar(instanceId, algorithmId)
     scatterData(instanceId, dataId, 'uniform')
 

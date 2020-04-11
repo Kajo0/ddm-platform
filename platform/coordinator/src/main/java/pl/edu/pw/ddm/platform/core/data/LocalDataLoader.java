@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -99,7 +98,6 @@ class LocalDataLoader implements DataLoader {
         return dataMap;
     }
 
-    // TODO move to different component
     private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, String separator, Integer idIndex, Integer labelIndex, boolean deductType) throws IOException {
         // TODO check type inside file
         String type = FilenameUtils.getExtension(name);
@@ -112,29 +110,8 @@ class LocalDataLoader implements DataLoader {
             ++labelIndex;
         }
 
-        // TODO check if header and remove
-        // TODO optimize if added index
-        long lines = Files.lines(dataPath)
-                .filter(Predicate.not(String::isBlank))
-                .count();
-        long size = bytes.length;
-        // TODO optimize
-        int attributesCount = Files.lines(dataPath)
-                .findFirst()
-                .map(l -> l.split(separator))
-                .map(c -> c.length)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot count attributes by splitting first line using separator: " + separator));
-        String[] types = new String[attributesCount]; // TODO check types
-
-        var location = new DataDesc.DataLocation(List.of(dataPath.toString()), List.of(size), List.of(lines));
-
-        if (deductType) {
-            // TODO deduct type based on sample
-//            types = ...;
-            log.debug("Deducting type for data '{}'.", name);
-        }
-
-        return new DataDesc(id, name, type, size, lines, separator, idIndex, labelIndex, attributesCount, types, location);
+        return new DataDescriber(dataPath, id, name, separator, idIndex, labelIndex, deductType)
+                .describe();
     }
 
     private void indexData(Path dataPath, String separator) throws IOException {

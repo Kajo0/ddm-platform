@@ -14,15 +14,4 @@ public class DataDesc {
     private Integer attributesAmount;
     private String[] colTypes;
 
-    int dataAttributes() {
-        int minus = 0;
-        if (idIndex != null) {
-            ++minus;
-        }
-        if (labelIndex != null) {
-            ++minus;
-        }
-        return attributesAmount - minus;
-    }
-
 }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.Value;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
@@ -63,14 +64,14 @@ public class InstanceFacade {
         private final Integer workerNodes;
     }
 
-    @Builder
+    @Value(staticConstructor = "of")
     public static class DestroyRequest {
 
         @NonNull
         private final String instanceId;
     }
 
-    @Builder
+    @Value(staticConstructor = "of")
     public static class AddressRequest {
 
         @NonNull

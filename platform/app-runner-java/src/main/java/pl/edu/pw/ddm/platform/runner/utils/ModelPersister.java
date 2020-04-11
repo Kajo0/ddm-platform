@@ -16,7 +16,7 @@ import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 @UtilityClass
 public class ModelPersister {
 
-    private final static String PATH = "/execution/";
+    private final static String PATH = "/ddm/execution/";
     private final static String LOCAL = "local_model.data";
 
     @SneakyThrows

@@ -13,9 +13,10 @@ import pl.edu.pw.ddm.platform.agent.data.dto.DataDesc;
 
 @Slf4j
 @Service
-public class LocalDataLoader implements DataLoader {
+class LocalDataLoader implements DataLoader {
 
-    private static final String DATA_PATH = "/execution/data";
+    // TODO properties
+    private static final String DATA_PATH = "/ddm/data";
 
     LocalDataLoader() throws IOException {
         Files.createDirectories(Paths.get(DATA_PATH));

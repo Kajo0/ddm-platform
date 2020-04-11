@@ -12,9 +12,10 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class LocalAlgorithmLoader implements AlgorithmLoader {
+class LocalAlgorithmLoader implements AlgorithmLoader {
 
-    private static final String ALGORITHMS_PATH = "/execution/algorithms";
+    // TODO properties
+    private static final String ALGORITHMS_PATH = "/ddm/algorithms";
 
     LocalAlgorithmLoader() throws IOException {
         Files.createDirectories(Paths.get(ALGORITHMS_PATH));

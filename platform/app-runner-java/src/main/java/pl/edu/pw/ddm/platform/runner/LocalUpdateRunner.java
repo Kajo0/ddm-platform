@@ -36,7 +36,7 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         LocalModel previousModel = ModelPersister.loadLocal(executionId);
         MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor()
                 .updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
-        MethodPersister.save(method);
+        MethodPersister.save(method, executionId);
 
         LocalModel model = new StringLocalModel("ackTime=" + System.currentTimeMillis());
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);

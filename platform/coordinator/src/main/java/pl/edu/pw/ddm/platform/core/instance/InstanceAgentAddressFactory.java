@@ -7,19 +7,23 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 @UtilityClass
 public class InstanceAgentAddressFactory {
 
-    public String sendData(InstanceAddrDto dto) {
+    public String sendData(@NonNull InstanceAddrDto dto) {
         return base(dto) + "data/load";
     }
 
-    public String sendAlgorithm(InstanceAddrDto dto) {
+    public String sendAlgorithm(@NonNull InstanceAddrDto dto) {
         return base(dto) + "algorithm/load";
     }
 
-    public String startExecution(InstanceAddrDto dto, @NonNull String instanceId, @NonNull String algorithmId, @NonNull String dataId) {
+    public String startExecution(@NonNull InstanceAddrDto dto, @NonNull String instanceId, @NonNull String algorithmId, @NonNull String dataId) {
         return base(dto) + "execution/run/" + instanceId + "/" + algorithmId + "/" + dataId;
     }
 
-    private String base(InstanceAddrDto dto) {
+    public String collectResults(@NonNull InstanceAddrDto dto, @NonNull String executionId) {
+        return base(dto) + "results/" + executionId + "/download";
+    }
+
+    private String base(@NonNull InstanceAddrDto dto) {
         return "http://" + dto.agentAddress() + "/agent/";
     }
 

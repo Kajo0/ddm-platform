@@ -25,9 +25,9 @@ class ExecutionController {
         }
 
         try {
-            String executionId = appRunner.run(instanceId, algorithmId, dataId);
-            return executionId;
+            return appRunner.run(instanceId, algorithmId, dataId);
         } catch (IOException e) {
+            // TODO think about return messages
             e.printStackTrace();
             return "IOException: " + e.getMessage();
         }
@@ -36,6 +36,11 @@ class ExecutionController {
     @GetMapping("stop/{executionId}")
     String stop(@PathVariable String executionId) {
         return "not implemented yet - stop execution of " + executionId;
+    }
+
+    @GetMapping("status/{executionId}")
+    String status(@PathVariable String executionId) {
+        return "not implemented yet - status execution of " + executionId;
     }
 
 }

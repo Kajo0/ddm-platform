@@ -1,11 +1,15 @@
 package pl.edu.pw.ddm.platform.core.data;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import pl.edu.pw.ddm.platform.core.data.dto.DataDescDto;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 
 @Service
@@ -32,9 +36,7 @@ public class DataFacade {
     }
 
     public String scatter(@NonNull ScatterRequest request) {
-        var req = InstanceFacade.AddressRequest.builder()
-                .instanceId(request.instanceId)
-                .build();
+        var req = InstanceFacade.AddressRequest.of(request.instanceId);
         var addr = instanceFacade.addresses(req);
 
         var data = dataLoader.getDataDesc(request.dataId);
@@ -43,6 +45,15 @@ public class DataFacade {
         }
 
         return dataPartitioner.scatter(addr, data, request.strategy);
+    }
+
+    public DataDescDto description(@NonNull DescriptionRequest request) {
+        // TODO more checks
+        return Optional.of(request)
+                .map(DescriptionRequest::getDataId)
+                .map(dataLoader::getDataDesc)
+                .map(DataDescMapper.INSTANCE::map)
+                .get();
     }
 
     // TODO remove debug
@@ -82,6 +93,13 @@ public class DataFacade {
 
         @NonNull
         private final String strategy;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class DescriptionRequest {
+
+        @NonNull
+        private final String dataId;
     }
 
 }

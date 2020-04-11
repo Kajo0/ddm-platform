@@ -17,7 +17,7 @@ import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 
 public class NodeDataProvider implements DataProvider {
 
-    private static final String DATA_PATH = "/execution/data/";
+    private static final String DATA_PATH = "/ddm/data/";
 
     private final String dataId;
     private final DataDesc dataDesc;

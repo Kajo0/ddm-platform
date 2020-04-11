@@ -15,17 +15,17 @@ import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 @UtilityClass
 public class MethodPersister {
 
-    private final static String PATH = "/execution/method.data";
+    private final static String DIR = "/ddm/execution";
+    private final static String FILE = "method.data";
 
-    // TODO add executionId
     @SneakyThrows
-    public boolean save(MiningMethod method) {
+    public boolean save(MiningMethod method, String executionId) {
         boolean updated = false;
 
-        Path path = Paths.get(PATH);
+        Path path = Paths.get(DIR, executionId, FILE);
         Files.createDirectories(path.getParent());
         if (Files.exists(path)) {
-            updated = removeLocal();
+            updated = removeLocal(executionId);
         }
 
         try (FileOutputStream fos = new FileOutputStream(path.toFile());
@@ -37,8 +37,8 @@ public class MethodPersister {
     }
 
     @SneakyThrows
-    public MiningMethod load() {
-        Path path = Paths.get(PATH);
+    public MiningMethod load(String executionId) {
+        Path path = Paths.get(DIR, executionId, FILE);
         if (Files.notExists(path)) {
             return null;
         } else {
@@ -50,8 +50,8 @@ public class MethodPersister {
     }
 
     @SneakyThrows
-    public boolean removeLocal() {
-        Path path = Paths.get(PATH);
+    public boolean removeLocal(String executionId) {
+        Path path = Paths.get(DIR, executionId, FILE);
         return Files.deleteIfExists(path);
     }
 

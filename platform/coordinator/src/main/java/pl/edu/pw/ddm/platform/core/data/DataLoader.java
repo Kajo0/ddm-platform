@@ -34,17 +34,6 @@ interface DataLoader {
         private String[] colTypes;
         private DataLocation location;
 
-        int dataAttributes() {
-            int minus = 0;
-            if (idIndex != null) {
-                ++minus;
-            }
-            if (labelIndex != null) {
-                ++minus;
-            }
-            return attributesAmount - minus;
-        }
-
         @Value
         static class DataLocation {
 

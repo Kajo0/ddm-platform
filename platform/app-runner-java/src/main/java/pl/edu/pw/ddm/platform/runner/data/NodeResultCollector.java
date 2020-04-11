@@ -15,7 +15,7 @@ import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
 
 public class NodeResultCollector implements ResultCollector {
 
-    private final static String PATH = "/execution";
+    private final static String PATH = "/ddm/execution";
     private final static String RESULTS = "results.txt";
 
     private final String executionId;

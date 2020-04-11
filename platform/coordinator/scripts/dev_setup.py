@@ -21,6 +21,8 @@ api = {
         'scatter': '/coordinator/command/data/scatter/instance/{instanceId}/{strategy}/{dataId}',
     },
     'execution': {
+        'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
+        'info': '/coordinator/command/execution/info',
         'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{dataId}',
         'status': '/coordinator/command/execution/status/executionId}',
         'stop': '/coordinator/command/execution/stop/{executionId}'
@@ -101,6 +103,22 @@ def scatterData(instanceId, dataId, strategy='uniform'):
     return response
 
 
+def collectResults(executionId):
+    print("collectResults executionId='{}'".format(executionId))
+    url = baseUrl + api['execution']['collectResults'].format(**{'executionId': executionId})
+    response = requests.get(url).text
+    print('  response: ' + response)
+    return response
+
+
+def executionInfo():
+    print('executionInfo')
+    url = baseUrl + api['execution']['info']
+    response = requests.get(url).text
+    formatted = json.loads(response)
+    pprint.pprint(formatted)
+
+
 def startExecution(instanceId, algorithmId, dataId):
     print("startExecution instanceId='{}' algorithmId='{}' dataId='{}'".format(instanceId, algorithmId, dataId))
     url = baseUrl + api['execution']['start'].format(**{
@@ -137,12 +155,13 @@ def destroyAll():
     return response
 
 
-def saveLast(instanceId, algorithmId, dataId):
+def saveLast(instanceId, algorithmId, dataId, executionId=None):
     config = configparser.RawConfigParser()
     config['last'] = {
         'instance_id': instanceId,
         'algorithm_id': algorithmId,
-        'data_id': dataId
+        'data_id': dataId,
+        'execution_id': executionId
     }
     with open(lastExecFile, 'w') as file:
         config.write(file)
@@ -179,8 +198,17 @@ def reload():
 
 def execute():
     last = loadLast()
-    print(last)
-    startExecution(last.get('instance_id'), last.get('algorithm_id'), last.get('data_id'))
+    instanceId = last.get('instance_id')
+    algorithmId = last.get('algorithm_id')
+    dataId = last.get('data_id')
+    executionId = startExecution(instanceId, algorithmId, dataId)
+
+    saveLast(instanceId, algorithmId, dataId, executionId)
+
+
+def results():
+    last = loadLast()
+    collectResults(last.get('execution_id'))
 
 
 def clear():
@@ -188,7 +216,7 @@ def clear():
 
 
 if len(sys.argv) < 2:
-    print('  Provide command! [setup, clear, reload, execute, info [data, alg, instance]]')
+    print('  Provide command! [setup, clear, reload, execute, info [data, alg, execution, instance]]')
     sys.exit(1)
 
 command = sys.argv[1]
@@ -200,9 +228,11 @@ elif command == 'reload':
     reload()
 elif command == 'execute':
     execute()
+elif command == 'results':
+    results()
 elif command == 'info':
     if len(sys.argv) < 3:
-        print('  Provide info arg [data, alg, instance]')
+        print('  Provide info arg [data, alg, execution, instance]')
         sys.exit(1)
 
     arg = sys.argv[2]
@@ -210,6 +240,8 @@ elif command == 'info':
         dataInfo()
     elif arg == 'alg':
         algorithmInfo()
+    elif arg == 'execution':
+        executionInfo()
     elif arg == 'instance':
         instanceInfo()
     else:

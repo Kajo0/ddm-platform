@@ -29,7 +29,7 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
-        MiningMethod method = MethodPersister.load();
+        MiningMethod method = MethodPersister.load(executionId);
         StringModel model = new StringModel(perform(method));
 
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), null);

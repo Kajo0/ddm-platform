@@ -32,9 +32,7 @@ class InstanceCommandController {
 
     @GetMapping("instance/destroy/{instanceId}")
     String destroyInstance(@PathVariable String instanceId) {
-        var req = InstanceFacade.DestroyRequest.builder()
-                .instanceId(instanceId)
-                .build();
+        var req = InstanceFacade.DestroyRequest.of(instanceId);
         return instanceFacade.destroy(req);
     }
 
@@ -45,9 +43,7 @@ class InstanceCommandController {
 
     @GetMapping("instance/info/{instanceId}")
     List<InstanceAddrDto> instanceAddresses(@PathVariable String instanceId) {
-        var req = InstanceFacade.AddressRequest.builder()
-                .instanceId(instanceId)
-                .build();
+        var req = InstanceFacade.AddressRequest.of(instanceId);
         return instanceFacade.addresses(req);
     }
 

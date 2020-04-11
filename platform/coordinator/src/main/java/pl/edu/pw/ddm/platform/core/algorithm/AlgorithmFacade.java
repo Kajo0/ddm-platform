@@ -2,6 +2,7 @@ package pl.edu.pw.ddm.platform.core.algorithm;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,10 +10,12 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
+import pl.edu.pw.ddm.platform.core.algorithm.dto.AlgorithmDescDto;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 import pl.edu.pw.ddm.platform.core.util.ProfileConstants;
@@ -32,9 +35,7 @@ public class AlgorithmFacade {
     }
 
     public String broadcast(@NonNull BroadcastRequest request) {
-        var req = InstanceFacade.AddressRequest.builder()
-                .instanceId(request.instanceId)
-                .build();
+        var req = InstanceFacade.AddressRequest.of(request.instanceId);
         var addr = instanceFacade.addresses(req)
                 .stream()
                 .filter(InstanceAddrDto::isMaster)
@@ -57,6 +58,15 @@ public class AlgorithmFacade {
         }
 
         return algorithmBroadcaster.broadcast(addr, alg);
+    }
+
+    public AlgorithmDescDto description(@NonNull DescriptionRequest request) {
+        // TODO more checks
+        return Optional.of(request)
+                .map(DescriptionRequest::getAlgorithmId)
+                .map(algorithmLoader::getAlgorithm)
+                .map(AlgorithmDescMapper.INSTANCE::map)
+                .get();
     }
 
     // TODO remove debug
@@ -83,6 +93,13 @@ public class AlgorithmFacade {
 
         @NonNull
         private final String instanceId;
+
+        @NonNull
+        private final String algorithmId;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class DescriptionRequest {
 
         @NonNull
         private final String algorithmId;

@@ -75,6 +75,7 @@ class LocalDataPartitioner implements DataPartitioner {
         return "ok_process-id";
     }
 
+    // TODO extract to component with interface
     private List<Path> uniformDistribution(int workers, DataLoader.DataDesc dataDesc, File dataFile) throws IOException {
         List<Path> tempFiles = IntStream.range(0, workers)
                 .mapToObj(wi -> {

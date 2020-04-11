@@ -26,14 +26,14 @@ class DataController {
                 @RequestParam Integer idIndex,
                 @RequestParam Integer labelIndex,
                 @RequestParam Integer attributesAmount,
-                @RequestParam String[] colTypes) throws IOException {
+                @RequestParam String colTypes) throws IOException {
         DataDesc desc = DataDesc.builder()
                 .id(dataId)
                 .separator(separator)
                 .idIndex(idIndex)
                 .labelIndex(labelIndex)
                 .attributesAmount(attributesAmount)
-                .colTypes(colTypes)
+                .colTypes(colTypes.split(","))
                 .build();
         // TODO divide into train/test data
         dataLoader.save(dataFile.getBytes(), DataLoader.DataType.TRAIN, desc);

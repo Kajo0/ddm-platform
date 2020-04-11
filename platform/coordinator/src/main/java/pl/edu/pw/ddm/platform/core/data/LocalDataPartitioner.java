@@ -64,7 +64,7 @@ class LocalDataPartitioner implements DataPartitioner {
             body.add("idIndex", dataDesc.getIdIndex());
             body.add("labelIndex", dataDesc.getLabelIndex());
             body.add("attributesAmount", dataDesc.getAttributesAmount());
-            body.add("colTypes", dataDesc.getColTypes());
+            body.add("colTypes", String.join(",", dataDesc.getColTypes()));
 
             String url = InstanceAgentAddressFactory.sendData(addressDto);
             ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);

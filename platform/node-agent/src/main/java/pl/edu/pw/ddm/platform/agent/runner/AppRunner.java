@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.edu.pw.ddm.platform.agent.algorithm.AlgorithmLoader;
 import pl.edu.pw.ddm.platform.agent.util.IdGenerator;
+import pl.edu.pw.ddm.platform.agent.util.ProfileConstants;
 
 @Slf4j
 @Service
@@ -64,7 +65,7 @@ public class AppRunner {
         this.runnerJarPath = algorithmsConfig.getRunner().getPath();
         this.runnerMainClass = algorithmsConfig.getRunner().getMainClass();
         this.algorithmsJarsPaths = algorithmsConfig.getAlgorithms();
-        this.agentOnMasterNode = env.acceptsProfiles(Profiles.of("nodemaster"));
+        this.agentOnMasterNode = env.acceptsProfiles(Profiles.of(ProfileConstants.NODE_MASTER));
 
         this.coordinatorBaseUrl = coordinatorApiConfig.getBaseUrl();
     }

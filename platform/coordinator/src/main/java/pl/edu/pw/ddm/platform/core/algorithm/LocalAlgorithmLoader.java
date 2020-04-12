@@ -40,12 +40,20 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
         Files.deleteIfExists(algPath);
         Files.write(algPath, jar);
 
-        // TODO extract algorithm type
-        var alg = new AlgorithmDesc(id, name, "TODO", (long) jar.length, algPath.toString());
-        if (algorithmMap.putIfAbsent(id, alg) != null) {
-            log.warn("Loaded the same jar '{}' file as before with id '{}'.", name, id);
+        try {
+            var typePackage = new ProcessorPackageEvaluator()
+                    .callForPackageName(algPath.toFile());
+            var alg = new AlgorithmDesc(id, name, typePackage.getPackageName(), typePackage.getAlgorithmType(), (long) jar.length, algPath.toString());
+
+            if (algorithmMap.putIfAbsent(id, alg) != null) {
+                log.warn("Loaded the same jar '{}' file as before with id '{}'.", name, id);
+            }
+            return id;
+        } catch (Exception e) {
+            log.error("Error during algorithm package name evaluation so removing saved jar.", e);
+            Files.delete(algPath);
+            throw e;
         }
-        return id;
     }
 
     @Override

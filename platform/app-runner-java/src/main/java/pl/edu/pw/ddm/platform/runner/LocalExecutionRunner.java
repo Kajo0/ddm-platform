@@ -24,12 +24,11 @@ import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
-    private final String dataId;
-    private final String executionId;
+    private final InitParamsDto initParams;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
-        MiningMethod method = MethodPersister.load(executionId);
+        MiningMethod method = MethodPersister.load(initParams.getExecutionId());
         StringModel model = new StringModel(perform(method));
 
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), null);
@@ -47,10 +46,10 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     }
 
     private String classify(Classifier classifier) {
-        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
+        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
         SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test());
-        NodeResultCollector resultCollector = new NodeResultCollector(executionId);
-        ParamProvider paramProvider = new NodeParamProvider();
+        NodeResultCollector resultCollector = new NodeResultCollector(initParams.getExecutionId());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
 
         classifier.classify(sampleProvider, paramProvider, resultCollector);
         resultCollector.saveResults();
@@ -63,9 +62,9 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     }
 
     private String cluster(Clustering clustering) {
-        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
-        NodeResultCollector resultCollector = new NodeResultCollector(executionId);
-        ParamProvider paramProvider = new NodeParamProvider();
+        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
+        NodeResultCollector resultCollector = new NodeResultCollector(initParams.getExecutionId());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
 
         clustering.cluster(dataProvider, paramProvider, resultCollector);
         resultCollector.saveResults();

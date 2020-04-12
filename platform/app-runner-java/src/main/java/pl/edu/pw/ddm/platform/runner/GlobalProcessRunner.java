@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
@@ -14,7 +16,10 @@ import pl.edu.pw.ddm.platform.runner.data.NodeParamProvider;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class GlobalProcessRunner implements FlatMapFunction<Iterator<LocalModel>, ModelWrapper> {
+
+    private final InitParamsDto initParams;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<LocalModel> iterator) throws Exception {
@@ -24,9 +29,9 @@ class GlobalProcessRunner implements FlatMapFunction<Iterator<LocalModel>, Model
         }
 
         // TODO move to runner class and pass as clojure
-        ParamProvider paramProvider = new NodeParamProvider();
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
 
-        GlobalModel globalModel = AlgorithmProcessorInitializer.initGlobalProcessor()
+        GlobalModel globalModel = AlgorithmProcessorInitializer.initGlobalProcessor(initParams.getAlgorithmPackageName())
                 .processGlobal(models, paramProvider);
 
         ModelWrapper wrapper = ModelWrapper.global(globalModel, InetAddress.getLocalHost().toString());

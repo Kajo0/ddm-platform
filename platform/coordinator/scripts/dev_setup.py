@@ -15,15 +15,18 @@ api = {
         'load': '/coordinator/command/algorithm/load'
     },
     'data': {
+        'distance-function-broadcast': '/coordinator/command/data/distance-function/broadcast/{instanceId}/{distanceFunctionId}',
+        'distance-function-load': '/coordinator/command/data/distance-function/load/file',
         'info': '/coordinator/command/data/info',
+        'distance-functions-info': '/coordinator/command/data/info/distance-functions',
         'load': '/coordinator/command/data/load/file',
         'loadUri': '/coordinator/command/data/load/uri',
-        'scatter': '/coordinator/command/data/scatter/instance/{instanceId}/{strategy}/{dataId}',
+        'scatter': '/coordinator/command/data/scatter/{instanceId}/{strategy}/{dataId}',
     },
     'execution': {
         'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
         'info': '/coordinator/command/execution/info',
-        'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{dataId}',
+        'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{dataId}/{distanceFunctionIdOrPredefinedName}',
         'status': '/coordinator/command/execution/status/executionId}',
         'stop': '/coordinator/command/execution/stop/{executionId}'
     },
@@ -75,15 +78,44 @@ def dataInfo():
     pprint.pprint(formatted)
 
 
-def loadData(path, label, separator=',', id=None):
-    print("loadData path='{}' id='{}' label='{}' separator='{}'".format(path, id, label, separator))
+def broadcastDistanceFunction(instanceId, distanceFunctionId):
+    print("broadcastDistanceFunction instanceId='{}' distanceFunctionId='{}'".format(instanceId, distanceFunctionId))
+    url = baseUrl + api['data']['distance-function-broadcast'].format(**{
+        'instanceId': instanceId,
+        'distanceFunctionId': distanceFunctionId
+    })
+    response = requests.get(url).text
+    print('  response: ' + response)
+    return response
+
+
+def loadDistanceFunction(path):
+    print("loadDistanceFunction path='{}'".format(path))
+    url = baseUrl + api['data']['distance-function-load']
+    with open(path, 'rb') as file:
+        distanceFunctionId = requests.post(url, files={'distanceFunctionFile':
+                                                           (file.name, file, 'application/x-java-archive')}).text
+        print('  distanceFunctionId: ' + distanceFunctionId)
+        return distanceFunctionId
+
+
+def functionsInfo():
+    print('functionsInfo')
+    url = baseUrl + api['data']['distance-functions-info']
+    response = requests.get(url).text
+    formatted = json.loads(response)
+    pprint.pprint(formatted)
+
+
+def loadData(path, labelIndex, separator=',', idIndex=None):
+    print("loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}'".format(path, idIndex, labelIndex, separator))
     url = baseUrl + api['data']['load']
     with open(path, 'rb') as file:
         dataId = requests.post(url,
                                files={'dataFile': (file.name, file, 'application/x-java-archive')},
                                data={
-                                   'idIndex': id,
-                                   'labelIndex': label,
+                                   'idIndex': idIndex,
+                                   'labelIndex': labelIndex,
                                    'separator': separator
                                }
                                ).text
@@ -119,12 +151,16 @@ def executionInfo():
     pprint.pprint(formatted)
 
 
-def startExecution(instanceId, algorithmId, dataId):
-    print("startExecution instanceId='{}' algorithmId='{}' dataId='{}'".format(instanceId, algorithmId, dataId))
+def startExecution(instanceId, algorithmId, dataId, distanceFuncName='none'):
+    print("startExecution instanceId='{}' algorithmId='{}' dataId='{}' distanceFuncName='{}'".format(instanceId,
+                                                                                                     algorithmId,
+                                                                                                     dataId,
+                                                                                                     distanceFuncName))
     url = baseUrl + api['execution']['start'].format(**{
         'instanceId': instanceId,
         'algorithmId': algorithmId,
-        'dataId': dataId
+        'dataId': dataId,
+        'distanceFunctionIdOrPredefinedName': distanceFuncName
     })
     executionId = requests.get(url).text
     print('  executionId: ' + executionId)
@@ -155,12 +191,13 @@ def destroyAll():
     return response
 
 
-def saveLast(instanceId, algorithmId, dataId, executionId=None):
+def saveLast(instanceId, algorithmId, dataId, distanceFunctionId=None, executionId=None):
     config = configparser.RawConfigParser()
     config['last'] = {
         'instance_id': instanceId,
         'algorithm_id': algorithmId,
         'data_id': dataId,
+        'distance_function_id': distanceFunctionId,
         'execution_id': executionId
     }
     with open(lastExecFile, 'w') as file:
@@ -176,12 +213,15 @@ def loadLast():
 def setupDefault(workers=2):
     algorithmId = loadJar('./samples/aoptkm.jar')
     dataId = loadData('./samples/iris.data', 4, ',', None)
+    distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
     instanceId = createInstance(workers)
+
     time.sleep(workers * 5)
     broadcastJar(instanceId, algorithmId)
     scatterData(instanceId, dataId, 'uniform')
+    broadcastDistanceFunction(instanceId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, dataId)
+    saveLast(instanceId, algorithmId, dataId, distanceFunctionId)
 
 
 def reload():
@@ -190,10 +230,13 @@ def reload():
 
     algorithmId = loadJar('./samples/aoptkm.jar')
     dataId = loadData('./samples/iris.data', 4, ',', None)
+    distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
+
     broadcastJar(instanceId, algorithmId)
     scatterData(instanceId, dataId, 'uniform')
+    broadcastDistanceFunction(instanceId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, dataId)
+    saveLast(instanceId, algorithmId, dataId, distanceFunctionId)
 
 
 def execute():
@@ -201,9 +244,12 @@ def execute():
     instanceId = last.get('instance_id')
     algorithmId = last.get('algorithm_id')
     dataId = last.get('data_id')
-    executionId = startExecution(instanceId, algorithmId, dataId)
+    distanceFunctionId = last.get('distance_function_id')
 
-    saveLast(instanceId, algorithmId, dataId, executionId)
+    executionId = startExecution(instanceId, algorithmId, dataId)
+    # executionId = startExecution(instanceId, algorithmId, dataId, distanceFunctionId)
+
+    saveLast(instanceId, algorithmId, dataId, distanceFunctionId, executionId)
 
 
 def results():
@@ -232,12 +278,14 @@ elif command == 'results':
     results()
 elif command == 'info':
     if len(sys.argv) < 3:
-        print('  Provide info arg [data, alg, execution, instance]')
+        print('  Provide info arg [data, functions, alg, execution, instance]')
         sys.exit(1)
 
     arg = sys.argv[2]
     if arg == 'data':
         dataInfo()
+    if arg == 'functions':
+        functionsInfo()
     elif arg == 'alg':
         algorithmInfo()
     elif arg == 'execution':

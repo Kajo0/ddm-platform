@@ -1,2 +1,2 @@
-/home/mmarkiew/stud/ddm-platform/platform/coordinator/docker/worker/data/training_data.txt
-/home/mmarkiew/stud/ddm-platform/platform/coordinator/docker/worker/data/test_data.txt
+/home/mmarkiew/stud/ddm-platform/platform/coordinator/scripts/samples/iris_numeric.data
+/home/mmarkiew/stud/ddm-platform/platform/coordinator/scripts/samples/iris_numeric.data

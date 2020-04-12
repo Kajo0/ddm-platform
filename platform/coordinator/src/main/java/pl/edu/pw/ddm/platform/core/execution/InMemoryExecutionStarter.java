@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.core.execution;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,6 +8,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import pl.edu.pw.ddm.platform.core.instance.InstanceAgentAddressFactory;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
@@ -21,11 +24,21 @@ class InMemoryExecutionStarter implements ExecutionStarter {
     private final Map<String, ExecutionStarter.ExecutionDesc> executionMap = new HashMap<>();
 
     @Override
-    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId) {
-        log.info("Starting algorithm with id '{}' and data with id '{}' on master node '{}'.", algorithmId, dataId, masterAddr);
+    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId, String distanceFunctionId, String distanceFunctionName) {
+        log.info("Starting algorithm with id '{}' and data with id '{}' and distance function id '{}' and name '{}' on master node '{}'.", algorithmId, dataId, distanceFunctionId, distanceFunctionName, masterAddr);
+
+        // TODO broadcast algorithm if not present there
+        // TODO broadcast distance function if not present there
 
         String url = InstanceAgentAddressFactory.startExecution(masterAddr, instanceId, algorithmId, dataId);
-        String executionId = restTemplate.getForObject(url, String.class);
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("distanceFunctionName", distanceFunctionName);
+        body.add("distanceFunctionPackageName", distanceFunctionName);
+        if (distanceFunctionId != null) {
+            body.add("distanceFunctionId", distanceFunctionId);
+        }
+
+        String executionId = restTemplate.postForObject(url, body, String.class);
         log.debug("Execution start data executionId: '{}'.", executionId);
 
         ExecutionDesc desc = ExecutionDesc.builder()
@@ -33,8 +46,11 @@ class InMemoryExecutionStarter implements ExecutionStarter {
                 .instanceId(instanceId)
                 .algorithmId(algorithmId)
                 .dataId(dataId)
+                .distanceFunctionId(distanceFunctionId)
+                .distanceFunctionName(distanceFunctionName)
                 .masterAddr(masterAddr)
                 .status(ExecutionDesc.ExecutionStatus.STARTED)
+                .started(LocalDateTime.now())
                 .build();
         executionMap.put(executionId, desc);
 

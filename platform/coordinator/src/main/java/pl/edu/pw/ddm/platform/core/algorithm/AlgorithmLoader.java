@@ -20,6 +20,7 @@ interface AlgorithmLoader {
 
         private String id;
         private String name;
+        private String packageName;
         private String type;
         private Long sizeInBytes;
         private String location;

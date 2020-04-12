@@ -1,26 +1,31 @@
 package pl.edu.pw.ddm.platform.core.instance;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
+import pl.edu.pw.ddm.platform.core.util.ProfileConstants;
 
+@Slf4j
 @Service
+@AllArgsConstructor
 public class InstanceFacade {
 
     private final InstanceConfig instanceConfig;
     private final InstanceCreator creator;
-
-    InstanceFacade(InstanceConfig instanceConfig, InstanceCreator creator) {
-        this.instanceConfig = instanceConfig;
-        this.creator = creator;
-    }
+    private final Environment env;
 
     public String create(@NonNull CreateRequest request) {
         return creator.create(request.workerNodes);
@@ -37,12 +42,28 @@ public class InstanceFacade {
 
     public List<InstanceAddrDto> addresses(@NonNull AddressRequest request) {
         // TODO NPE fix add checks somewhere
-        return instanceConfig.get(request.instanceId)
+        List<InstanceAddrDto> addr = instanceConfig.get(request.instanceId)
                 .getNodes()
                 .values()
                 .stream()
                 .map(InstanceConfigMapper.INSTANCE::map)
                 .collect(Collectors.toUnmodifiableList());
+
+        // TODO debug - remove on release
+        if (env.acceptsProfiles(Profiles.of(ProfileConstants.LOCAL_MASTER))) {
+            InstanceAddrDto masterAddr = addr.stream()
+                    .filter(InstanceAddrDto::isMaster)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No master node found for instance: " + request.instanceId));
+            try {
+                masterAddr.setAddress(InetAddress.getLocalHost().getHostAddress());
+                masterAddr.setAgentPort("7100");
+            } catch (UnknownHostException e) {
+                log.error("Getting localhost address error.", e);
+            }
+        }
+
+        return addr;
     }
 
     // TODO remove debug

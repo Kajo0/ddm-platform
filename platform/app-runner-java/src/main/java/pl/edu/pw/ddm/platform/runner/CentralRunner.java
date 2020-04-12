@@ -2,7 +2,6 @@ package pl.edu.pw.ddm.platform.runner;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -19,11 +18,7 @@ import pl.edu.pw.ddm.platform.runner.utils.CentralDdmSummarizer;
 
 public final class CentralRunner {
 
-    private final String masterAddr;
-    private final List<String> workerAddrs;
-    private final String algorithmId;
-    private final String dataId;
-    private final String executionId;
+    private final JsonArgsDto args;
 
     private final JavaSparkContext sc;
     private final List<Integer> nodeStubList;
@@ -33,35 +28,45 @@ public final class CentralRunner {
     private List<ModelWrapper> updatedAcks;
     private List<ModelWrapper> executionAcks;
 
-    public CentralRunner(String masterAddr, List<String> workerAddrs, String algorithmId, String dataId, String executionId) {
-        this.masterAddr = masterAddr;
-        this.workerAddrs = workerAddrs;
-        this.algorithmId = algorithmId;
-        this.dataId = dataId;
-        this.executionId = executionId;
+    @SneakyThrows
+    public CentralRunner(String jsonArgs) {
+        this.args = JsonArgsDto.fromJson(jsonArgs);
 
-        this.nodeStubList = IntStream.range(0, workerAddrs.size())
+        this.nodeStubList = IntStream.range(0, args.getWorkerNodes().size())
                 .boxed()
                 .collect(Collectors.toList());
         this.localModels = new ArrayList<>(nodeStubList.size());
+        printRunConfig();
 
         SparkContext ssc = SparkContext.getOrCreate();
         this.sc = JavaSparkContext.fromSparkContext(ssc);
     }
 
+    // TODO think if not remove or sth and log.info it
+    private void printRunConfig() {
+        System.out.println("------------------------------------------------------------------------");
+        System.out.println("-             CentralRunner CONFIG                                     -");
+        System.out.println("------------------------------------------------------------------------");
+        System.out.println("  masterNode                  = " + args.getMasterNode());
+        System.out.println("  workerNodes                 = " + args.getWorkerNodes());
+        System.out.println("  algorithmId                 = " + args.getAlgorithmId());
+        System.out.println("  algorithmPackageName        = " + args.getAlgorithmPackageName());
+        System.out.println("  dataId                      = " + args.getDataId());
+        System.out.println("  executionId                 = " + args.getExecutionId());
+        System.out.println("  distanceFunctionName        = " + args.getDistanceFunctionName());
+        System.out.println("  distanceFunctionPackageName = " + args.getDistanceFunctionPackageName());
+        System.out.println("  nodeStubList                = " + nodeStubList);
+        System.out.println("------------------------------------------------------------------------");
+    }
+
     public static void main(String[] args) {
         // TODO args with num dataId and maybe start parameters
-        if (args.length < 4) {
-            System.err.println("No args provided. [masterAddr, workerAddrs, algorithmId, dataId, executionId]");
+        if (args.length != 1) {
+            System.err.println("No json arg provided.");
             System.exit(1);
         }
-        String masterAddr = args[0];
-        List<String> workerAddrs = Arrays.asList(args[1].split(","));
-        String algorithmId = args[2];
-        String dataId = args[3];
-        String executionId = args[4];
 
-        new CentralRunner(masterAddr, workerAddrs, algorithmId, dataId, executionId)
+        new CentralRunner(args[0])
                 .run();
     }
 
@@ -75,7 +80,7 @@ public final class CentralRunner {
 
         executeMethod();
 
-        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, masterAddr, workerAddrs)
+        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes())
                 .printModelsSummary()
                 .printDispersionSummary();
 
@@ -92,7 +97,7 @@ public final class CentralRunner {
     private void processLocal() {
         // FIXME not using preferred locations
         localModels = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalProcessRunner(dataId, executionId))
+                .mapPartitions(new LocalProcessRunner(createInitParams()))
                 .collect();
     }
 
@@ -101,21 +106,25 @@ public final class CentralRunner {
         Iterator<LocalModel> models = localModels.stream()
                 .map(ModelWrapper::getLocalModel)
                 .iterator();
-        globalModel = new GlobalProcessRunner().call(models)
+        globalModel = new GlobalProcessRunner(createInitParams()).call(models)
                 .next();
     }
 
     private void updateLocal() {
-        List<GlobalModel> globals = Collections.nCopies(workerAddrs.size(), globalModel.getGlobalModel());
-        updatedAcks = sc.parallelize(globals, workerAddrs.size())
-                .mapPartitions(new LocalUpdateRunner(dataId, executionId))
+        List<GlobalModel> globals = Collections.nCopies(nodeStubList.size(), globalModel.getGlobalModel());
+        updatedAcks = sc.parallelize(globals, nodeStubList.size())
+                .mapPartitions(new LocalUpdateRunner(createInitParams()))
                 .collect();
     }
 
     private void executeMethod() {
         executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalExecutionRunner(dataId, executionId))
+                .mapPartitions(new LocalExecutionRunner(createInitParams()))
                 .collect();
+    }
+
+    private InitParamsDto createInitParams() {
+        return new InitParamsDto(args.getDataId(), args.getExecutionId(), args.getAlgorithmPackageName(), args.getDistanceFunctionName(), args.getDistanceFunctionPackageName());
     }
 
 }

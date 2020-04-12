@@ -10,15 +10,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.pw.ddm.platform.core.data.DataFacade;
+import pl.edu.pw.ddm.platform.core.data.DistanceFunctionFacade;
 
 @RestController
 @RequestMapping("coordinator/command/data")
 class DataCommandController {
 
     private final DataFacade dataFacade;
+    private final DistanceFunctionFacade distanceFunctionFacade;
 
-    DataCommandController(DataFacade dataFacade) {
+    DataCommandController(DataFacade dataFacade, DistanceFunctionFacade distanceFunctionFacade) {
         this.dataFacade = dataFacade;
+        this.distanceFunctionFacade = distanceFunctionFacade;
     }
 
     // TODO add lazy loading used for scatter
@@ -55,7 +58,13 @@ class DataCommandController {
         return dataFacade.load(req);
     }
 
-    @GetMapping("scatter/instance/{instanceId}/{strategy}/{dataId}")
+    @PostMapping("distance-function/load/file")
+    String loadDistanceFunctionFile(@RequestParam("distanceFunctionFile") MultipartFile distanceFunctionFile) {
+        var req = DistanceFunctionFacade.LoadRequest.of(distanceFunctionFile);
+        return distanceFunctionFacade.load(req);
+    }
+
+    @GetMapping("scatter/{instanceId}/{strategy}/{dataId}")
     String scatterData(@PathVariable String instanceId, @PathVariable String strategy, @PathVariable String dataId) {
         // TODO advance parametrization
         var req = DataFacade.ScatterRequest.builder()
@@ -66,9 +75,24 @@ class DataCommandController {
         return dataFacade.scatter(req);
     }
 
+    @GetMapping("distance-function/broadcast/{instanceId}/{distanceFunctionId}")
+    String broadcastDistanceFunction(@PathVariable String instanceId, @PathVariable String distanceFunctionId) {
+        // TODO advance parametrization
+        var req = DistanceFunctionFacade.BroadcastRequest.builder()
+                .instanceId(instanceId)
+                .distanceFunctionId(distanceFunctionId)
+                .build();
+        return distanceFunctionFacade.broadcast(req);
+    }
+
     @GetMapping(value = "info", produces = MediaType.APPLICATION_JSON_VALUE)
     String loadedDataInfo() {
         return dataFacade.info();
+    }
+
+    @GetMapping(value = "info/distance-functions", produces = MediaType.APPLICATION_JSON_VALUE)
+    String loadedDistanceFunctions() {
+        return distanceFunctionFacade.info();
     }
 
 }

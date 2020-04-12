@@ -38,6 +38,7 @@ class DefaultAlgorithmBroadcaster implements AlgorithmBroadcaster {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>(1);
         body.add("algorithmFile", new FileSystemResource(algFile));
         body.add("algorithmId", algorithmDesc.getId());
+        body.add("algorithmPackageName", algorithmDesc.getPackageName());
 
         String url = InstanceAgentAddressFactory.sendAlgorithm(masterAddr);
         ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);

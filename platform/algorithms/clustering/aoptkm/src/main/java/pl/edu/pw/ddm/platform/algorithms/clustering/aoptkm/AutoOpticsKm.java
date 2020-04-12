@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.GModel;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.LModel;
+import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.PredefinedDistanceFuncWrapper;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.kmeans.Kmeans;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.kmeans.ObjectKmeansCluster;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.optics.ObjectOpticsPoint;
@@ -28,6 +29,8 @@ public class AutoOpticsKm extends OpticsDkm {
         labelNumber = paramProvider.provideNumeric("labelNumber", 1.).intValue();
         splitPattern = paramProvider.provide("splitPattern", ",");
 
+        distanceFunc = new PredefinedDistanceFuncWrapper(paramProvider);
+
         inputPath = null;
         outputPath = "/tmp";
 
@@ -35,6 +38,29 @@ public class AutoOpticsKm extends OpticsDkm {
         noOneGroup = Boolean.parseBoolean(paramProvider.provide("noOneGroup", "false"));
         minKGroups = Boolean.parseBoolean(paramProvider.provide("minKGroups", "false"));
         exactKGroups = Boolean.parseBoolean(paramProvider.provide("exactKGroups", "false"));
+
+        printConfig();
+    }
+
+    // TODO remove debug checker
+    private void printConfig() {
+        System.out.println("---------------------------------");
+        System.out.println("-        AOPTKM - CONFIG        -");
+        System.out.println("---------------------------------");
+        System.out.println("  groups        = " + groups);
+        System.out.println("  iterations    = " + iterations);
+        System.out.println("  epsilon       = " + epsilon);
+        System.out.println("  indexNumber   = " + indexNumber);
+        System.out.println("  labelNumber   = " + labelNumber);
+        System.out.println("  splitPattern  = " + splitPattern);
+        System.out.println("  distanceFunc  = " + distanceFunc);
+        System.out.println("  inputPath     = " + inputPath);
+        System.out.println("  outputPath    = " + outputPath);
+        System.out.println("  increaseModel = " + increaseModel);
+        System.out.println("  noOneGroup    = " + noOneGroup);
+        System.out.println("  minKGroups    = " + minKGroups);
+        System.out.println("  exactKGroups  = " + exactKGroups);
+        System.out.println("---------------------------------");
     }
 
     public AutoOpticsKm(String[] args) {

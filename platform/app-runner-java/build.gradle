@@ -15,6 +15,8 @@ repositories {
 
 dependencies {
     implementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
+    implementation 'pl.edu.pw.ddm.platform:distance-functions:0.0.1-SNAPSHOT'
+
     compileOnly 'org.apache.spark:spark-core_2.11:2.4.5'
     implementation 'org.scala-lang:scala-library:2.11.12'
     implementation 'org.reflections:reflections:0.9.12'

@@ -1,7 +1,5 @@
 package pl.edu.pw.ddm.platform.core.execution;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,13 +11,13 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
+import pl.edu.pw.ddm.platform.core.data.DistanceFunctionFacade;
+import pl.edu.pw.ddm.platform.core.data.dto.DistanceFunctionDescDto;
 import pl.edu.pw.ddm.platform.core.execution.dto.ExecutionDescDto;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
-import pl.edu.pw.ddm.platform.core.util.ProfileConstants;
+import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 
 @Slf4j
 @Service
@@ -27,13 +25,26 @@ import pl.edu.pw.ddm.platform.core.util.ProfileConstants;
 public class ExecutionFacade {
 
     private final InstanceFacade instanceFacade;
+    private final DistanceFunctionFacade distanceFunctionFacade;
     private final ExecutionStarter executionStarter;
     private final ResultsCollector resultsCollector;
-    private final Environment env;
 
     public String start(@NonNull StartRequest request) {
         InstanceAddrDto masterAddr = findMasterAddress(request.instanceId);
-        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.dataId);
+
+        String distanceFunctionId;
+        String distanceFunctionName;
+        if (DistanceFunction.PREDEFINED_FUNCTIONS.contains(request.distanceFunctionIdOrPredefinedName)) {
+            distanceFunctionId = null;
+            distanceFunctionName = request.distanceFunctionIdOrPredefinedName;
+        } else {
+            var req = DistanceFunctionFacade.DescriptionRequest.of(request.distanceFunctionIdOrPredefinedName);
+            DistanceFunctionDescDto desc = distanceFunctionFacade.description(req);
+            distanceFunctionId = request.distanceFunctionIdOrPredefinedName;
+            distanceFunctionName = desc.getFunctionName();
+        }
+
+        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.dataId, distanceFunctionId, distanceFunctionName);
     }
 
     public String stop(@NonNull StopRequest request) {
@@ -68,22 +79,11 @@ public class ExecutionFacade {
 
     private InstanceAddrDto findMasterAddress(@NonNull String instanceId) {
         var req = InstanceFacade.AddressRequest.of(instanceId);
-        InstanceAddrDto masterAddr = instanceFacade.addresses(req)
+        return instanceFacade.addresses(req)
                 .stream()
                 .filter(InstanceAddrDto::isMaster)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No master node for instance: " + instanceId));
-
-        // TODO debug - remove on release
-        if (env.acceptsProfiles(Profiles.of(ProfileConstants.LOCAL_MASTER))) {
-            try {
-                masterAddr.setAddress(InetAddress.getLocalHost().getHostAddress());
-                masterAddr.setAgentPort("7100");
-            } catch (UnknownHostException e) {
-                log.error("Getting localhost address error.", e);
-            }
-        }
-        return masterAddr;
     }
 
     @Builder
@@ -97,6 +97,10 @@ public class ExecutionFacade {
 
         @NonNull
         private final String dataId;
+
+        @NonNull
+        @Builder.Default
+        private final String distanceFunctionIdOrPredefinedName = DistanceFunction.PredefinedNames.NONE;
     }
 
     @Value(staticConstructor = "of")

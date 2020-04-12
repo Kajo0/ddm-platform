@@ -1,7 +1,5 @@
 package pl.edu.pw.ddm.platform.core.algorithm;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,13 +10,10 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.core.algorithm.dto.AlgorithmDescDto;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
-import pl.edu.pw.ddm.platform.core.util.ProfileConstants;
 
 @Slf4j
 @Service
@@ -28,7 +23,6 @@ public class AlgorithmFacade {
     private final InstanceFacade instanceFacade;
     private final AlgorithmLoader algorithmLoader;
     private final AlgorithmBroadcaster algorithmBroadcaster;
-    private final Environment env;
 
     public String load(@NonNull LoadRequest request) {
         return algorithmLoader.save(request.name, request.jar);
@@ -45,16 +39,6 @@ public class AlgorithmFacade {
         var alg = algorithmLoader.getAlgorithm(request.algorithmId);
         if (alg == null) {
             throw new IllegalArgumentException("No algorithm with id: " + request.algorithmId);
-        }
-
-        // TODO debug - remove on release
-        if (env.acceptsProfiles(Profiles.of(ProfileConstants.LOCAL_MASTER))) {
-            try {
-                addr.setAddress(InetAddress.getLocalHost().getHostAddress());
-                addr.setAgentPort("7100");
-            } catch (UnknownHostException e) {
-                log.error("Getting localhost address error.", e);
-            }
         }
 
         return algorithmBroadcaster.broadcast(addr, alg);

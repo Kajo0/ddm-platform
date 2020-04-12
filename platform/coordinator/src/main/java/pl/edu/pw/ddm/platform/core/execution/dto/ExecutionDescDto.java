@@ -1,5 +1,7 @@
 package pl.edu.pw.ddm.platform.core.execution.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
@@ -8,8 +10,12 @@ public class ExecutionDescDto {
     private String id;
     private String instanceId;
     private String algorithmId;
+    private String distanceFunctionId;
+    private String distanceFunctionName;
     private String dataId;
     private String status;
     private String message;
+    private LocalDateTime started;
+    private LocalDateTime stopped;
 
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.pw.ddm.platform.agent.algorithm.AlgorithmLoader;
+import pl.edu.pw.ddm.platform.agent.algorithm.dto.AlgorithmDesc;
 
 @RestController
 @RequestMapping("agent/algorithm")
@@ -20,8 +21,13 @@ class AlgorithmController {
 
     @PostMapping(value = "load")
     String load(@RequestParam("algorithmFile") MultipartFile algorithmFile,
-                @RequestParam("algorithmId") String algorithmId) throws IOException {
-        algorithmLoader.save(algorithmFile.getBytes(), algorithmId);
+                @RequestParam("algorithmId") String algorithmId,
+                @RequestParam("algorithmPackageName") String algorithmPackageName) throws IOException {
+        AlgorithmDesc desc = AlgorithmDesc.builder()
+                .id(algorithmId)
+                .packageName(algorithmPackageName)
+                .build();
+        algorithmLoader.save(algorithmFile.getBytes(), desc);
         return "ok";
     }
 

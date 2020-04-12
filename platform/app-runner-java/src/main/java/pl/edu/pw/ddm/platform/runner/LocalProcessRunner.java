@@ -19,20 +19,19 @@ import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
-    private final String dataId;
-    private final String executionId;
+    private final InitParamsDto initParams;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
         Integer id = iterator.next();
         PersistentIdStamper.save(id);
 
-        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
-        ParamProvider paramProvider = new NodeParamProvider();
+        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
 
-        LocalModel model = AlgorithmProcessorInitializer.initLocalProcessor()
+        LocalModel model = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName())
                 .processLocal(dataProvider, paramProvider);
-        ModelPersister.saveLocal(model, executionId);
+        ModelPersister.saveLocal(model, initParams.getExecutionId());
 
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);
         return new SingletonIterator(wrapper);

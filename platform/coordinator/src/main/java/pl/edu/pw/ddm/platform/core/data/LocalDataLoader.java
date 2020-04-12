@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.core.data;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
@@ -33,11 +34,6 @@ class LocalDataLoader implements DataLoader {
     private static final String DATA_PATH = "/coordinator/data";
 
     private final Map<String, DataDesc> dataMap = new HashMap<>();
-
-    LocalDataLoader() throws IOException {
-        // TODO save on PreDestroy and collect or keep removed
-        Files.createDirectories(Paths.get(DATA_PATH));
-    }
 
     @SneakyThrows
     @Override
@@ -121,6 +117,12 @@ class LocalDataLoader implements DataLoader {
                 .map(l -> (i[0]++) + separator + l)
                 .collect(Collectors.joining(System.lineSeparator()));
         Files.writeString(dataPath, lines);
+    }
+
+    @PostConstruct
+    void init() throws IOException {
+        // TODO save on PreDestroy and collect or keep removed
+        Files.createDirectories(Paths.get(DATA_PATH));
     }
 
     @PreDestroy

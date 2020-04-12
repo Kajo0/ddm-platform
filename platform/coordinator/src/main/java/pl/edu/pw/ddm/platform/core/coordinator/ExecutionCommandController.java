@@ -19,15 +19,17 @@ class ExecutionCommandController {
 
     private final ExecutionFacade executionFacade;
 
-    @GetMapping("start/{instanceId}/{algorithmId}/{dataId}")
+    @GetMapping("start/{instanceId}/{algorithmId}/{dataId}/{distanceFunctionIdOrPredefinedName}")
     String start(@PathVariable String instanceId,
                  @PathVariable String algorithmId,
-                 @PathVariable String dataId) {
+                 @PathVariable String dataId,
+                 @PathVariable String distanceFunctionIdOrPredefinedName) {
         // TODO parameters
         ExecutionFacade.StartRequest req = ExecutionFacade.StartRequest.builder()
                 .instanceId(instanceId)
                 .algorithmId(algorithmId)
                 .dataId(dataId)
+                .distanceFunctionIdOrPredefinedName(distanceFunctionIdOrPredefinedName)
                 .build();
         return executionFacade.start(req);
     }

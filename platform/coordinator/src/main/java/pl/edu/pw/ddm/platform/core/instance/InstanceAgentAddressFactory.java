@@ -11,11 +11,18 @@ public class InstanceAgentAddressFactory {
         return base(dto) + "data/load";
     }
 
+    public String sendDistanceFunction(@NonNull InstanceAddrDto dto) {
+        return base(dto) + "data/distance-function/load";
+    }
+
     public String sendAlgorithm(@NonNull InstanceAddrDto dto) {
         return base(dto) + "algorithm/load";
     }
 
-    public String startExecution(@NonNull InstanceAddrDto dto, @NonNull String instanceId, @NonNull String algorithmId, @NonNull String dataId) {
+    public String startExecution(@NonNull InstanceAddrDto dto,
+                                 @NonNull String instanceId,
+                                 @NonNull String algorithmId,
+                                 @NonNull String dataId) {
         return base(dto) + "execution/run/" + instanceId + "/" + algorithmId + "/" + dataId;
     }
 

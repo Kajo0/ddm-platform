@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 import pl.edu.pw.ddm.platform.core.data.dto.DataDescDto;
+import pl.edu.pw.ddm.platform.core.data.dto.DistanceFunctionDescDto;
 
 @Mapper
 public interface DataDescMapper {
@@ -14,5 +15,7 @@ public interface DataDescMapper {
     @Mapping(target = "sizesInBytes", source = "location.sizesInBytes")
     @Mapping(target = "numbersOfSamples", source = "location.numbersOfSamples")
     DataDescDto map(DataLoader.DataDesc desc);
+
+    DistanceFunctionDescDto map(DistanceFunctionLoader.DistanceFunctionDesc desc);
 
 }

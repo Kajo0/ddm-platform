@@ -23,20 +23,19 @@ import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
 
-    private final String dataId;
-    private final String executionId;
+    private final InitParamsDto initParams;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<GlobalModel> iterator) throws Exception {
         Integer id = PersistentIdStamper.read();
 
-        NodeDataProvider dataProvider = new NodeDataProvider(dataId);
-        ParamProvider paramProvider = new NodeParamProvider();
+        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
 
-        LocalModel previousModel = ModelPersister.loadLocal(executionId);
-        MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor()
+        LocalModel previousModel = ModelPersister.loadLocal(initParams.getExecutionId());
+        MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName())
                 .updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
-        MethodPersister.save(method, executionId);
+        MethodPersister.save(method, initParams.getExecutionId());
 
         LocalModel model = new StringLocalModel("ackTime=" + System.currentTimeMillis());
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);

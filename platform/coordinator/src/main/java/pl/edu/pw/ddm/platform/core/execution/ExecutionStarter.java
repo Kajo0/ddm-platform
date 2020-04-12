@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.core.execution;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import lombok.AccessLevel;
@@ -12,7 +13,7 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 interface ExecutionStarter {
 
-    String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId);
+    String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId, String distanceFunctionId, String distanceFunctionName);
 
     String stop(String executionId);
 
@@ -30,8 +31,14 @@ interface ExecutionStarter {
         private final String instanceId;
         private final String algorithmId;
         private final String dataId;
+        private final String distanceFunctionId;
+        private final String distanceFunctionName;
         private final InstanceAddrDto masterAddr;
         private final ExecutionStatus status;
+
+        @Builder.Default
+        private LocalDateTime started = LocalDateTime.now();
+        private LocalDateTime stopped;
         private String message;
 
         @Getter

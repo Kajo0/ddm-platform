@@ -77,7 +77,9 @@ public class NodeDataProvider implements DataProvider {
     }
 
     private void loadTest() {
-        testSet = loadCsvData(DATA_PATH + dataId + "/test");
+        // TODO change to test
+//        testSet = loadCsvData(DATA_PATH + dataId + "/test");
+        testSet = loadCsvData(DATA_PATH + dataId + "/train");
     }
 
     private void loadAll() {

@@ -12,18 +12,18 @@ import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 
 class ProcessorPackageEvaluator {
 
-    // TODO extract type
     TypePackageDto callForPackageName(File jar) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         var url = new URL[]{jar.toURI().toURL()};
         try (URLClassLoader loader = new URLClassLoader(url)) {
-            var packageName = new Reflections(loader)
+            var clazz = new Reflections(loader)
                     .getSubTypesOf(MiningMethod.class)
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Local processor not found in jar: " + jar.getName()))
-                    .getPackageName();
+                    .getDeclaredConstructor()
+                    .newInstance();
 
-            return TypePackageDto.of(packageName, "TODO");
+            return TypePackageDto.of(clazz.getClass().getPackageName(), clazz.type(), clazz.name());
         }
     }
 
@@ -32,6 +32,7 @@ class ProcessorPackageEvaluator {
 
         private String packageName;
         private String algorithmType;
+        private String algorithmName;
     }
 
 }

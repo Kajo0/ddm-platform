@@ -19,9 +19,10 @@ interface AlgorithmLoader {
     class AlgorithmDesc {
 
         private String id;
-        private String name;
+        private String originalName;
         private String packageName;
-        private String type;
+        private String algorithmType;
+        private String algorithmName;
         private Long sizeInBytes;
         private String location;
     }

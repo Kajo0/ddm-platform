@@ -43,7 +43,7 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
         try {
             var typePackage = new ProcessorPackageEvaluator()
                     .callForPackageName(algPath.toFile());
-            var alg = new AlgorithmDesc(id, name, typePackage.getPackageName(), typePackage.getAlgorithmType(), (long) jar.length, algPath.toString());
+            var alg = new AlgorithmDesc(id, name, typePackage.getPackageName(), typePackage.getAlgorithmType(), typePackage.getAlgorithmName(), (long) jar.length, algPath.toString());
 
             if (algorithmMap.putIfAbsent(id, alg) != null) {
                 log.warn("Loaded the same jar '{}' file as before with id '{}'.", name, id);

@@ -6,6 +6,10 @@ import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
 
 public interface Clustering extends MiningMethod {
 
+    default String type() {
+        return MethodType.CLUSTERING;
+    }
+
     void cluster(DataProvider dataProvider, ParamProvider paramProvider, ResultCollector resultCollector);
 
 }

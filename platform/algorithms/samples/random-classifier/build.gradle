@@ -1,9 +1,10 @@
 plugins {
     id 'java'
+    id 'groovy'
     id 'maven-publish'
 }
 
-group 'pl.edu.pw.ddm.platform'
+group 'pl.edu.pw.ddm.platform.samples'
 version '0.0.1-SNAPSHOT'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -24,11 +25,19 @@ publishing {
 dependencies {
     compileOnly 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
 
-    testImplementation 'junit:junit:4.12'
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
     testImplementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
+
+    testImplementation platform('org.spockframework:spock-bom:2.0-M1-groovy-2.5')
+    testImplementation 'org.spockframework:spock-core'
+    testRuntime 'net.bytebuddy:byte-buddy:1.9.3'
 }
 
 test {
+    useJUnitPlatform()
+
     testLogging {
         showStandardStreams = true
     }

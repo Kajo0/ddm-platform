@@ -59,4 +59,9 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, Gl
                 .toArray();
     }
 
+    @Override
+    public String name() {
+        return "AOPTKM";
+    }
+
 }

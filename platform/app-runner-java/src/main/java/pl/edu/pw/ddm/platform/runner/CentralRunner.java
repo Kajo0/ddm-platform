@@ -19,6 +19,7 @@ import pl.edu.pw.ddm.platform.runner.utils.CentralDdmSummarizer;
 public final class CentralRunner {
 
     private final JsonArgsDto args;
+    private final InitParamsDto initParams;
 
     private final JavaSparkContext sc;
     private final List<Integer> nodeStubList;
@@ -31,6 +32,7 @@ public final class CentralRunner {
     @SneakyThrows
     public CentralRunner(String jsonArgs) {
         this.args = JsonArgsDto.fromJson(jsonArgs);
+        this.initParams = CentralRunner.createInitParams(args);
 
         this.nodeStubList = IntStream.range(0, args.getWorkerNodes().size())
                 .boxed()
@@ -55,6 +57,7 @@ public final class CentralRunner {
         System.out.println("  executionId                 = " + args.getExecutionId());
         System.out.println("  distanceFunctionName        = " + args.getDistanceFunctionName());
         System.out.println("  distanceFunctionPackageName = " + args.getDistanceFunctionPackageName());
+        System.out.println("  executionParams             = " + args.getExecutionParams());
         System.out.println("  nodeStubList                = " + nodeStubList);
         System.out.println("------------------------------------------------------------------------");
     }
@@ -97,7 +100,7 @@ public final class CentralRunner {
     private void processLocal() {
         // FIXME not using preferred locations
         localModels = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalProcessRunner(createInitParams()))
+                .mapPartitions(new LocalProcessRunner(initParams))
                 .collect();
     }
 
@@ -106,25 +109,32 @@ public final class CentralRunner {
         Iterator<LocalModel> models = localModels.stream()
                 .map(ModelWrapper::getLocalModel)
                 .iterator();
-        globalModel = new GlobalProcessRunner(createInitParams()).call(models)
+        globalModel = new GlobalProcessRunner(initParams).call(models)
                 .next();
     }
 
     private void updateLocal() {
         List<GlobalModel> globals = Collections.nCopies(nodeStubList.size(), globalModel.getGlobalModel());
         updatedAcks = sc.parallelize(globals, nodeStubList.size())
-                .mapPartitions(new LocalUpdateRunner(createInitParams()))
+                .mapPartitions(new LocalUpdateRunner(initParams))
                 .collect();
     }
 
     private void executeMethod() {
         executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalExecutionRunner(createInitParams()))
+                .mapPartitions(new LocalExecutionRunner(initParams))
                 .collect();
     }
 
-    private InitParamsDto createInitParams() {
-        return new InitParamsDto(args.getDataId(), args.getExecutionId(), args.getAlgorithmPackageName(), args.getDistanceFunctionName(), args.getDistanceFunctionPackageName());
+    private static InitParamsDto createInitParams(JsonArgsDto args) {
+        return new InitParamsDto(
+                args.getDataId(),
+                args.getExecutionId(),
+                args.getAlgorithmPackageName(),
+                args.getDistanceFunctionName(),
+                args.getDistanceFunctionPackageName(),
+                args.getExecutionParams()
+        );
     }
 
 }

@@ -29,7 +29,7 @@ class GlobalProcessRunner implements FlatMapFunction<Iterator<LocalModel>, Model
         }
 
         // TODO move to runner class and pass as clojure
-        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         GlobalModel globalModel = AlgorithmProcessorInitializer.initGlobalProcessor(initParams.getAlgorithmPackageName())
                 .processGlobal(models, paramProvider);

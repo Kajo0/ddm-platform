@@ -1,6 +1,8 @@
 package pl.edu.pw.ddm.platform.core.execution;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,19 +34,21 @@ public class ExecutionFacade {
     public String start(@NonNull StartRequest request) {
         InstanceAddrDto masterAddr = findMasterAddress(request.instanceId);
 
-        String distanceFunctionId;
-        String distanceFunctionName;
-        if (DistanceFunction.PREDEFINED_FUNCTIONS.contains(request.distanceFunctionIdOrPredefinedName)) {
-            distanceFunctionId = null;
-            distanceFunctionName = request.distanceFunctionIdOrPredefinedName;
-        } else {
-            var req = DistanceFunctionFacade.DescriptionRequest.of(request.distanceFunctionIdOrPredefinedName);
+        String distanceFunctionId = request.executionParams.get("distanceFunctionId");
+        String distanceFunctionName = request.executionParams.get("distanceFunctionName");
+        if (distanceFunctionId != null) {
+            var req = DistanceFunctionFacade.DescriptionRequest.of(distanceFunctionId);
             DistanceFunctionDescDto desc = distanceFunctionFacade.description(req);
-            distanceFunctionId = request.distanceFunctionIdOrPredefinedName;
             distanceFunctionName = desc.getFunctionName();
+        } else if (DistanceFunction.PREDEFINED_FUNCTIONS.contains(request.getDistanceFunctionName())) {
+            distanceFunctionId = null;
+            distanceFunctionName = request.getDistanceFunctionName();
+        } else {
+            throw new IllegalArgumentException("Unknown distance (id=" + distanceFunctionId + ", name=" + distanceFunctionName + ")");
         }
+        // TODO add precondition to avoid both distance function id and name which does not matche id
 
-        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.dataId, distanceFunctionId, distanceFunctionName);
+        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.dataId, distanceFunctionId, distanceFunctionName, request.executionParams);
     }
 
     public String stop(@NonNull StopRequest request) {
@@ -98,9 +102,15 @@ public class ExecutionFacade {
         @NonNull
         private final String dataId;
 
+        private final String distanceFunctionId;
+
         @NonNull
         @Builder.Default
-        private final String distanceFunctionIdOrPredefinedName = DistanceFunction.PredefinedNames.NONE;
+        private final Map<String, String> executionParams = new HashMap<>();
+
+        public String getDistanceFunctionName() {
+            return executionParams.getOrDefault("distanceFunctionName", DistanceFunction.PredefinedNames.NONE);
+        }
     }
 
     @Value(staticConstructor = "of")

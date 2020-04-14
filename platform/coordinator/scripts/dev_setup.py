@@ -26,7 +26,7 @@ api = {
     'execution': {
         'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
         'info': '/coordinator/command/execution/info',
-        'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{dataId}/{distanceFunctionIdOrPredefinedName}',
+        'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{dataId}',
         'status': '/coordinator/command/execution/status/executionId}',
         'stop': '/coordinator/command/execution/stop/{executionId}'
     },
@@ -159,10 +159,18 @@ def startExecution(instanceId, algorithmId, dataId, distanceFuncName='none'):
     url = baseUrl + api['execution']['start'].format(**{
         'instanceId': instanceId,
         'algorithmId': algorithmId,
-        'dataId': dataId,
-        'distanceFunctionIdOrPredefinedName': distanceFuncName
+        'dataId': dataId
     })
-    executionId = requests.get(url).text
+    jsonParams = json.dumps({
+        'distanceFunctionName': distanceFuncName,
+        # 'distanceFunctionId': '1156746230', # loaded equality
+        'groups': '3',
+        'iterations': '20',
+        'epsilon': '0.002'
+    })
+    executionId = requests.post(url,
+                                data={'executionParams': jsonParams}
+                                ).text
     print('  executionId: ' + executionId)
     return executionId
 

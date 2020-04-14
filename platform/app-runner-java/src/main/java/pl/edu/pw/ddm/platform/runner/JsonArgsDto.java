@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.runner;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
@@ -20,6 +21,7 @@ class JsonArgsDto {
     private String distanceFunctionPackageName;
     private String distanceFunctionName;
     private String executionId;
+    private Map<String, String> executionParams;
 
     List<String> getWorkerNodes() {
         return Arrays.asList(workerNodes.split(","));

@@ -1,10 +1,14 @@
 package pl.edu.pw.ddm.platform.agent.api;
 
 import java.io.IOException;
+import java.util.Map;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +30,8 @@ class ExecutionController {
                @PathVariable String algorithmId,
                @PathVariable String dataId,
                @RequestParam(value = "distanceFunctionId", required = false) String distanceFunctionId,
-               @RequestParam("distanceFunctionName") String distanceFunctionName) {
+               @RequestParam("distanceFunctionName") String distanceFunctionName,
+               @RequestParam("executionParams") String executionParamsJson) {
         if (appRunner.isProgramRunning()) {
             // TODO change response
             throw new IllegalStateException("Another process is already running");
@@ -40,6 +45,7 @@ class ExecutionController {
                     .dataId(dataId)
                     .distanceFunctionId(Strings.emptyToNull(distanceFunctionId))
                     .distanceFunctionName(distanceFunctionName)
+                    .executionParams(mapFromJsonString(executionParamsJson))
                     .build();
 
             return appRunner.run(params);
@@ -58,6 +64,12 @@ class ExecutionController {
     @GetMapping("status/{executionId}")
     String status(@PathVariable String executionId) {
         return "not implemented yet - status execution of " + executionId;
+    }
+
+    @SneakyThrows
+    private Map<String, String> mapFromJsonString(String executionParamsJson) {
+        return new ObjectMapper().readValue(executionParamsJson, new TypeReference<Map<String, String>>() {
+        });
     }
 
 }

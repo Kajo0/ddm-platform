@@ -30,7 +30,7 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         Integer id = PersistentIdStamper.read();
 
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
-        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         LocalModel previousModel = ModelPersister.loadLocal(initParams.getExecutionId());
         MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName())

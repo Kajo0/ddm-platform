@@ -191,6 +191,7 @@ public class AppRunner {
         private String dataId;
         private String distanceFunctionId;
         private String distanceFunctionName;
+        private Map<String, String> executionParams;
     }
 
     @Data
@@ -214,6 +215,7 @@ public class AppRunner {
         private String distanceFunctionPackageName;
         private String distanceFunctionName;
         private String executionId;
+        private Map<String, String> executionParams;
 
         private static ArgJsonBuilderBuilder toBuilder(AppRunnerParamsDto params, String masterNode, String workerNodes, String executionId) {
             return ArgJsonBuilder.builder()
@@ -224,11 +226,11 @@ public class AppRunner {
                     .algorithmId(params.algorithmId)
                     .dataId(params.dataId)
                     .distanceFunctionId(params.distanceFunctionId)
-                    .distanceFunctionName(params.distanceFunctionName);
+                    .distanceFunctionName(params.distanceFunctionName)
+                    .executionParams(params.executionParams);
         }
 
         private String toJsonArgs() throws JsonProcessingException {
-
             return new ObjectMapper().writeValueAsString(this);
         }
     }

@@ -1,13 +1,21 @@
 package pl.edu.pw.ddm.platform.core.coordinator;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.edu.pw.ddm.platform.core.execution.ExecutionFacade;
 import pl.edu.pw.ddm.platform.core.execution.dto.ExecutionDescDto;
@@ -19,17 +27,16 @@ class ExecutionCommandController {
 
     private final ExecutionFacade executionFacade;
 
-    @GetMapping("start/{instanceId}/{algorithmId}/{dataId}/{distanceFunctionIdOrPredefinedName}")
+    @PostMapping("start/{instanceId}/{algorithmId}/{dataId}")
     String start(@PathVariable String instanceId,
                  @PathVariable String algorithmId,
                  @PathVariable String dataId,
-                 @PathVariable String distanceFunctionIdOrPredefinedName) {
-        // TODO parameters
+                 @RequestParam("executionParams") String executionParamsJson) {
         ExecutionFacade.StartRequest req = ExecutionFacade.StartRequest.builder()
                 .instanceId(instanceId)
                 .algorithmId(algorithmId)
                 .dataId(dataId)
-                .distanceFunctionIdOrPredefinedName(distanceFunctionIdOrPredefinedName)
+                .executionParams(mapFromJsonString(executionParamsJson))
                 .build();
         return executionFacade.start(req);
     }
@@ -61,6 +68,16 @@ class ExecutionCommandController {
     @GetMapping(value = "info", produces = MediaType.APPLICATION_JSON_VALUE)
     String executedInfo() {
         return executionFacade.info();
+    }
+
+    @SneakyThrows
+    private Map<String, String> mapFromJsonString(String executionParamsJson) {
+        if (StringUtils.isBlank(executionParamsJson)) {
+            return Collections.emptyMap();
+        } else {
+            return new ObjectMapper().readValue(executionParamsJson, new TypeReference<>() {
+            });
+        }
     }
 
 }

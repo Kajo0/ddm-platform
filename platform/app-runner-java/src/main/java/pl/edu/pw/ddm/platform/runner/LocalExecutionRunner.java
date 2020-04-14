@@ -49,7 +49,7 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
         SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test());
         NodeResultCollector resultCollector = new NodeResultCollector(initParams.getExecutionId());
-        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         classifier.classify(sampleProvider, paramProvider, resultCollector);
         resultCollector.saveResults();
@@ -64,7 +64,7 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
     private String cluster(Clustering clustering) {
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
         NodeResultCollector resultCollector = new NodeResultCollector(initParams.getExecutionId());
-        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction());
+        ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         clustering.cluster(dataProvider, paramProvider, resultCollector);
         resultCollector.saveResults();

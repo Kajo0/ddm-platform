@@ -1,6 +1,7 @@
 package pl.edu.pw.ddm.platform.runner;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ class InitParamsDto implements Serializable {
     private final String algorithmPackageName;
     private final String distanceFunctionName;
     private final String distanceFunctionPackageName;
+    private final Map<String, String> executionParams;
 
     DistanceFunction findDistanceFunction() {
         if (DistanceFunction.PredefinedNames.NONE.equals(distanceFunctionName)) {

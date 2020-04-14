@@ -4,8 +4,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -24,8 +26,8 @@ class InMemoryExecutionStarter implements ExecutionStarter {
     private final Map<String, ExecutionStarter.ExecutionDesc> executionMap = new HashMap<>();
 
     @Override
-    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId, String distanceFunctionId, String distanceFunctionName) {
-        log.info("Starting algorithm with id '{}' and data with id '{}' and distance function id '{}' and name '{}' on master node '{}'.", algorithmId, dataId, distanceFunctionId, distanceFunctionName, masterAddr);
+    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId, String distanceFunctionId, String distanceFunctionName, Map<String, String> executionParams) {
+        log.info("Starting algorithm with id '{}' and data with id '{}' and distance function id '{}' and name '{}' on master node '{}'. (execution params: '{}')", algorithmId, dataId, distanceFunctionId, distanceFunctionName, masterAddr, executionParams);
 
         // TODO broadcast algorithm if not present there
         // TODO broadcast distance function if not present there
@@ -34,6 +36,7 @@ class InMemoryExecutionStarter implements ExecutionStarter {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("distanceFunctionName", distanceFunctionName);
         body.add("distanceFunctionPackageName", distanceFunctionName);
+        body.add("executionParams", toJsonParams(executionParams));
         if (distanceFunctionId != null) {
             body.add("distanceFunctionId", distanceFunctionId);
         }
@@ -71,6 +74,11 @@ class InMemoryExecutionStarter implements ExecutionStarter {
     @Override
     public Map<String, ExecutionDesc> allExecutionsInfo() {
         return executionMap;
+    }
+
+    @SneakyThrows
+    private String toJsonParams(Map<String, String> params) {
+        return new ObjectMapper().writeValueAsString(params);
     }
 
 }

@@ -13,7 +13,7 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 interface ExecutionStarter {
 
-    String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId, String distanceFunctionId, String distanceFunctionName);
+    String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId, String distanceFunctionId, String distanceFunctionName, Map<String, String> executionParams);
 
     String stop(String executionId);
 

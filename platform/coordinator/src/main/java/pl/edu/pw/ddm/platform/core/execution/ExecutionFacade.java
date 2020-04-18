@@ -48,7 +48,7 @@ public class ExecutionFacade {
         }
         // TODO add precondition to avoid both distance function id and name which does not matche id
 
-        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.dataId, distanceFunctionId, distanceFunctionName, request.executionParams);
+        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.trainDataId, request.testDataId, distanceFunctionId, distanceFunctionName, request.executionParams);
     }
 
     public String stop(@NonNull StopRequest request) {
@@ -100,8 +100,9 @@ public class ExecutionFacade {
         private final String algorithmId;
 
         @NonNull
-        private final String dataId;
+        private final String trainDataId;
 
+        private final String testDataId;
         private final String distanceFunctionId;
 
         @NonNull

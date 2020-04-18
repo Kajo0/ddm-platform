@@ -26,19 +26,22 @@ class InMemoryExecutionStarter implements ExecutionStarter {
     private final Map<String, ExecutionStarter.ExecutionDesc> executionMap = new HashMap<>();
 
     @Override
-    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String dataId, String distanceFunctionId, String distanceFunctionName, Map<String, String> executionParams) {
-        log.info("Starting algorithm with id '{}' and data with id '{}' and distance function id '{}' and name '{}' on master node '{}'. (execution params: '{}')", algorithmId, dataId, distanceFunctionId, distanceFunctionName, masterAddr, executionParams);
+    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String trainDataId, String testDataId, String distanceFunctionId, String distanceFunctionName, Map<String, String> executionParams) {
+        log.info("Starting algorithm with id '{}' train data with id '{}' test data with id '{}' distance function id '{}' and name '{}' on master node '{}'. (execution params: '{}')", algorithmId, trainDataId, testDataId, distanceFunctionId, distanceFunctionName, masterAddr, executionParams);
 
         // TODO broadcast algorithm if not present there
         // TODO broadcast distance function if not present there
 
-        String url = InstanceAgentAddressFactory.startExecution(masterAddr, instanceId, algorithmId, dataId);
+        String url = InstanceAgentAddressFactory.startExecution(masterAddr, instanceId, algorithmId, trainDataId);
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("distanceFunctionName", distanceFunctionName);
         body.add("distanceFunctionPackageName", distanceFunctionName);
         body.add("executionParams", toJsonParams(executionParams));
         if (distanceFunctionId != null) {
             body.add("distanceFunctionId", distanceFunctionId);
+        }
+        if (testDataId != null) {
+            body.add("testDataId", testDataId);
         }
 
         String executionId = restTemplate.postForObject(url, body, String.class);
@@ -48,7 +51,8 @@ class InMemoryExecutionStarter implements ExecutionStarter {
                 .id(executionId)
                 .instanceId(instanceId)
                 .algorithmId(algorithmId)
-                .dataId(dataId)
+                .trainDataId(trainDataId)
+                .testDataId(testDataId)
                 .distanceFunctionId(distanceFunctionId)
                 .distanceFunctionName(distanceFunctionName)
                 .masterAddr(masterAddr)

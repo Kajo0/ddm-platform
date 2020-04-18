@@ -26,7 +26,7 @@ class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrap
         Integer id = iterator.next();
         PersistentIdStamper.save(id);
 
-        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDataId());
+        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getTrainDataId(), initParams.getTestDataId());
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         LocalModel model = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName())

@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,6 +46,23 @@ interface DataLoader {
             boolean isPartitioned() {
                 return filesLocations.size() > 1;
             }
+        }
+    }
+
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    enum TypeCode {
+        TRAIN("train"),
+        TEST("test");
+
+        private final String code;
+
+        static TypeCode fromCode(String typeCode) {
+            for (TypeCode tc : values()) {
+                if (tc.code.equals(typeCode)) {
+                    return tc;
+                }
+            }
+            throw new IllegalArgumentException("TypeCode not found for code: " + typeCode);
         }
     }
 

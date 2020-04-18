@@ -19,16 +19,25 @@ public class NodeDataProvider implements DataProvider {
 
     private static final String DATA_PATH = "/ddm/data/";
 
-    private final String dataId;
-    private final DataDesc dataDesc;
+    // TODO think about, both might be same named as they have different ids
+    private final String trainDataId;
+    private final String testDataId;
+    private final DataDesc trainDataDesc;
+    private final DataDesc testDataDesc;
 
     private Collection<Data> trainingSet;
     private Collection<Data> testSet;
     private Collection<Data> allSet;
 
-    public NodeDataProvider(String dataId) {
-        this.dataId = dataId;
-        this.dataDesc = loadDescription();
+    public NodeDataProvider(String trainDataId, String testDataId) {
+        this.trainDataId = trainDataId;
+        this.trainDataDesc = loadDescription(trainDataId);
+        this.testDataId = testDataId;
+        if (testDataId != null) {
+            this.testDataDesc = loadDescription(testDataId);
+        } else {
+            this.testDataDesc = null;
+        }
     }
 
     @Override
@@ -56,7 +65,7 @@ public class NodeDataProvider implements DataProvider {
     }
 
     @SneakyThrows
-    private DataDesc loadDescription() {
+    private DataDesc loadDescription(String dataId) {
         Properties prop = new Properties();
         File file = Paths.get(DATA_PATH + dataId + "/desc").toFile();
         try (FileInputStream fis = new FileInputStream(file)) {
@@ -73,17 +82,15 @@ public class NodeDataProvider implements DataProvider {
     }
 
     private void loadTraining() {
-        trainingSet = loadCsvData(DATA_PATH + dataId + "/train");
+        trainingSet = loadCsvData(DATA_PATH + trainDataId + "/train", trainDataDesc);
     }
 
     private void loadTest() {
-        // TODO change to test
-//        testSet = loadCsvData(DATA_PATH + dataId + "/test");
-        testSet = loadCsvData(DATA_PATH + dataId + "/train");
+        testSet = loadCsvData(DATA_PATH + testDataId + "/test", testDataDesc);
     }
 
     private void loadAll() {
-        // TODO load
+        // TODO check if same types
         loadTraining();
         loadTest();
         allSet = new LinkedList<>();
@@ -92,7 +99,7 @@ public class NodeDataProvider implements DataProvider {
     }
 
     @SneakyThrows
-    private Collection<Data> loadCsvData(String file) {
+    private Collection<Data> loadCsvData(String file, DataDesc dataDesc) {
         // TODO improve loading data
         Path path = Paths.get(file);
         if (Files.notExists(path)) {
@@ -103,16 +110,16 @@ public class NodeDataProvider implements DataProvider {
         String[] attrColTypes = dataDesc.getAttributesColTypes();
         return Files.readAllLines(path)
                 .stream()
-                .map(this::toArray)
-                .map(values -> toNodeData(values, attrColTypes))
+                .map(l -> toArray(l, dataDesc.getSeparator()))
+                .map(values -> toNodeData(values, attrColTypes, dataDesc))
                 .collect(Collectors.toList());
     }
 
-    private String[] toArray(String line) {
-        return line.split(dataDesc.getSeparator());
+    private String[] toArray(String line, String separator) {
+        return line.split(separator);
     }
 
-    private NodeData toNodeData(String[] values, String[] attrColTypes) {
+    private NodeData toNodeData(String[] values, String[] attrColTypes, DataDesc dataDesc) {
         // TODO Array.copy as label always will be placed at the end such as index on the first place
         String[] attributes = new String[dataDesc.getAttributesAmount()];
         for (int i = 0, j = 0; i < values.length; ++i) {

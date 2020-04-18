@@ -24,12 +24,13 @@ class DataController {
 
     @PostMapping(value = "load")
     String load(@RequestParam("dataFile") MultipartFile dataFile,
-                @RequestParam String dataId,
-                @RequestParam String separator,
-                @RequestParam Integer idIndex,
-                @RequestParam Integer labelIndex,
-                @RequestParam Integer attributesAmount,
-                @RequestParam String colTypes) throws IOException {
+                @RequestParam("dataId") String dataId,
+                @RequestParam("separator") String separator,
+                @RequestParam("idIndex") Integer idIndex,
+                @RequestParam("labelIndex") Integer labelIndex,
+                @RequestParam("attributesAmount") Integer attributesAmount,
+                @RequestParam("colTypes") String colTypes,
+                @RequestParam("typeCode") String typeCode) throws IOException {
         DataDesc desc = DataDesc.builder()
                 .id(dataId)
                 .separator(separator)
@@ -38,8 +39,8 @@ class DataController {
                 .attributesAmount(attributesAmount)
                 .colTypes(colTypes.split(","))
                 .build();
-        // TODO divide into train/test data
-        dataLoader.save(dataFile.getBytes(), DataLoader.DataType.TRAIN, desc);
+        DataLoader.DataType dataType = DataLoader.DataType.ofType(typeCode);
+        dataLoader.save(dataFile.getBytes(), dataType, desc);
         return "ok";
     }
 

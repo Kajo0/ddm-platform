@@ -1,16 +1,10 @@
 package pl.edu.pw.ddm.platform.core.data;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import pl.edu.pw.ddm.platform.core.data.strategy.PartitionerStrategy;
 import pl.edu.pw.ddm.platform.core.instance.InstanceAgentAddressFactory;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
@@ -39,16 +34,46 @@ class LocalDataPartitioner implements DataPartitioner {
 
     @SneakyThrows
     @Override
-    public String scatter(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy) {
-        log.info("Scattering data '{}' with strategy '{}' into nodes '{}'.", dataDesc, strategy, addresses);
-        // TODO eval strategy
-        // TODO it may be path as well for FileSystemResource
+    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy) {
+        log.info("Scattering train data '{}' with strategy '{}' into nodes '{}'.", dataDesc, strategy, addresses);
+
         File dataFile = dataLoader.load(dataDesc.getId());
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)
                 .collect(Collectors.toList());
-        List<Path> tempFiles = uniformDistribution(workers.size(), dataDesc, dataFile);
+        // TODO eval strategy
+        List<Path> tempFiles = PartitionerStrategy.UNIFORM.partition(dataFile, workers.size(), dataDesc.getNumberOfSamples());
 
+        sendDataToNodes(workers, dataDesc, tempFiles, "train");
+
+        for (Path tempFile : tempFiles) {
+            Files.delete(tempFile);
+        }
+
+        return "ok_process-id";
+    }
+
+    @SneakyThrows
+    @Override
+    public String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc) {
+        log.info("Scattering test data '{}' equally into nodes '{}'.", dataDesc, addresses);
+
+        File dataFile = dataLoader.load(dataDesc.getId());
+        List<InstanceAddrDto> workers = addresses.stream()
+                .filter(InstanceAddrDto::isWorker)
+                .collect(Collectors.toList());
+        List<Path> tempFiles = PartitionerStrategy.UNIFORM.partition(dataFile, workers.size(), dataDesc.getNumberOfSamples());
+
+        sendDataToNodes(workers, dataDesc, tempFiles, "test");
+
+        for (Path tempFile : tempFiles) {
+            Files.delete(tempFile);
+        }
+
+        return "ok_process-id";
+    }
+
+    private void sendDataToNodes(List<InstanceAddrDto> workers, DataLoader.DataDesc dataDesc, List<Path> tempFiles, String typeCode) {
         // TODO optimize
         for (int i = 0; i < workers.size(); ++i) {
             InstanceAddrDto addressDto = workers.get(i);
@@ -58,6 +83,7 @@ class LocalDataPartitioner implements DataPartitioner {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>(1);
+            // TODO it may be path as well for FileSystemResource
             body.add("dataFile", new FileSystemResource(tempDataFile));
             body.add("dataId", dataDesc.getId());
             body.add("separator", dataDesc.getSeparator());
@@ -65,58 +91,12 @@ class LocalDataPartitioner implements DataPartitioner {
             body.add("labelIndex", dataDesc.getLabelIndex());
             body.add("attributesAmount", dataDesc.getAttributesAmount());
             body.add("colTypes", String.join(",", dataDesc.getColTypes()));
+            body.add("typeCode", typeCode);
 
             String url = InstanceAgentAddressFactory.sendData(addressDto);
             ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
             log.debug("Scattering data post response: '{}'.", response.getBody());
-            Files.delete(tempDataFile);
         }
-
-        return "ok_process-id";
-    }
-
-    // TODO extract to component with interface
-    private List<Path> uniformDistribution(int workers, DataLoader.DataDesc dataDesc, File dataFile) throws IOException {
-        List<Path> tempFiles = IntStream.range(0, workers)
-                .mapToObj(wi -> {
-                    try {
-                        return Files.createTempFile("splitter.", String.valueOf(wi));
-                    } catch (IOException e) {
-                        // TODO optimize
-                        e.printStackTrace();
-                        return Path.of("/tmp/splitter. " + wi);
-                    }
-                })
-                .collect(Collectors.toList());
-
-        int partSize = (int) (dataDesc.getNumberOfSamples() / workers);
-        int lastRest = (int) (dataDesc.getNumberOfSamples() % workers);
-        List<Integer> shuffleIndices = new ArrayList<>(dataDesc.getNumberOfSamples().intValue());
-        for (int i = 0; i < lastRest; ++i) {
-            shuffleIndices.add(0);
-        }
-        for (int i = 0; i < workers; ++i) {
-            for (int j = 0; j < partSize; ++j) {
-                shuffleIndices.add(i);
-            }
-        }
-        Collections.shuffle(shuffleIndices);
-
-        AtomicInteger i = new AtomicInteger(0);
-        Files.readAllLines(dataFile.toPath())
-                .forEach(l -> {
-                    try {
-                        int index = i.getAndIncrement();
-                        int fileNumber = shuffleIndices.get(index);
-                        Path tempFile = tempFiles.get(fileNumber);
-                        Files.writeString(tempFile, l + System.lineSeparator(), StandardOpenOption.APPEND);
-                    } catch (IOException e) {
-                        // TODO optimize
-                        e.printStackTrace();
-                    }
-                });
-
-        return tempFiles;
     }
 
 }

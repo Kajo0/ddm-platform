@@ -16,7 +16,8 @@ class JsonArgsDto {
     private String instanceId;
     private String algorithmId;
     private String algorithmPackageName;
-    private String dataId;
+    private String trainDataId;
+    private String testDataId;
     private String distanceFunctionId;
     private String distanceFunctionPackageName;
     private String distanceFunctionName;

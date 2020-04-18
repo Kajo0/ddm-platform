@@ -21,12 +21,12 @@ api = {
         'distance-functions-info': '/coordinator/command/data/info/distance-functions',
         'load': '/coordinator/command/data/load/file',
         'loadUri': '/coordinator/command/data/load/uri',
-        'scatter': '/coordinator/command/data/scatter/{instanceId}/{strategy}/{dataId}',
+        'scatter': '/coordinator/command/data/scatter/{instanceId}/{dataId}',
     },
     'execution': {
         'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
         'info': '/coordinator/command/execution/info',
-        'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{dataId}',
+        'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{trainDataId}',
         'status': '/coordinator/command/execution/status/executionId}',
         'stop': '/coordinator/command/execution/stop/{executionId}'
     },
@@ -123,14 +123,19 @@ def loadData(path, labelIndex, separator=',', idIndex=None):
         return dataId
 
 
-def scatterData(instanceId, dataId, strategy='uniform'):
-    print("scatterData instanceId='{}' dataId='{}' strategy='{}'".format(instanceId, dataId, strategy))
+def scatterData(instanceId, dataId, strategy='uniform', typeCode='train'):
+    print("scatterData instanceId='{}' dataId='{}' strategy='{}' typeCode='{}'".format(instanceId, dataId, strategy,
+                                                                                       typeCode))
     url = baseUrl + api['data']['scatter'].format(**{
         'instanceId': instanceId,
-        'dataId': dataId,
-        'strategy': strategy
+        'dataId': dataId
     })
-    response = requests.get(url).text
+    response = requests.post(url,
+                             data={
+                                 'strategy': strategy,
+                                 'typeCode': typeCode
+                             }
+                             ).text
     print('  response: ' + response)
     return response
 
@@ -151,25 +156,31 @@ def executionInfo():
     pprint.pprint(formatted)
 
 
-def startExecution(instanceId, algorithmId, dataId, distanceFuncName='none'):
-    print("startExecution instanceId='{}' algorithmId='{}' dataId='{}' distanceFuncName='{}'".format(instanceId,
-                                                                                                     algorithmId,
-                                                                                                     dataId,
-                                                                                                     distanceFuncName))
+def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distanceFuncName='none'):
+    print(
+        "startExecution instanceId='{}' algorithmId='{}' trainDataId='{}' testDataId='{}' distanceFuncName='{}'".format(
+            instanceId,
+            algorithmId,
+            trainDataId,
+            testDataId,
+            distanceFuncName))
     url = baseUrl + api['execution']['start'].format(**{
         'instanceId': instanceId,
         'algorithmId': algorithmId,
-        'dataId': dataId
+        'trainDataId': trainDataId
     })
     jsonParams = json.dumps({
-        'distanceFunctionName': distanceFuncName,
-        # 'distanceFunctionId': '1156746230', # loaded equality
         'groups': '3',
         'iterations': '20',
         'epsilon': '0.002'
     })
     executionId = requests.post(url,
-                                data={'executionParams': jsonParams}
+                                data={
+                                    'testDataId': testDataId,
+                                    'distanceFunctionName': distanceFuncName,
+                                    # 'distanceFunctionId': '1156746230', # loaded equality
+                                    'executionParams': jsonParams
+                                }
                                 ).text
     print('  executionId: ' + executionId)
     return executionId
@@ -199,12 +210,13 @@ def destroyAll():
     return response
 
 
-def saveLast(instanceId, algorithmId, dataId, distanceFunctionId=None, executionId=None):
+def saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None, executionId=None):
     config = configparser.RawConfigParser()
     config['last'] = {
         'instance_id': instanceId,
         'algorithm_id': algorithmId,
-        'data_id': dataId,
+        'train_data_id': trainDataId,
+        'test_data_id': testDataId,
         'distance_function_id': distanceFunctionId,
         'execution_id': executionId
     }
@@ -220,16 +232,19 @@ def loadLast():
 
 def setupDefault(workers=2):
     algorithmId = loadJar('./samples/aoptkm.jar')
-    dataId = loadData('./samples/iris.data', 4, ',', None)
+    # algorithmId = loadJar('./samples/random-classifier.jar')
+    trainDataId = loadData('./samples/iris.data', 4, ',', None)
+    testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
     instanceId = createInstance(workers)
 
     time.sleep(workers * 5)
     broadcastJar(instanceId, algorithmId)
-    scatterData(instanceId, dataId, 'uniform')
+    scatterData(instanceId, trainDataId, 'uniform', 'train')
+    scatterData(instanceId, testDataId, 'uniform', 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, dataId, distanceFunctionId)
+    saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
 
 def reload():
@@ -237,27 +252,31 @@ def reload():
     instanceId = last.get('instance_id')
 
     algorithmId = loadJar('./samples/aoptkm.jar')
-    dataId = loadData('./samples/iris.data', 4, ',', None)
+    # algorithmId = loadJar('./samples/random-classifier.jar')
+    trainDataId = loadData('./samples/iris.data', 4, ',', None)
+    testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
 
     broadcastJar(instanceId, algorithmId)
-    scatterData(instanceId, dataId, 'uniform')
+    scatterData(instanceId, trainDataId, 'uniform', 'train')
+    scatterData(instanceId, testDataId, 'uniform', 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, dataId, distanceFunctionId)
+    saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
 
 def execute():
     last = loadLast()
     instanceId = last.get('instance_id')
     algorithmId = last.get('algorithm_id')
-    dataId = last.get('data_id')
+    trainDataId = last.get('train_data_id')
+    testDataId = last.get('test_data_id')
     distanceFunctionId = last.get('distance_function_id')
 
-    executionId = startExecution(instanceId, algorithmId, dataId)
-    # executionId = startExecution(instanceId, algorithmId, dataId, distanceFunctionId)
+    executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId)
+    # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, dataId, distanceFunctionId, executionId)
+    saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, executionId)
 
 
 def results():

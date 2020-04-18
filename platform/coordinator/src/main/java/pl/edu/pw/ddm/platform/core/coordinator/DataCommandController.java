@@ -47,7 +47,7 @@ class DataCommandController {
                         @RequestParam String separator,
                         @RequestParam(required = false) Integer idIndex,
                         @RequestParam Integer labelIndex) {
-        // TODO advance parametrization
+        // TODO advance parametrization eg attr types
         var req = DataFacade.LoadRequest.builder()
                 .file(dataFile)
                 .separator(separator)
@@ -64,13 +64,17 @@ class DataCommandController {
         return distanceFunctionFacade.load(req);
     }
 
-    @GetMapping("scatter/{instanceId}/{strategy}/{dataId}")
-    String scatterData(@PathVariable String instanceId, @PathVariable String strategy, @PathVariable String dataId) {
-        // TODO advance parametrization
+    @PostMapping("scatter/{instanceId}/{dataId}")
+    String scatterData(@PathVariable String instanceId,
+                       @PathVariable String dataId,
+                       @RequestParam String strategy,
+                       @RequestParam String typeCode) {
+        // TODO advance parametrization eg distance function
         var req = DataFacade.ScatterRequest.builder()
                 .instanceId(instanceId)
                 .strategy(strategy)
                 .dataId(dataId)
+                .typeCode(typeCode)
                 .build();
         return dataFacade.scatter(req);
     }

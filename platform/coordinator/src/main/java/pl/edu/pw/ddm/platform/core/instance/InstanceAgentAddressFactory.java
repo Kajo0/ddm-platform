@@ -22,8 +22,8 @@ public class InstanceAgentAddressFactory {
     public String startExecution(@NonNull InstanceAddrDto dto,
                                  @NonNull String instanceId,
                                  @NonNull String algorithmId,
-                                 @NonNull String dataId) {
-        return base(dto) + "execution/run/" + instanceId + "/" + algorithmId + "/" + dataId;
+                                 @NonNull String trainDataId) {
+        return base(dto) + "execution/run/" + instanceId + "/" + algorithmId + "/" + trainDataId;
     }
 
     public String collectResults(@NonNull InstanceAddrDto dto, @NonNull String executionId) {

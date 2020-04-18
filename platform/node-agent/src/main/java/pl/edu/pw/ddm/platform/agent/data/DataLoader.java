@@ -17,6 +17,15 @@ public interface DataLoader {
         DESCRIPTION("desc");
 
         private String code;
+
+        public static DataType ofType(String typeCode) {
+            for (DataType dt : DataType.values()) {
+                if (dt.code.equals(typeCode)) {
+                    return dt;
+                }
+            }
+            throw new IllegalArgumentException("Not found DataType with code: " + typeCode);
+        }
     }
 
     @Getter

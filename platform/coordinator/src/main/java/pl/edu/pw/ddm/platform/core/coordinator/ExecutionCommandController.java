@@ -27,15 +27,17 @@ class ExecutionCommandController {
 
     private final ExecutionFacade executionFacade;
 
-    @PostMapping("start/{instanceId}/{algorithmId}/{dataId}")
+    @PostMapping("start/{instanceId}/{algorithmId}/{trainDataId}")
     String start(@PathVariable String instanceId,
                  @PathVariable String algorithmId,
-                 @PathVariable String dataId,
+                 @PathVariable String trainDataId,
+                 @RequestParam(value = "testDataId", required = false) String testDataId,
                  @RequestParam("executionParams") String executionParamsJson) {
         ExecutionFacade.StartRequest req = ExecutionFacade.StartRequest.builder()
                 .instanceId(instanceId)
                 .algorithmId(algorithmId)
-                .dataId(dataId)
+                .trainDataId(trainDataId)
+                .testDataId(testDataId)
                 .executionParams(mapFromJsonString(executionParamsJson))
                 .build();
         return executionFacade.start(req);

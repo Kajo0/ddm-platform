@@ -25,10 +25,11 @@ class ExecutionController {
     private final AppRunner appRunner;
 
     // TODO think about request params and post dto due to another parameters
-    @PostMapping("run/{instanceId}/{algorithmId}/{dataId}")
-    String run(@PathVariable String instanceId,
-               @PathVariable String algorithmId,
-               @PathVariable String dataId,
+    @PostMapping("run/{instanceId}/{algorithmId}/{trainDataId}")
+    String run(@PathVariable("instanceId") String instanceId,
+               @PathVariable("algorithmId") String algorithmId,
+               @PathVariable("trainDataId") String trainDataId,
+               @RequestParam(value = "testDataId", required = false) String testDataId,
                @RequestParam(value = "distanceFunctionId", required = false) String distanceFunctionId,
                @RequestParam("distanceFunctionName") String distanceFunctionName,
                @RequestParam("executionParams") String executionParamsJson) {
@@ -42,7 +43,8 @@ class ExecutionController {
             AppRunner.AppRunnerParamsDto params = AppRunner.AppRunnerParamsDto.builder()
                     .instanceId(instanceId)
                     .algorithmId(algorithmId)
-                    .dataId(dataId)
+                    .trainDataId(trainDataId)
+                    .testDataId(testDataId)
                     .distanceFunctionId(Strings.emptyToNull(distanceFunctionId))
                     .distanceFunctionName(distanceFunctionName)
                     .executionParams(mapFromJsonString(executionParamsJson))

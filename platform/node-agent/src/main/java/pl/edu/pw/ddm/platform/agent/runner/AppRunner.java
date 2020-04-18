@@ -93,7 +93,7 @@ public class AppRunner {
         SparkLauncher launcher = new SparkLauncher()
                 .setSparkHome(sparkHome)
                 .setMaster("spark://" + masterNode)
-                .setAppName(params.algorithmId + " (" + params.dataId + ") " + executionId) // FIXME
+                .setAppName(params.algorithmId + " (" + params.trainDataId + ") " + executionId) // FIXME
                 .setAppResource(runnerJarPath)
                 .setMainClass(runnerMainClass)
                 .redirectToLog(log.getName())
@@ -188,7 +188,8 @@ public class AppRunner {
 
         private String instanceId;
         private String algorithmId;
-        private String dataId;
+        private String trainDataId;
+        private String testDataId;
         private String distanceFunctionId;
         private String distanceFunctionName;
         private Map<String, String> executionParams;
@@ -210,7 +211,8 @@ public class AppRunner {
         private String instanceId;
         private String algorithmId;
         private String algorithmPackageName;
-        private String dataId;
+        private String trainDataId;
+        private String testDataId;
         private String distanceFunctionId;
         private String distanceFunctionPackageName;
         private String distanceFunctionName;
@@ -224,7 +226,8 @@ public class AppRunner {
                     .executionId(executionId)
                     .instanceId(params.instanceId)
                     .algorithmId(params.algorithmId)
-                    .dataId(params.dataId)
+                    .trainDataId(params.trainDataId)
+                    .testDataId(params.testDataId)
                     .distanceFunctionId(params.distanceFunctionId)
                     .distanceFunctionName(params.distanceFunctionName)
                     .executionParams(params.executionParams);

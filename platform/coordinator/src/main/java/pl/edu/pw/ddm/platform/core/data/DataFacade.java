@@ -44,7 +44,15 @@ public class DataFacade {
             throw new IllegalArgumentException("No data with id: " + request.dataId);
         }
 
-        return dataPartitioner.scatter(addr, data, request.strategy);
+        switch (DataLoader.TypeCode.fromCode(request.typeCode)) {
+            case TRAIN:
+                return dataPartitioner.scatterTrain(addr, data, request.strategy);
+            case TEST:
+                return dataPartitioner.scatterTestEqually(addr, data);
+
+            default:
+                throw new IllegalStateException("should not be not accessed");
+        }
     }
 
     public DataDescDto description(@NonNull DescriptionRequest request) {
@@ -93,6 +101,9 @@ public class DataFacade {
 
         @NonNull
         private final String strategy;
+
+        @NonNull
+        private final String typeCode;
     }
 
     @Value(staticConstructor = "of")

@@ -13,7 +13,8 @@ import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class InitParamsDto implements Serializable {
 
-    private final String dataId;
+    private final String trainDataId;
+    private final String testDataId;
     private final String executionId;
     private final String algorithmPackageName;
     private final String distanceFunctionName;

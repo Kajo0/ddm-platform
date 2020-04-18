@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -119,7 +120,8 @@ class LocalResultsCollector implements ResultsCollector {
         Properties prop = new Properties();
         prop.setProperty("workers", String.valueOf(instanceFacade.addresses(InstanceFacade.AddressRequest.of(desc.getInstanceId())).size() - 1));
         prop.setProperty("algorithm", objMapper.writeValueAsString(algorithmFacade.description(AlgorithmFacade.DescriptionRequest.of(desc.getAlgorithmId()))));
-        prop.setProperty("data", objMapper.writeValueAsString(dataFacade.description(DataFacade.DescriptionRequest.of(desc.getDataId()))));
+        prop.setProperty("trainData", objMapper.writeValueAsString(dataFacade.description(DataFacade.DescriptionRequest.of(desc.getTrainDataId()))));
+        prop.setProperty("testData", objMapper.writeValueAsString(Optional.ofNullable(desc.getTestDataId()).map(id -> dataFacade.description(DataFacade.DescriptionRequest.of(id))).orElse(null)));
         prop.setProperty("execution", objMapper.writeValueAsString(desc));
         prop.setProperty("saveTimestamp", LocalDateTime.now().toString());
 

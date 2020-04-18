@@ -53,7 +53,8 @@ public final class CentralRunner {
         System.out.println("  workerNodes                 = " + args.getWorkerNodes());
         System.out.println("  algorithmId                 = " + args.getAlgorithmId());
         System.out.println("  algorithmPackageName        = " + args.getAlgorithmPackageName());
-        System.out.println("  dataId                      = " + args.getDataId());
+        System.out.println("  trainDataId                 = " + args.getTrainDataId());
+        System.out.println("  testDataId                  = " + args.getTestDataId());
         System.out.println("  executionId                 = " + args.getExecutionId());
         System.out.println("  distanceFunctionName        = " + args.getDistanceFunctionName());
         System.out.println("  distanceFunctionPackageName = " + args.getDistanceFunctionPackageName());
@@ -128,7 +129,8 @@ public final class CentralRunner {
 
     private static InitParamsDto createInitParams(JsonArgsDto args) {
         return new InitParamsDto(
-                args.getDataId(),
+                args.getTrainDataId(),
+                args.getTestDataId(),
                 args.getExecutionId(),
                 args.getAlgorithmPackageName(),
                 args.getDistanceFunctionName(),

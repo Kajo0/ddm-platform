@@ -6,6 +6,8 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 interface DataPartitioner {
 
-    String scatter(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy);
+    String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy);
+
+    String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc);
 
 }

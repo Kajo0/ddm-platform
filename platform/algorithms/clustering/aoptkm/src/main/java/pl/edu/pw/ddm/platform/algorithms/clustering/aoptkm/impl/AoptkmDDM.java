@@ -42,7 +42,7 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, Gl
     @Override
     public void cluster(DataProvider dataProvider, ParamProvider paramProvider, ResultCollector resultCollector) {
         AutoOpticsKm algorithm = new AutoOpticsKm(paramProvider);
-        List<ObjectPoint> pts = toObjectPoints(dataProvider.all());
+        List<ObjectPoint> pts = toObjectPoints(dataProvider.training());
         algorithm.updateLocalClustering(pts, globalCentroids)
                 .forEach(kmeansCluster -> kmeansCluster.cluster.forEach(obj -> resultCollector.collect(String.valueOf(obj.index), String.valueOf(kmeansCluster.centroid.clusterId))));
     }

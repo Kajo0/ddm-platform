@@ -36,6 +36,9 @@ api = {
         'destroyAll': '/coordinator/command/instance/destroy/all',
         'info': '/coordinator/command/instance/info',
         'addresses': '/coordinator/command/instance/info/{instanceId}'
+    },
+    'results': {
+        'validate': '/coordinator/command/results/validate/{executionId}'
     }
 }
 
@@ -210,6 +213,16 @@ def destroyAll():
     return response
 
 
+def validateResults(executionId, metrics):
+    print("validateResults executionId='{}' metrics='{}'".format(executionId, metrics))
+    url = baseUrl + api['results']['validate'].format(**{'executionId': executionId})
+    response = requests.post(url,
+                             data={'metrics': metrics}
+                             ).text
+    print('  response: ' + response)
+    return response
+
+
 def saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None, executionId=None):
     config = configparser.RawConfigParser()
     config['last'] = {
@@ -284,12 +297,17 @@ def results():
     collectResults(last.get('execution_id'))
 
 
+def validate():
+    last = loadLast()
+    validateResults(last.get('execution_id'), 'ARI')
+
+
 def clear():
     destroyAll()
 
 
 if len(sys.argv) < 2:
-    print('  Provide command! [setup, clear, reload, execute, info [data, alg, execution, instance]]')
+    print('  Provide command! [setup, clear, reload, execute, validate, info [data, alg, execution, instance]]')
     sys.exit(1)
 
 command = sys.argv[1]
@@ -303,6 +321,8 @@ elif command == 'execute':
     execute()
 elif command == 'results':
     results()
+elif command == 'validate':
+    validate()
 elif command == 'info':
     if len(sys.argv) < 3:
         print('  Provide info arg [data, functions, alg, execution, instance]')

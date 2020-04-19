@@ -12,7 +12,8 @@ public class ExecutionDescDto {
     private String algorithmId;
     private String distanceFunctionId;
     private String distanceFunctionName;
-    private String dataId;
+    private String trainDataId;
+    private String testDataId;
     private String status;
     private String message;
     private LocalDateTime started;

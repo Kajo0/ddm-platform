@@ -1,7 +1,6 @@
 package pl.edu.pw.ddm.platform.core.execution;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,7 +28,6 @@ public class ExecutionFacade {
     private final InstanceFacade instanceFacade;
     private final DistanceFunctionFacade distanceFunctionFacade;
     private final ExecutionStarter executionStarter;
-    private final ResultsCollector resultsCollector;
 
     public String start(@NonNull StartRequest request) {
         InstanceAddrDto masterAddr = findMasterAddress(request.instanceId);
@@ -71,14 +69,6 @@ public class ExecutionFacade {
             return executionStarter.allExecutionsInfo()
                     .toString();
         }
-    }
-
-    public String collectResults(@NonNull CollectResultsRequest request) {
-        ExecutionStarter.ExecutionDesc desc = executionStarter.status(request.executionId);
-        var req = InstanceFacade.AddressRequest.of(desc.getInstanceId());
-        List<InstanceAddrDto> addresses = instanceFacade.addresses(req);
-
-        return resultsCollector.collect(addresses, desc);
     }
 
     private InstanceAddrDto findMasterAddress(@NonNull String instanceId) {
@@ -123,13 +113,6 @@ public class ExecutionFacade {
 
     @Value(staticConstructor = "of")
     public static class StatusRequest {
-
-        @NonNull
-        private final String executionId;
-    }
-
-    @Value(staticConstructor = "of")
-    public static class CollectResultsRequest {
 
         @NonNull
         private final String executionId;

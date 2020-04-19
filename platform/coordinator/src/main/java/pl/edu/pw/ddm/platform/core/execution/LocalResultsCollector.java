@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.core.execution;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,6 +16,8 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
+import com.google.common.io.PatternFilenameFilter;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -47,6 +50,8 @@ class LocalResultsCollector implements ResultsCollector {
     private static final String EXECUTION_DESCRIPTION = "description.properties";
     private static final String ARCHIVE_RESULTS_PATH = "/coordinator/archive_results";
 
+    private static final FilenameFilter RESULT_FILE_FILTER = new PatternFilenameFilter(".*" + RESULTS_SUFFIX + "$");
+
     private final RestTemplate restTemplate;
     private final InstanceFacade instanceFacade;
     private final AlgorithmFacade algorithmFacade;
@@ -76,6 +81,16 @@ class LocalResultsCollector implements ResultsCollector {
         saveDescription(desc);
 
         return "ok";
+    }
+
+    // TODO move to loader or sth
+    @Override
+    public File[] load(String executionId) {
+        Path path = Paths.get(RESULTS_PATH, executionId);
+        Preconditions.checkState(path.toFile().exists(), "Result directory for execution id: '%s' not exists.", executionId);
+
+        return path.toFile()
+                .listFiles(RESULT_FILE_FILTER);
     }
 
     private NodeResultsPair requestForResults(InstanceAddrDto addressDto, String executionId) {

@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.core.data;
 
+import java.io.File;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -74,6 +75,10 @@ public class DataFacade {
         }
     }
 
+    public File dataFile(@NonNull LoadDataFileRequest request) {
+        return dataLoader.load(request.dataId);
+    }
+
     @Builder
     public static class LoadRequest {
 
@@ -108,6 +113,13 @@ public class DataFacade {
 
     @Value(staticConstructor = "of")
     public static class DescriptionRequest {
+
+        @NonNull
+        private final String dataId;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class LoadDataFileRequest {
 
         @NonNull
         private final String dataId;

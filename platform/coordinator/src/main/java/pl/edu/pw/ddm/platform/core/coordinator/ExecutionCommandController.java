@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.edu.pw.ddm.platform.core.execution.ExecutionFacade;
+import pl.edu.pw.ddm.platform.core.execution.ExecutionResultsFacade;
 import pl.edu.pw.ddm.platform.core.execution.dto.ExecutionDescDto;
 
 @RestController
@@ -26,6 +27,7 @@ import pl.edu.pw.ddm.platform.core.execution.dto.ExecutionDescDto;
 class ExecutionCommandController {
 
     private final ExecutionFacade executionFacade;
+    private final ExecutionResultsFacade executionResultsFacade;
 
     @PostMapping("start/{instanceId}/{algorithmId}/{trainDataId}")
     String start(@PathVariable String instanceId,
@@ -62,8 +64,8 @@ class ExecutionCommandController {
     @GetMapping("results/collect/{executionId}")
     String collectResults(@PathVariable String executionId) {
         return Optional.of(executionId)
-                .map(ExecutionFacade.CollectResultsRequest::of)
-                .map(executionFacade::collectResults)
+                .map(ExecutionResultsFacade.CollectResultsRequest::of)
+                .map(executionResultsFacade::collectResults)
                 .get();
     }
 

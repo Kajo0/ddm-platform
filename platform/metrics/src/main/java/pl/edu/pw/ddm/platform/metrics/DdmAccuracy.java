@@ -8,10 +8,9 @@ class DdmAccuracy implements Metrics {
 
     @Override
     public Double calculate(SortedData sortedData, MetricsSummary summary) {
-        int[] predictions = ConversionUtils.mapToInts(sortedData.predicationLabels());
-        int[] labels = ConversionUtils.mapToInts(sortedData.realLabels());
+        int[][] ints = ConversionUtils.mapToInts(sortedData.realLabels(), sortedData.predicationLabels());
 
-        return Accuracy.instance.measure(labels, predictions);
+        return Accuracy.instance.measure(ints[0], ints[1]);
     }
 
 }

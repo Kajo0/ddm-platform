@@ -6,11 +6,6 @@ public interface Metrics {
 
     String ADJUSTED_RAND_INDEX = "ARI";
 
-    String TRUE_POSITIVE = "TP";
-    String TRUE_NEGATIVE = "TN";
-    String FALSE_POSITIVE = "FP";
-    String FALSE_NEGATIVE = "FN";
-
     String ACCURACY = "accuracy";
     String PRECISION = "precision";
     String RECALL = "recall";

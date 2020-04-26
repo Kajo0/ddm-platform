@@ -120,6 +120,11 @@ class RandomClassifierSpec extends Specification {
         SampleData next() {
             return samples.next()
         }
+
+        @Override
+        Collection<SampleData> all() {
+            return samples
+        }
     }
 
 }

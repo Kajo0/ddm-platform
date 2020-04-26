@@ -63,10 +63,11 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
 
     private String cluster(Clustering clustering) {
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getTrainDataId(), initParams.getTestDataId());
+        SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.training()); // TODO think if not test for clustering means eg training
         NodeResultCollector resultCollector = new NodeResultCollector(initParams.getExecutionId());
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
-        clustering.cluster(dataProvider, paramProvider, resultCollector);
+        clustering.cluster(sampleProvider, paramProvider, resultCollector);
         resultCollector.saveResults();
 
         String resultStr = resultCollector.getResults()

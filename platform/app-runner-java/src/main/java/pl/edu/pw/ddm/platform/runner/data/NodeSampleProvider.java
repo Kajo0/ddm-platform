@@ -10,12 +10,14 @@ import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 
 public class NodeSampleProvider implements SampleProvider {
 
+    private final Collection<SampleData> data;
     private final Iterator<SampleData> iterator;
 
     public NodeSampleProvider(Collection<NodeData> data) {
-        this.iterator = data.stream()
+        this.data = data.stream()
                 .map(NodeData::toSample)
-                .iterator();
+                .collect(Collectors.toList());
+        this.iterator = this.data.iterator();
     }
 
     public static NodeSampleProvider fromData(Collection<Data> data) {
@@ -32,6 +34,11 @@ public class NodeSampleProvider implements SampleProvider {
     @Override
     public SampleData next() {
         return iterator.next();
+    }
+
+    @Override
+    public Collection<SampleData> all() {
+        return data;
     }
 
 }

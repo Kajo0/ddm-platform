@@ -13,6 +13,7 @@ import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
+import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 
 public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, GlobalProcessor<LModel, GModel>, Clustering {
@@ -40,14 +41,14 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, Gl
     }
 
     @Override
-    public void cluster(DataProvider dataProvider, ParamProvider paramProvider, ResultCollector resultCollector) {
+    public void cluster(SampleProvider sampleProvider, ParamProvider paramProvider, ResultCollector resultCollector) {
         AutoOpticsKm algorithm = new AutoOpticsKm(paramProvider);
-        List<ObjectPoint> pts = toObjectPoints(dataProvider.training());
+        List<ObjectPoint> pts = toObjectPoints(sampleProvider.all());
         algorithm.updateLocalClustering(pts, globalCentroids)
                 .forEach(kmeansCluster -> kmeansCluster.cluster.forEach(obj -> resultCollector.collect(String.valueOf(obj.index), String.valueOf(kmeansCluster.centroid.clusterId))));
     }
 
-    private List<ObjectPoint> toObjectPoints(Collection<Data> data) {
+    private List<ObjectPoint> toObjectPoints(Collection<? extends Data> data) {
         return data.stream()
                 .map(d -> new ObjectPoint(toObjectAttributes(d.getNumericAttributes()), (int) Double.parseDouble(d.getId())))
                 .collect(Collectors.toList());

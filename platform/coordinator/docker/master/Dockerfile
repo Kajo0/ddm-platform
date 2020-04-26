@@ -5,11 +5,9 @@ ENV SPARK_HOME /spark
 RUN apk add --no-cache busybox-extras
 
 # TODO change path to local
-ADD apps/node-agent-0.0.1-SNAPSHOT.jar /apps/node-agent.jar
+ADD apps/node-agent-*.jar /apps/node-agent.jar
 # TODO to agent classpath
-ADD apps/app-runner-java-0.0.1-SNAPSHOT-all.jar /apps/app-runner-java.jar
-# TODO distirbute to master node and from classpath
-ADD apps/aoptkm-1.0-SNAPSHOT-all.jar /apps/aoptkm.jar
+ADD apps/app-runner-java-*.jar /apps/app-runner-java.jar
 
 COPY entrypoint.sh /
 

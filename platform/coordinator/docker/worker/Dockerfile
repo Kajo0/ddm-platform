@@ -5,7 +5,7 @@ ENV SPARK_HOME /spark
 RUN apk add --no-cache busybox-extras
 
 # TODO change path to local
-ADD apps/node-agent-0.0.1-SNAPSHOT.jar /apps/node-agent.jar
+ADD apps/node-agent-*.jar /apps/node-agent.jar
 
 COPY entrypoint.sh /
 

@@ -1,8 +1,8 @@
 package pl.edu.pw.ddm.platform.interfaces.mining;
 
-import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
+import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 
 public interface Clustering extends MiningMethod {
 
@@ -10,6 +10,6 @@ public interface Clustering extends MiningMethod {
         return MethodType.CLUSTERING;
     }
 
-    void cluster(DataProvider dataProvider, ParamProvider paramProvider, ResultCollector resultCollector);
+    void cluster(SampleProvider sampleProvider, ParamProvider paramProvider, ResultCollector resultCollector);
 
 }

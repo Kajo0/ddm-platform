@@ -245,7 +245,6 @@ def loadLast():
 
 def setupDefault(workers=2):
     algorithmId = loadJar('./samples/aoptkm.jar')
-    # algorithmId = loadJar('./samples/random-classifier.jar')
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
@@ -266,6 +265,7 @@ def reload():
 
     algorithmId = loadJar('./samples/aoptkm.jar')
     # algorithmId = loadJar('./samples/random-classifier.jar')
+    # algorithmId = loadJar('./samples/k-means-weka.jar')
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
@@ -299,7 +299,7 @@ def results():
 
 def validate():
     last = loadLast()
-    validateResults(last.get('execution_id'), 'ARI')
+    validateResults(last.get('execution_id'), 'accuracy,recall,precision,f-measure,ARI')
 
 
 def clear():

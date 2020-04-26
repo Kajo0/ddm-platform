@@ -223,9 +223,9 @@ def validateResults(executionId, metrics):
     return response
 
 
-def saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None, executionId=None):
+def saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None, executionId=None):
     config = configparser.RawConfigParser()
-    config['last'] = {
+    config['onenode' if oneNode else 'last'] = {
         'instance_id': instanceId,
         'algorithm_id': algorithmId,
         'train_data_id': trainDataId,
@@ -233,18 +233,28 @@ def saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionI
         'distance_function_id': distanceFunctionId,
         'execution_id': executionId
     }
+    try:
+        config['onenode' if not oneNode else 'last'] = loadLast(not oneNode)
+    except:
+        print('No previous onenode=', oneNode, 'save but its ok')
+
     with open(lastExecFile, 'w') as file:
         config.write(file)
 
 
-def loadLast():
+def loadLast(oneNode):
     config = configparser.RawConfigParser()
     config.read(lastExecFile)
-    return dict(config['last'])
+    return dict(config['onenode' if oneNode else 'last'])
 
 
-def setupDefault(workers=2):
-    algorithmId = loadJar('./samples/aoptkm.jar')
+def setupDefault(workers=2, oneNode=False):
+    algorithmId = None
+    if oneNode:
+        algorithmId = loadJar('./samples/k-means-weka.jar')
+    else:
+        algorithmId = loadJar('./samples/aoptkm.jar')
+
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
@@ -256,16 +266,20 @@ def setupDefault(workers=2):
     scatterData(instanceId, testDataId, 'uniform', 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
+    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
 
-def reload():
-    last = loadLast()
+def reload(oneNode=False):
+    last = loadLast(oneNode)
     instanceId = last.get('instance_id')
 
-    algorithmId = loadJar('./samples/aoptkm.jar')
-    # algorithmId = loadJar('./samples/random-classifier.jar')
-    # algorithmId = loadJar('./samples/k-means-weka.jar')
+    algorithmId = None
+    if oneNode:
+        algorithmId = loadJar('./samples/k-means-weka.jar')
+    else:
+        algorithmId = loadJar('./samples/aoptkm.jar')
+        # algorithmId = loadJar('./samples/random-classifier.jar')
+
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
@@ -275,11 +289,11 @@ def reload():
     scatterData(instanceId, testDataId, 'uniform', 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
+    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
 
-def execute():
-    last = loadLast()
+def execute(oneNode=False):
+    last = loadLast(oneNode)
     instanceId = last.get('instance_id')
     algorithmId = last.get('algorithm_id')
     trainDataId = last.get('train_data_id')
@@ -289,16 +303,16 @@ def execute():
     executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId)
     # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
-    saveLast(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, executionId)
+    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, executionId)
 
 
-def results():
-    last = loadLast()
+def results(oneNode=False):
+    last = loadLast(oneNode)
     collectResults(last.get('execution_id'))
 
 
-def validate():
-    last = loadLast()
+def validate(oneNode=False):
+    last = loadLast(oneNode)
     validateResults(last.get('execution_id'), 'accuracy,recall,precision,f-measure,ARI')
 
 
@@ -311,18 +325,25 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 command = sys.argv[1]
+oneNode = False
+if len(sys.argv) > 2 and sys.argv[2] == 'onenode':
+    oneNode = True
+
 if command == 'setup':
-    setupDefault()
+    if oneNode:
+        setupDefault(1, oneNode)
+    else:
+        setupDefault()
 elif command == 'clear':
     clear()
 elif command == 'reload':
-    reload()
+    reload(oneNode)
 elif command == 'execute':
-    execute()
+    execute(oneNode)
 elif command == 'results':
-    results()
+    results(oneNode)
 elif command == 'validate':
-    validate()
+    validate(oneNode)
 elif command == 'info':
     if len(sys.argv) < 3:
         print('  Provide info arg [data, functions, alg, execution, instance]')

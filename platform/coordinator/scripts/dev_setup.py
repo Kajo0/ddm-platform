@@ -276,6 +276,7 @@ def reload(oneNode=False):
     algorithmId = None
     if oneNode:
         algorithmId = loadJar('./samples/k-means-weka.jar')
+        # algorithmId = loadJar('./samples/svm-weka.jar')
     else:
         algorithmId = loadJar('./samples/aoptkm.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')

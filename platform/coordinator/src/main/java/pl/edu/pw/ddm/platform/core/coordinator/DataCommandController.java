@@ -67,12 +67,14 @@ class DataCommandController {
     @PostMapping("scatter/{instanceId}/{dataId}")
     String scatterData(@PathVariable String instanceId,
                        @PathVariable String dataId,
-                       @RequestParam String strategy,
-                       @RequestParam String typeCode) {
+                       @RequestParam("strategy") String strategy,
+                       @RequestParam(value = "strategyParams", required = false) String strategyParams,
+                       @RequestParam("typeCode") String typeCode) {
         // TODO advance parametrization eg distance function
         var req = DataFacade.ScatterRequest.builder()
                 .instanceId(instanceId)
                 .strategy(strategy)
+                .strategyParams(strategyParams)
                 .dataId(dataId)
                 .typeCode(typeCode)
                 .build();

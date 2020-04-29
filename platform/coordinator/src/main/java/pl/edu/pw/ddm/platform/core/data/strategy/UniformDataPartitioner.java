@@ -1,6 +1,5 @@
 package pl.edu.pw.ddm.platform.core.data.strategy;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,10 +11,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.google.common.collect.Iterables;
+import pl.edu.pw.ddm.platform.core.data.dto.DataDescDto;
+
 class UniformDataPartitioner implements PartitionerStrategy {
 
     @Override
-    public List<Path> partition(File dataFile, int workers, long samplesCount) throws IOException {
+    public List<Path> partition(DataDescDto dataDesc, int workers, long samplesCount, String ignore) throws IOException {
+        // TODO optimize for 1 node by copying file or not deleting
         List<Path> tempFiles = IntStream.range(0, workers)
                 .mapToObj(wi -> {
                     try {
@@ -42,7 +45,9 @@ class UniformDataPartitioner implements PartitionerStrategy {
         Collections.shuffle(shuffleIndices);
 
         AtomicInteger i = new AtomicInteger(0);
-        Files.readAllLines(dataFile.toPath())
+        // TODO handle partitioned
+        Path path = Path.of(Iterables.getOnlyElement(dataDesc.getFilesLocations()));
+        Files.readAllLines(path)
                 .forEach(l -> {
                     try {
                         int index = i.getAndIncrement();

@@ -126,9 +126,12 @@ def loadData(path, labelIndex, separator=',', idIndex=None):
         return dataId
 
 
-def scatterData(instanceId, dataId, strategy='uniform', typeCode='train'):
-    print("scatterData instanceId='{}' dataId='{}' strategy='{}' typeCode='{}'".format(instanceId, dataId, strategy,
-                                                                                       typeCode))
+def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, typeCode='train'):
+    print("scatterData instanceId='{}' dataId='{}' strategy='{}' strategyParams='{}' typeCode='{}'".format(instanceId,
+                                                                                                           dataId,
+                                                                                                           strategy,
+                                                                                                           strategyParams,
+                                                                                                           typeCode))
     url = baseUrl + api['data']['scatter'].format(**{
         'instanceId': instanceId,
         'dataId': dataId
@@ -136,6 +139,7 @@ def scatterData(instanceId, dataId, strategy='uniform', typeCode='train'):
     response = requests.post(url,
                              data={
                                  'strategy': strategy,
+                                 'strategyParams': strategyParams,
                                  'typeCode': typeCode
                              }
                              ).text
@@ -262,8 +266,8 @@ def setupDefault(workers=2, oneNode=False):
 
     time.sleep(workers * 5)
     broadcastJar(instanceId, algorithmId)
-    scatterData(instanceId, trainDataId, 'uniform', 'train')
-    scatterData(instanceId, testDataId, 'uniform', 'test')
+    scatterData(instanceId, trainDataId, 'uniform', None, 'train')
+    scatterData(instanceId, testDataId, 'dummy', None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
 
     saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
@@ -286,8 +290,13 @@ def reload(oneNode=False):
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
 
     broadcastJar(instanceId, algorithmId)
-    scatterData(instanceId, trainDataId, 'uniform', 'train')
-    scatterData(instanceId, testDataId, 'uniform', 'test')
+    if oneNode:
+        scatterData(instanceId, trainDataId, 'uniform', None, 'train')
+    else:
+        scatterData(instanceId, trainDataId, 'uniform', None, 'train')
+        # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', 'train')
+
+    scatterData(instanceId, testDataId, 'dummy', None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
 
     saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)

@@ -1,11 +1,11 @@
 package pl.edu.pw.ddm.platform.core.data;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -29,20 +29,19 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 class LocalDataPartitioner implements DataPartitioner {
     // TODO map of current scattered data
 
-    private final DataLoader dataLoader;
     private final RestTemplate restTemplate;
 
     @SneakyThrows
     @Override
-    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy) {
+    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String params) {
         log.info("Scattering train data '{}' with strategy '{}' into nodes '{}'.", dataDesc, strategy, addresses);
 
-        File dataFile = dataLoader.load(dataDesc.getId());
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)
                 .collect(Collectors.toList());
-        // TODO eval strategy
-        List<Path> tempFiles = PartitionerStrategy.UNIFORM.partition(dataFile, workers.size(), dataDesc.getNumberOfSamples());
+
+        List<Path> tempFiles = deductStrategy(strategy)
+                .partition(DataDescMapper.INSTANCE.map(dataDesc), workers.size(), dataDesc.getNumberOfSamples(), params);
 
         sendDataToNodes(workers, dataDesc, tempFiles, "train");
 
@@ -58,11 +57,11 @@ class LocalDataPartitioner implements DataPartitioner {
     public String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc) {
         log.info("Scattering test data '{}' equally into nodes '{}'.", dataDesc, addresses);
 
-        File dataFile = dataLoader.load(dataDesc.getId());
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)
                 .collect(Collectors.toList());
-        List<Path> tempFiles = PartitionerStrategy.UNIFORM.partition(dataFile, workers.size(), dataDesc.getNumberOfSamples());
+        List<Path> tempFiles = PartitionerStrategy.STRATEGIES.get(PartitionerStrategy.Strategies.UNIFORM.getCode())
+                .partition(DataDescMapper.INSTANCE.map(dataDesc), workers.size(), dataDesc.getNumberOfSamples(), null);
 
         sendDataToNodes(workers, dataDesc, tempFiles, "test");
 
@@ -71,6 +70,16 @@ class LocalDataPartitioner implements DataPartitioner {
         }
 
         return "ok_process-id";
+    }
+
+    private PartitionerStrategy deductStrategy(String strategy) {
+        if (strategy == null) {
+            log.info("Null strategy chosen so returning default one: '{}'.", PartitionerStrategy.Strategies.DEFAULT.getCode());
+            return PartitionerStrategy.STRATEGIES.get(PartitionerStrategy.Strategies.DEFAULT.getCode());
+        }
+        PartitionerStrategy partitioner = PartitionerStrategy.STRATEGIES.get(strategy);
+        Preconditions.checkNotNull(partitioner, "Unknown strategy '%s' provided.", strategy);
+        return partitioner;
     }
 
     private void sendDataToNodes(List<InstanceAddrDto> workers, DataLoader.DataDesc dataDesc, List<Path> tempFiles, String typeCode) {

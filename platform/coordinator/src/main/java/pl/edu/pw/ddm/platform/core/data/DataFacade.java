@@ -47,7 +47,7 @@ public class DataFacade {
 
         switch (DataLoader.TypeCode.fromCode(request.typeCode)) {
             case TRAIN:
-                return dataPartitioner.scatterTrain(addr, data, request.strategy);
+                return dataPartitioner.scatterTrain(addr, data, request.strategy, request.strategyParams);
             case TEST:
                 return dataPartitioner.scatterTestEqually(addr, data);
 
@@ -106,6 +106,8 @@ public class DataFacade {
 
         @NonNull
         private final String strategy;
+
+        private final String strategyParams;
 
         @NonNull
         private final String typeCode;

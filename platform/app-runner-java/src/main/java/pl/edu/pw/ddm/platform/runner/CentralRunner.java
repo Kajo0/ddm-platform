@@ -17,6 +17,7 @@ import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.TimeStatistics;
 import pl.edu.pw.ddm.platform.runner.utils.CentralDdmSummarizer;
+import pl.edu.pw.ddm.platform.runner.utils.ExecutionStatisticsPersister;
 
 public final class CentralRunner {
 
@@ -90,11 +91,13 @@ public final class CentralRunner {
         executeMethod();
         stats.setEnd(LocalDateTime.now());
 
-        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes(), stats)
+        CentralDdmSummarizer summarizer = new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes(), stats)
                 .printModelsSummary()
                 .printDispersionSummary()
                 .printTimeSummary()
                 .printTransferSummary();
+
+        ExecutionStatisticsPersister.save(summarizer.prepareStats(), initParams.getExecutionId());
 
         sc.stop();
     }

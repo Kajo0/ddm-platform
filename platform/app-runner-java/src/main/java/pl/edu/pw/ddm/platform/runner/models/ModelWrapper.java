@@ -8,11 +8,12 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
 @EqualsAndHashCode
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelWrapper implements Serializable {
 
     private final LocalModel localModel;
@@ -23,6 +24,9 @@ public class ModelWrapper implements Serializable {
 
     @Getter
     private final String address;
+
+    @Getter
+    private TimeStatistics timeStatistics = new TimeStatistics();
 
     public static ModelWrapper local(LocalModel model, String address, Integer id) {
         return new ModelWrapper(model, null, id, address);

@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
@@ -28,6 +29,9 @@ public class NodeDataProvider implements DataProvider {
     private Collection<Data> trainingSet;
     private Collection<Data> testSet;
     private Collection<Data> allSet;
+
+    @Getter
+    private long loadingMillis;
 
     public NodeDataProvider(String trainDataId, String testDataId) {
         this.trainDataId = trainDataId;
@@ -82,11 +86,21 @@ public class NodeDataProvider implements DataProvider {
     }
 
     private void loadTraining() {
+        long start = System.currentTimeMillis();
+
         trainingSet = loadCsvData(DATA_PATH + trainDataId + "/train", trainDataDesc);
+
+        long end = System.currentTimeMillis();
+        loadingMillis += end - start;
     }
 
     private void loadTest() {
+        long start = System.currentTimeMillis();
+
         testSet = loadCsvData(DATA_PATH + testDataId + "/test", testDataDesc);
+
+        long end = System.currentTimeMillis();
+        loadingMillis += end - start;
     }
 
     private void loadAll() {

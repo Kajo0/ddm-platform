@@ -1,6 +1,7 @@
 package pl.edu.pw.ddm.platform.runner;
 
 import java.net.InetAddress;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -14,6 +15,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
+import pl.edu.pw.ddm.platform.runner.models.TimeStatistics;
 import pl.edu.pw.ddm.platform.runner.utils.CentralDdmSummarizer;
 
 public final class CentralRunner {
@@ -78,15 +80,21 @@ public final class CentralRunner {
         // TODO send clear ID to every agent
         performEachNodeDistributionWorkaround();
 
+        TimeStatistics stats = new TimeStatistics();
+        stats.setStart(LocalDateTime.now());
+
         processLocal();
         processGlobal();
         updateLocal();
 
         executeMethod();
+        stats.setEnd(LocalDateTime.now());
 
-        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes())
+        new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes(), stats)
                 .printModelsSummary()
-                .printDispersionSummary();
+                .printDispersionSummary()
+                .printTimeSummary()
+                .printTransferSummary();
 
         sc.stop();
     }

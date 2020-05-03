@@ -1,12 +1,14 @@
 package pl.edu.pw.ddm.platform.runner;
 
 import java.net.InetAddress;
+import java.time.LocalDateTime;
 import java.util.Iterator;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
@@ -33,12 +35,20 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         LocalModel previousModel = ModelPersister.loadLocal(initParams.getExecutionId());
-        MiningMethod method = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName())
-                .updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
+        LocalProcessor processor = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName());
+
+        LocalDateTime start = LocalDateTime.now();
+        MiningMethod method = processor.updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
+        LocalDateTime end = LocalDateTime.now();
+
         MethodPersister.save(method, initParams.getExecutionId());
 
         LocalModel model = new StringLocalModel("ackTime=" + System.currentTimeMillis());
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);
+        wrapper.getTimeStatistics().setStart(start);
+        wrapper.getTimeStatistics().setEnd(end);
+        wrapper.getTimeStatistics().setDataLoadingMillis(dataProvider.getLoadingMillis());
+
         return new SingletonIterator(wrapper);
     }
 

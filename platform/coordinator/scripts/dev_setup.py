@@ -179,7 +179,8 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
     jsonParams = json.dumps({
         'groups': '3',
         'iterations': '20',
-        'epsilon': '0.002'
+        'epsilon': '0.002',
+        'preCalcCentroids': 'true'
     })
     executionId = requests.post(url,
                                 data={

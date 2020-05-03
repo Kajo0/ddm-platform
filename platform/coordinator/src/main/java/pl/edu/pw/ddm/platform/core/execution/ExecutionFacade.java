@@ -57,7 +57,7 @@ public class ExecutionFacade {
         return Optional.of(request)
                 .map(StatusRequest::getExecutionId)
                 .map(executionStarter::status)
-                .map(ExecutionStatusMapper.INSTANCE::map)
+                .map(ExecutionDtosMapper.INSTANCE::map)
                 .get();
     }
 

@@ -6,4 +6,6 @@ public interface ResultsLoader {
 
     File load(String executionId);
 
+    String loadJsonStats(String executionId);
+
 }

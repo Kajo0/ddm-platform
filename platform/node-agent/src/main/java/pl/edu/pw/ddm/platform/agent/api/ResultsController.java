@@ -32,4 +32,14 @@ class ResultsController {
         }
     }
 
+    @GetMapping(value = "{executionId}/stats", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<String> stats(@PathVariable String executionId) {
+        String stats = resultsLoader.loadJsonStats(executionId);
+        if (stats == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(stats);
+        }
+    }
+
 }

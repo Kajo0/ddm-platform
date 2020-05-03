@@ -30,7 +30,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.edu.pw.ddm.platform.core.algorithm.AlgorithmFacade;
@@ -47,6 +46,7 @@ class LocalResultsCollector implements ResultsCollector {
     // TODO move to properties
     private static final String RESULTS_PATH = "/coordinator/results";
     private static final String RESULTS_SUFFIX = "-results.txt";
+    private static final String STATS_FILE = "stats.json";
     private static final String EXECUTION_DESCRIPTION = "description.properties";
     private static final String ARCHIVE_RESULTS_PATH = "/coordinator/archive_results";
 
@@ -71,13 +71,22 @@ class LocalResultsCollector implements ResultsCollector {
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)
                 .collect(Collectors.toList());
+        InstanceAddrDto master = addresses.stream()
+                .filter(InstanceAddrDto::isMaster)
+                .findFirst()
+                .orElseThrow();
+
+        ExecutionStats stats = requestForStats(master, desc.getId());
+        log.info("Collected results stats from master node.");
 
         // TODO optimize
         List<NodeResultsPair> files = workers.stream()
                 .map(addr -> requestForResults(addr, desc.getId()))
                 .collect(Collectors.toList());
         log.info("Collected {} files with results from worker nodes.", files.size());
+
         saveResults(files, desc.getId());
+        saveStats(stats, desc.getId());
         saveDescription(desc);
 
         return "ok";
@@ -93,10 +102,17 @@ class LocalResultsCollector implements ResultsCollector {
                 .listFiles(RESULT_FILE_FILTER);
     }
 
-    private NodeResultsPair requestForResults(InstanceAddrDto addressDto, String executionId) {
-        restTemplate.getMessageConverters()
-                .add(new ByteArrayHttpMessageConverter());
+    // TODO move to loader or sth
+    @SneakyThrows
+    @Override
+    public ExecutionStats loadStats(String executionId) {
+        Path path = Paths.get(RESULTS_PATH, executionId, STATS_FILE);
+        Preconditions.checkState(path.toFile().exists(), "Result stats file for execution id: '%s' not exists.", executionId);
 
+        return new ObjectMapper().readValue(path.toFile(), ExecutionStats.class);
+    }
+
+    private NodeResultsPair requestForResults(InstanceAddrDto addressDto, String executionId) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.TEXT_PLAIN));
 
@@ -109,9 +125,21 @@ class LocalResultsCollector implements ResultsCollector {
         }
 
         byte[] body = response.getBody();
-        log.debug("Collect data get response length: '{}'.", body.length);
+        log.debug("Collect results response length: '{}'.", body.length);
 
         return NodeResultsPair.of(addressDto.getId(), body);
+    }
+
+    private ExecutionStats requestForStats(InstanceAddrDto master, String executionId) {
+        String url = InstanceAgentAddressFactory.collectResultsStats(master, executionId);
+        ResponseEntity<ExecutionStats> response = restTemplate.getForEntity(url, ExecutionStats.class);
+        if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+            throw new IllegalStateException("Results stats not found for execution id " + executionId + " and address: " + master);
+        }
+
+        ExecutionStats body = response.getBody();
+        log.debug("Collected results stats response: '{}'.", body);
+        return body;
     }
 
     private void saveResults(List<NodeResultsPair> files, String executionId) throws IOException {
@@ -127,6 +155,14 @@ class LocalResultsCollector implements ResultsCollector {
             log.info("Saving file '{}' with node results.", nodeFile);
             Files.write(nodeFile, pair.results);
         }
+    }
+
+    private void saveStats(ExecutionStats stats, String executionId) throws IOException {
+        Path path = Paths.get(RESULTS_PATH, executionId, STATS_FILE);
+        log.info("Saving file '{}' with execution results stats.", path);
+        String json = new ObjectMapper().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(stats);
+        Files.write(path, json.getBytes());
     }
 
     private void saveDescription(ExecutionStarter.ExecutionDesc desc) throws IOException {

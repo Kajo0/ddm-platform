@@ -38,7 +38,8 @@ api = {
         'addresses': '/coordinator/command/instance/info/{instanceId}'
     },
     'results': {
-        'validate': '/coordinator/command/results/validate/{executionId}'
+        'validate': '/coordinator/command/results/validate/{executionId}',
+        'stats': '/coordinator/command/results/stats/{executionId}'
     }
 }
 
@@ -228,6 +229,14 @@ def validateResults(executionId, metrics):
     return response
 
 
+def resultsStats(executionId):
+    print("resultsStats executionId='{}' ".format(executionId))
+    url = baseUrl + api['results']['stats'].format(**{'executionId': executionId})
+    response = requests.get(url).text
+    formatted = json.loads(response)
+    pprint.pprint(formatted)
+
+
 def saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None, executionId=None):
     config = configparser.RawConfigParser()
     config['onenode' if oneNode else 'last'] = {
@@ -322,6 +331,11 @@ def results(oneNode=False):
     collectResults(last.get('execution_id'))
 
 
+def stats(oneNode=False):
+    last = loadLast(oneNode)
+    resultsStats(last.get('execution_id'))
+
+
 def validate(oneNode=False):
     last = loadLast(oneNode)
     validateResults(last.get('execution_id'), 'accuracy,recall,precision,f-measure,ARI')
@@ -332,7 +346,7 @@ def clear():
 
 
 if len(sys.argv) < 2:
-    print('  Provide command! [setup, clear, reload, execute, validate, info [data, alg, execution, instance]]')
+    print('  Provide command! [setup, clear, reload, execute, validate, stats, info [data, alg, execution, instance]]')
     sys.exit(1)
 
 command = sys.argv[1]
@@ -353,6 +367,8 @@ elif command == 'execute':
     execute(oneNode)
 elif command == 'results':
     results(oneNode)
+elif command == 'stats':
+    stats(oneNode)
 elif command == 'validate':
     validate(oneNode)
 elif command == 'info':

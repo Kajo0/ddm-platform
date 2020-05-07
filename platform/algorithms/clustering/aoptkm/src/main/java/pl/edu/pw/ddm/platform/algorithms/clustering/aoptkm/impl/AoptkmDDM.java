@@ -23,7 +23,7 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, Gl
     @Override
     public LModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
         AutoOpticsKm algorithm = new AutoOpticsKm(paramProvider);
-        List<ObjectPoint> pts = toObjectPoints(dataProvider.all());
+        List<ObjectPoint> pts = toObjectPoints(dataProvider.training());
         return algorithm.localClustering("dummy", pts);
     }
 

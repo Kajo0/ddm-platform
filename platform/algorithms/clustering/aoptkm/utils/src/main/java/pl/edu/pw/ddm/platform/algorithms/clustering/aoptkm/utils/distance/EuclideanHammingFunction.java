@@ -16,7 +16,7 @@ public class EuclideanHammingFunction implements DistanceFunction<Object[]> {
     @Override
     public double distance(Object[] first, Object[] second) {
         if (first.length != second.length) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("First length != second length (" + first.length + "!=" + second.length + ")");
         }
 
         double numeric = 0;

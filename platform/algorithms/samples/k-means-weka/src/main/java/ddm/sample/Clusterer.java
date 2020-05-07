@@ -71,14 +71,28 @@ public class Clusterer implements Clustering {
             dataset.add(di);
         }
 
+        int groups = paramProvider.provideNumeric("groups").intValue();
+        int iterations = paramProvider.provideNumeric("iterations").intValue();
+        printConfig(groups, iterations);
+
         SimpleKMeans kmeans = new SimpleKMeans();
-        kmeans.setNumClusters(paramProvider.provideNumeric("groups").intValue());
-        kmeans.setMaxIterations(paramProvider.provideNumeric("iterations").intValue());
+        kmeans.setNumClusters(groups);
+        kmeans.setMaxIterations(iterations);
         kmeans.setPreserveInstancesOrder(true);
 
         kmeans.buildClusterer(dataset);
 
         return kmeans;
+    }
+
+    // TODO remove debug checker
+    private static void printConfig(int groups, int iterations) {
+        System.out.println("---------------------------------");
+        System.out.println("-     K-means WEKA - CONFIG     -");
+        System.out.println("---------------------------------");
+        System.out.println("  groups        = " + groups);
+        System.out.println("  iterations    = " + iterations);
+        System.out.println("---------------------------------");
     }
 
     @Override

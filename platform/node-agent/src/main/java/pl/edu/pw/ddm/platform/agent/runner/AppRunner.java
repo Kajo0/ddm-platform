@@ -97,7 +97,9 @@ public class AppRunner {
                 .setAppResource(runnerJarPath)
                 .setMainClass(runnerMainClass)
                 .redirectToLog(log.getName())
-                .addSparkArg("spark.locality.wait", "3600s");
+                .addSparkArg("spark.locality.wait", "3600s")
+                .setDeployMode("client")
+                .setConf(SparkLauncher.EXECUTOR_MEMORY, "4g"); // TODO change it based on params and instance availability
 
         ArgJsonBuilder.ArgJsonBuilderBuilder jsonArgsBuilder = ArgJsonBuilder.toBuilder(params, masterNode, workerNodes, executionId);
 

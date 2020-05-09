@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import pl.edu.pw.ddm.platform.agent.execution.results.ExecutionStatusProvider;
+import pl.edu.pw.ddm.platform.agent.execution.ExecutionStatusProvider;
 import pl.edu.pw.ddm.platform.agent.runner.AppRunner;
 
 @RestController

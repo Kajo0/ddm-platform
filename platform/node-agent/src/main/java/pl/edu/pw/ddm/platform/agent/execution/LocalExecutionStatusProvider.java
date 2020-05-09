@@ -1,4 +1,4 @@
-package pl.edu.pw.ddm.platform.agent.execution.results;
+package pl.edu.pw.ddm.platform.agent.execution;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

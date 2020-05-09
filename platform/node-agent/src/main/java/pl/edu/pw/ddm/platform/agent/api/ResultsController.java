@@ -32,6 +32,7 @@ class ResultsController {
         }
     }
 
+    // TODO define model
     @GetMapping(value = "{executionId}/stats", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<String> stats(@PathVariable String executionId) {
         String stats = resultsLoader.loadJsonStats(executionId);

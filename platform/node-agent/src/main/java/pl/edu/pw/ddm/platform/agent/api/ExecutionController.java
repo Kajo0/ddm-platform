@@ -9,12 +9,15 @@ import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import pl.edu.pw.ddm.platform.agent.execution.results.ExecutionStatusProvider;
 import pl.edu.pw.ddm.platform.agent.runner.AppRunner;
 
 @RestController
@@ -23,6 +26,7 @@ import pl.edu.pw.ddm.platform.agent.runner.AppRunner;
 class ExecutionController {
 
     private final AppRunner appRunner;
+    private final ExecutionStatusProvider statusProvider;
 
     // TODO think about request params and post dto due to another parameters
     @PostMapping("run/{instanceId}/{algorithmId}/{trainDataId}")
@@ -63,9 +67,15 @@ class ExecutionController {
         return "not implemented yet - stop execution of " + executionId;
     }
 
-    @GetMapping("status/{executionId}")
-    String status(@PathVariable String executionId) {
-        return "not implemented yet - status execution of " + executionId;
+    // TODO define model
+    @GetMapping(value = "status/{executionId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<String> status(@PathVariable String executionId) {
+        String status = statusProvider.loadJsonStatus(executionId);
+        if (status == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(status);
+        }
     }
 
     @SneakyThrows

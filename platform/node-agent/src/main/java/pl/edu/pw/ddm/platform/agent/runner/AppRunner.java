@@ -2,10 +2,13 @@ package pl.edu.pw.ddm.platform.agent.runner;
 
 import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +45,10 @@ import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance;
 @Service
 @EnableConfigurationProperties({AppAlgorithmsConfig.class, CoordinatorApiConfig.class})
 public class AppRunner {
+
+    // TODO properties
+    private static final String EXECUTION_DIR = "/ddm/execution";
+    private final static String LOG_FILE = "central.log";
 
     private static final String SPARK_MASTER_PORT = "7077";
 
@@ -96,6 +103,7 @@ public class AppRunner {
                 .setAppName(params.algorithmId + " (" + params.trainDataId + ") " + executionId) // FIXME
                 .setAppResource(runnerJarPath)
                 .setMainClass(runnerMainClass)
+                .redirectOutput(prepareMasterLogFile(executionId))
                 .redirectToLog(log.getName())
                 .addSparkArg("spark.locality.wait", "3600s")
                 .setDeployMode("client")
@@ -131,6 +139,13 @@ public class AppRunner {
 
     public boolean isProgramRunning() {
         return runningApp != null && runningApp.isAlive();
+    }
+
+    private File prepareMasterLogFile(String executionId) throws IOException {
+        Path path = Paths.get(EXECUTION_DIR, executionId, LOG_FILE);
+        Files.createDirectories(path.getParent());
+        return Files.createFile(path)
+                .toFile();
     }
 
     /**

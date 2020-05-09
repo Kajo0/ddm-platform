@@ -81,7 +81,7 @@ public class AppRunner {
         this.runnerJarPath = algorithmsConfig.getRunner().getPath();
         this.runnerMainClass = algorithmsConfig.getRunner().getMainClass();
         this.algorithmsJarsPaths = algorithmsConfig.getAlgorithms();
-        this.agentOnMasterNode = env.acceptsProfiles(Profiles.of(ProfileConstants.NODE_MASTER));
+        this.agentOnMasterNode = env.acceptsProfiles(Profiles.of(ProfileConstants.NON_DEVELOPMENT_MASTER_NODE));
 
         this.coordinatorBaseUrl = coordinatorApiConfig.getBaseUrl();
     }
@@ -104,7 +104,6 @@ public class AppRunner {
                 .setAppResource(runnerJarPath)
                 .setMainClass(runnerMainClass)
                 .redirectOutput(prepareMasterLogFile(executionId))
-                .redirectToLog(log.getName())
                 .addSparkArg("spark.locality.wait", "3600s")
                 .setDeployMode("client")
                 .setConf(SparkLauncher.EXECUTOR_MEMORY, "4g"); // TODO change it based on params and instance availability

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import pl.edu.pw.ddm.platform.agent.execution.ExecutionLogsProvider;
 import pl.edu.pw.ddm.platform.agent.execution.ExecutionStatusProvider;
 import pl.edu.pw.ddm.platform.agent.runner.AppRunner;
 
@@ -27,6 +28,7 @@ class ExecutionController {
 
     private final AppRunner appRunner;
     private final ExecutionStatusProvider statusProvider;
+    private final ExecutionLogsProvider logsProvider;
 
     // TODO think about request params and post dto due to another parameters
     @PostMapping("run/{instanceId}/{algorithmId}/{trainDataId}")
@@ -75,6 +77,16 @@ class ExecutionController {
             return ResponseEntity.notFound().build();
         } else {
             return ResponseEntity.ok(status);
+        }
+    }
+
+    @GetMapping(value = "logs/{executionId}/{appId}", produces = MediaType.TEXT_PLAIN_VALUE)
+    ResponseEntity<String> logs(@PathVariable String executionId, @PathVariable String appId) {
+        String logs = logsProvider.loadAll(executionId, appId);
+        if (logs == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.ok(logs);
         }
     }
 

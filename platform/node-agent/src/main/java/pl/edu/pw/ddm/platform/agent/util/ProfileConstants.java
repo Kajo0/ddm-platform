@@ -2,6 +2,8 @@ package pl.edu.pw.ddm.platform.agent.util;
 
 public interface ProfileConstants {
 
-    String NODE_MASTER = "nodemaster";
+    String NON_DEVELOPMENT_MASTER_NODE = "nodemaster";
+    String MASTER = "master";
+    String WORKER = "worker";
 
 }

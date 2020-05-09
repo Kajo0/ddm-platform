@@ -26,7 +26,7 @@ interface ExecutionStarter {
     Map<String, ExecutionDesc> allExecutionsInfo();
 
     @Data
-    @Builder
+    @Builder(toBuilder = true)
     @AllArgsConstructor
     @RequiredArgsConstructor
     class ExecutionDesc {
@@ -40,6 +40,7 @@ interface ExecutionStarter {
         private final String distanceFunctionName;
         private final InstanceAddrDto masterAddr;
         private final ExecutionStatus status;
+        private final String appId;
 
         @Builder.Default
         @JsonDeserialize(using = LocalDateTimeDeserializer.class)
@@ -52,6 +53,14 @@ interface ExecutionStarter {
 
         private String message;
 
+        boolean isRunning() {
+            return status == ExecutionStatus.STARTED;
+        }
+
+        boolean isCompleted() {
+            return status == ExecutionStatus.FINISHED;
+        }
+
         @Getter
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
         enum ExecutionStatus {
@@ -62,6 +71,16 @@ interface ExecutionStarter {
 
             private final String code;
         }
+    }
+
+    @Data
+    class ExecutionAgentStatus {
+
+        private String appId;
+        private String stage;
+        private String message;
+        private LocalDateTime startTime;
+        private LocalDateTime lastUpdate;
     }
 
 }

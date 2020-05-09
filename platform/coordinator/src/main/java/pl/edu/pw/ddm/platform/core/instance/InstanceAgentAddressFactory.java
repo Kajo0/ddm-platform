@@ -26,6 +26,11 @@ public class InstanceAgentAddressFactory {
         return base(dto) + "execution/run/" + instanceId + "/" + algorithmId + "/" + trainDataId;
     }
 
+    public String executionStatus(@NonNull InstanceAddrDto dto,
+                                  @NonNull String executionId) {
+        return base(dto) + "execution/status/" + executionId;
+    }
+
     public String collectResults(@NonNull InstanceAddrDto dto, @NonNull String executionId) {
         return base(dto) + "results/" + executionId + "/download";
     }

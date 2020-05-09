@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -71,8 +73,17 @@ class InMemoryExecutionStarter implements ExecutionStarter {
 
     @Override
     public ExecutionDesc status(String executionId) {
-        // TODO call master for status update
-        return executionMap.get(executionId);
+        // TODO add null check
+        ExecutionDesc currentStatus = executionMap.get(executionId);
+
+        if (currentStatus.isRunning()) {
+            log.info("Execution '{}' is running so fetching update.", executionId);
+            ExecutionAgentStatus update = requestForStatus(currentStatus);
+            return updateStatus(currentStatus, update);
+        } else {
+            log.info("Execution '{}' is finished with status '{}'.", executionId, currentStatus.getStatus().getCode());
+            return currentStatus;
+        }
     }
 
     @Override
@@ -83,6 +94,44 @@ class InMemoryExecutionStarter implements ExecutionStarter {
     @SneakyThrows
     private String toJsonParams(Map<String, String> params) {
         return new ObjectMapper().writeValueAsString(params);
+    }
+
+    private ExecutionAgentStatus requestForStatus(ExecutionDesc currentStatus) {
+        String executionId = currentStatus.getId();
+        InstanceAddrDto masterAddr = currentStatus.getMasterAddr();
+
+        String url = InstanceAgentAddressFactory.executionStatus(masterAddr, executionId);
+        ResponseEntity<ExecutionAgentStatus> response = restTemplate.getForEntity(url, ExecutionAgentStatus.class);
+        if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+            throw new IllegalStateException("Execution status not found for execution id " + executionId + " and address: " + masterAddr);
+        }
+
+        ExecutionAgentStatus body = response.getBody();
+        log.debug("Collected execution status response: '{}'.", body);
+        return body;
+    }
+
+    private ExecutionDesc updateStatus(ExecutionDesc currentExec, ExecutionAgentStatus update) {
+        ExecutionDesc.ExecutionDescBuilder statusBuilder = currentExec.toBuilder();
+        if (currentExec.getAppId() == null) {
+            log.info("Execution '{}' assigned app id: '{}'.", currentExec.getId(), update.getAppId());
+            statusBuilder.appId(update.getAppId());
+        }
+
+        if ("ERROR".equals(update.getStage())) {
+            log.info("Execution '{}' status changed to 'ERROR' with message '{}'.", currentExec.getId(), update.getMessage());
+            statusBuilder.status(ExecutionDesc.ExecutionStatus.FAILED)
+                    .message(update.getMessage())
+                    .stopped(update.getLastUpdate());
+        } else if ("FINISHED".equals(update.getStage())) {
+            log.info("Execution '{}' status changed to 'FINISHED'.", currentExec.getId());
+            statusBuilder.status(ExecutionDesc.ExecutionStatus.FINISHED)
+                    .stopped(update.getLastUpdate());
+        }
+
+        ExecutionDesc nextStatus = statusBuilder.build();
+        executionMap.put(currentExec.getId(), nextStatus);
+        return nextStatus;
     }
 
 }

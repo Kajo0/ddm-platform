@@ -27,7 +27,7 @@ api = {
         'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
         'info': '/coordinator/command/execution/info',
         'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{trainDataId}',
-        'status': '/coordinator/command/execution/status/executionId}',
+        'status': '/coordinator/command/execution/status/{executionId}',
         'stop': '/coordinator/command/execution/stop/{executionId}'
     },
     'instance': {
@@ -195,6 +195,14 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
     return executionId
 
 
+def executionStatus(executionId):
+    print("executionStatus executionId='{}'".format(executionId))
+    url = baseUrl + api['execution']['status'].format(**{'executionId': executionId})
+    response = requests.get(url).text
+    formatted = json.loads(response)
+    pprint.pprint(formatted)
+
+
 def createInstance(workers):
     print("createInstance workers='{}'".format(workers))
     url = baseUrl + api['instance']['create'].format(**{'workers': workers})
@@ -326,6 +334,11 @@ def execute(oneNode=False):
     saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, executionId)
 
 
+def status(oneNode=False):
+    last = loadLast(oneNode)
+    executionStatus(last.get('execution_id'))
+
+
 def results(oneNode=False):
     last = loadLast(oneNode)
     collectResults(last.get('execution_id'))
@@ -365,6 +378,8 @@ elif command == 'reload':
     reload(oneNode)
 elif command == 'execute':
     execute(oneNode)
+elif command == 'status':
+    status(oneNode)
 elif command == 'results':
     results(oneNode)
 elif command == 'stats':

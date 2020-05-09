@@ -16,6 +16,7 @@ public class ExecutionDescDto {
     private String testDataId;
     private String status;
     private String message;
+    private String appId;
     private LocalDateTime started;
     private LocalDateTime stopped;
 

@@ -60,11 +60,10 @@ class LocalResultsCollector implements ResultsCollector {
     @SneakyThrows
     @Override
     public String collect(List<InstanceAddrDto> addresses, ExecutionStarter.ExecutionDesc desc) {
-        // TODO enable after status check
-//        if (ExecutionStarter.ExecutionDesc.ExecutionStatus.FINISHED != desc.getStatus()) {
-//            log.warn("Execution '{}' not finished - in status '{}' so not collecting.", desc.getId(), desc.getStatus().getCode());
-//            return desc.getStatus().getCode();
-//        }
+        if (!desc.isCompleted()) {
+            log.warn("Execution '{}' not completed - in status '{}' so not collecting.", desc.getId(), desc.getStatus().getCode());
+            return desc.getStatus().getCode();
+        }
 
         // TODO check if already has results downloaded
         log.info("Collecting results using desc '{}' from nodes '{}'.", desc, addresses);

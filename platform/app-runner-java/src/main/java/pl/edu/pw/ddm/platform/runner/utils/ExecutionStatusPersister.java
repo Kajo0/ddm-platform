@@ -39,7 +39,10 @@ public class ExecutionStatusPersister {
 
     // TODO handle errors somehow by catching it and rethrowing
     public void error(String msg) {
-        next(ExecutionStage.ERROR);
+        ExecutionStatus status = load(executionId);
+        status.setStage(ExecutionStage.ERROR.code);
+        status.setMessage(msg);
+        save(status);
     }
 
     public void started() {
@@ -97,6 +100,7 @@ public class ExecutionStatusPersister {
 
         private String appId;
         private String stage;
+        private String message;
 
         @JsonDeserialize(using = LocalDateTimeDeserializer.class)
         @JsonSerialize(using = LocalDateTimeSerializer.class)

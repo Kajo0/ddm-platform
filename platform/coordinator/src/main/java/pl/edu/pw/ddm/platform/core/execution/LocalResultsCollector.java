@@ -145,8 +145,8 @@ class LocalResultsCollector implements ResultsCollector {
         Path path = Paths.get(RESULTS_PATH, executionId);
         if (Files.exists(path)) {
             log.warn("Removing previous results path '{}'.", path);
+            FileUtils.deleteDirectory(path.toFile());
         }
-        FileUtils.deleteDirectory(path.toFile());
         Files.createDirectories(path);
 
         for (NodeResultsPair pair : files) {

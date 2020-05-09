@@ -24,8 +24,9 @@ api = {
         'scatter': '/coordinator/command/data/scatter/{instanceId}/{dataId}',
     },
     'execution': {
-        'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
         'info': '/coordinator/command/execution/info',
+        'collectLogs': '/coordinator/command/execution/logs/collect/{executionId}',
+        'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
         'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{trainDataId}',
         'status': '/coordinator/command/execution/status/{executionId}',
         'stop': '/coordinator/command/execution/stop/{executionId}'
@@ -148,20 +149,28 @@ def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, typ
     return response
 
 
-def collectResults(executionId):
-    print("collectResults executionId='{}'".format(executionId))
-    url = baseUrl + api['execution']['collectResults'].format(**{'executionId': executionId})
-    response = requests.get(url).text
-    print('  response: ' + response)
-    return response
-
-
 def executionInfo():
     print('executionInfo')
     url = baseUrl + api['execution']['info']
     response = requests.get(url).text
     formatted = json.loads(response)
     pprint.pprint(formatted)
+
+
+def collectLogs(executionId):
+    print("collectLogs executionId='{}'".format(executionId))
+    url = baseUrl + api['execution']['collectLogs'].format(**{'executionId': executionId})
+    response = requests.get(url).text
+    print('  response: ' + response)
+    return response
+
+
+def collectResults(executionId):
+    print("collectResults executionId='{}'".format(executionId))
+    url = baseUrl + api['execution']['collectResults'].format(**{'executionId': executionId})
+    response = requests.get(url).text
+    print('  response: ' + response)
+    return response
 
 
 def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distanceFuncName='none'):
@@ -339,6 +348,11 @@ def status(oneNode=False):
     executionStatus(last.get('execution_id'))
 
 
+def logs(oneNode=False):
+    last = loadLast(oneNode)
+    collectLogs(last.get('execution_id'))
+
+
 def results(oneNode=False):
     last = loadLast(oneNode)
     collectResults(last.get('execution_id'))
@@ -359,7 +373,7 @@ def clear():
 
 
 if len(sys.argv) < 2:
-    print('  Provide command! [setup, clear, reload, execute, validate, stats, info [data, alg, execution, instance]]')
+    print('  Provide command! [setup, clear, reload, execute, status, logs, results, validate, stats, info [data, alg, func, exec, inst]]')
     sys.exit(1)
 
 command = sys.argv[1]
@@ -380,6 +394,8 @@ elif command == 'execute':
     execute(oneNode)
 elif command == 'status':
     status(oneNode)
+elif command == 'logs':
+    logs(oneNode)
 elif command == 'results':
     results(oneNode)
 elif command == 'stats':
@@ -388,19 +404,19 @@ elif command == 'validate':
     validate(oneNode)
 elif command == 'info':
     if len(sys.argv) < 3:
-        print('  Provide info arg [data, functions, alg, execution, instance]')
+        print('  Provide info arg [data, func, alg, exec, inst]')
         sys.exit(1)
 
     arg = sys.argv[2]
     if arg == 'data':
         dataInfo()
-    if arg == 'functions':
+    elif arg == 'func':
         functionsInfo()
     elif arg == 'alg':
         algorithmInfo()
-    elif arg == 'execution':
+    elif arg == 'exec':
         executionInfo()
-    elif arg == 'instance':
+    elif arg == 'inst':
         instanceInfo()
     else:
         print('  Unknown info to show')

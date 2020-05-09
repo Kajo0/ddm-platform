@@ -69,6 +69,14 @@ class ExecutionCommandController {
                 .get();
     }
 
+    @GetMapping("logs/collect/{executionId}")
+    String collectLogs(@PathVariable String executionId) {
+        return Optional.of(executionId)
+                .map(ExecutionResultsFacade.CollectLogsRequest::of)
+                .map(executionResultsFacade::collectLogs)
+                .get();
+    }
+
     @GetMapping(value = "info", produces = MediaType.APPLICATION_JSON_VALUE)
     String executedInfo() {
         return executionFacade.info();

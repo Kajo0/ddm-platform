@@ -31,6 +31,10 @@ public class InstanceAgentAddressFactory {
         return base(dto) + "execution/status/" + executionId;
     }
 
+    public String collectLogs(@NonNull InstanceAddrDto dto, @NonNull String executionId, @NonNull String appId) {
+        return base(dto) + "execution/logs/" + executionId + "/" + appId;
+    }
+
     public String collectResults(@NonNull InstanceAddrDto dto, @NonNull String executionId) {
         return base(dto) + "results/" + executionId + "/download";
     }

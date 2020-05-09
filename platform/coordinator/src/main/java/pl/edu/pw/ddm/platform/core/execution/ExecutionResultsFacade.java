@@ -1,7 +1,6 @@
 package pl.edu.pw.ddm.platform.core.execution;
 
 import java.io.File;
-import java.util.List;
 import java.util.Optional;
 
 import lombok.AccessLevel;
@@ -11,7 +10,6 @@ import lombok.Value;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.core.execution.dto.ExecutionStatsDto;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
-import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 @Service
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -20,13 +18,22 @@ public class ExecutionResultsFacade {
     private final InstanceFacade instanceFacade;
     private final ExecutionStarter executionStarter;
     private final ResultsCollector resultsCollector;
+    private final LogsCollector logsCollector;
 
     public String collectResults(@NonNull CollectResultsRequest request) {
-        ExecutionStarter.ExecutionDesc desc = executionStarter.status(request.executionId);
+        var desc = executionStarter.status(request.executionId);
         var req = InstanceFacade.AddressRequest.of(desc.getInstanceId());
-        List<InstanceAddrDto> addresses = instanceFacade.addresses(req);
+        var addresses = instanceFacade.addresses(req);
 
         return resultsCollector.collect(addresses, desc);
+    }
+
+    public String collectLogs(@NonNull CollectLogsRequest request) {
+        var desc = executionStarter.status(request.executionId);
+        var req = InstanceFacade.AddressRequest.of(desc.getInstanceId());
+        var addresses = instanceFacade.addresses(req);
+
+        return logsCollector.collectAll(addresses, desc);
     }
 
     public File[] nodesResultsFiles(@NonNull LoadResultFilesRequest request) {
@@ -42,6 +49,13 @@ public class ExecutionResultsFacade {
 
     @Value(staticConstructor = "of")
     public static class CollectResultsRequest {
+
+        @NonNull
+        private final String executionId;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class CollectLogsRequest {
 
         @NonNull
         private final String executionId;

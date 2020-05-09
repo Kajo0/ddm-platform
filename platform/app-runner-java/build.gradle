@@ -20,6 +20,7 @@ dependencies {
     compileOnly 'org.apache.spark:spark-core_2.11:2.4.5'
     implementation 'org.scala-lang:scala-library:2.11.12'
     implementation 'org.reflections:reflections:0.9.12'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.6.5'
 
     compileOnly 'org.projectlombok:lombok:1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'

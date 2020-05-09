@@ -18,11 +18,13 @@ import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.TimeStatistics;
 import pl.edu.pw.ddm.platform.runner.utils.CentralDdmSummarizer;
 import pl.edu.pw.ddm.platform.runner.utils.ExecutionStatisticsPersister;
+import pl.edu.pw.ddm.platform.runner.utils.ExecutionStatusPersister;
 
 public final class CentralRunner {
 
     private final JsonArgsDto args;
     private final InitParamsDto initParams;
+    private final ExecutionStatusPersister statusPersister;
 
     private final JavaSparkContext sc;
     private final List<Integer> nodeStubList;
@@ -45,6 +47,9 @@ public final class CentralRunner {
 
         SparkContext ssc = SparkContext.getOrCreate();
         this.sc = JavaSparkContext.fromSparkContext(ssc);
+
+        this.statusPersister = ExecutionStatusPersister.of(initParams.getExecutionId());
+        this.statusPersister.init(this.sc.getConf().getAppId());
     }
 
     // TODO think if not remove or sth and log.info it
@@ -78,19 +83,25 @@ public final class CentralRunner {
     }
 
     private void run() {
+        statusPersister.started();
         // TODO send clear ID to every agent
         performEachNodeDistributionWorkaround();
 
         TimeStatistics stats = new TimeStatistics();
         stats.setStart(LocalDateTime.now());
 
+        statusPersister.processLocal();
         processLocal();
+        statusPersister.processGlobal();
         processGlobal();
+        statusPersister.updateLocal();
         updateLocal();
 
+        statusPersister.validate();
         executeMethod();
         stats.setEnd(LocalDateTime.now());
 
+        statusPersister.summarize();
         CentralDdmSummarizer summarizer = new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes(), stats)
                 .printModelsSummary()
                 .printDispersionSummary()
@@ -99,6 +110,7 @@ public final class CentralRunner {
 
         ExecutionStatisticsPersister.save(summarizer.prepareStats(), initParams.getExecutionId());
 
+        statusPersister.finish();
         sc.stop();
     }
 

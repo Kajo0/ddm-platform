@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -54,14 +55,40 @@ class LocalLogsCollector implements LogsCollector {
         return "ok";
     }
 
-//    @Override
-//    public File[] load(String executionId) {
-//        Path path = Paths.get(RESULTS_PATH, executionId);
-//        Preconditions.checkState(path.toFile().exists(), "Result directory for execution id: '%s' not exists.", executionId);
-//
-//        return path.toFile()
-//                .listFiles(RESULT_FILE_FILTER);
-//    }
+    @Override
+    public String fetchSince(String executionId, String nodeId, Integer since) {
+        return fetch(executionId, nodeId, since, null);
+    }
+
+    @Override
+    public String fetchLast(String executionId, String nodeId, Integer last) {
+        return fetch(executionId, nodeId, null, last);
+    }
+
+    @SneakyThrows
+    public String fetch(String executionId, String nodeId, Integer start, Integer limitOrLast) {
+        Path path = Paths.get(LOGS_PATH, executionId, nodeId + LOGFILE_SUFFIX);
+        if (Files.notExists(path)) {
+            log.warn("No log file '{}' exists.", path);
+            return "no log";
+        }
+
+        Stream<String> lines = Files.lines(path);
+
+        if (start != null && limitOrLast != null) {
+            lines = lines.skip(start)
+                    .limit(limitOrLast);
+        } else if (start != null) {
+            lines = lines.skip(start);
+        } else if (limitOrLast != null) {
+            // TODO optimize
+            long count = Files.lines(path)
+                    .count();
+            lines = lines.skip(count - limitOrLast);
+        }
+
+        return lines.collect(Collectors.joining(System.lineSeparator()));
+    }
 
     private NodeLogsPair requestForLogs(InstanceAddrDto addressDto, String executionId, String appId) {
         HttpHeaders headers = new HttpHeaders();

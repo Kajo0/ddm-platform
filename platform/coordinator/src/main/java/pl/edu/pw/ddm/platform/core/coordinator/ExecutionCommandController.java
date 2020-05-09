@@ -77,6 +77,21 @@ class ExecutionCommandController {
                 .get();
     }
 
+    @GetMapping("logs/fetch/{executionId}/{nodeId}/{count}")
+    String fetchLogs(@PathVariable String executionId, @PathVariable String nodeId, @PathVariable Integer count) {
+        var builder = ExecutionResultsFacade.FetchLogsRequest.builder()
+                .executionId(executionId)
+                .nodeId(nodeId);
+
+        if (count < 0) {
+            builder.last(count * -1);
+        } else {
+            builder.start(count);
+        }
+
+        return executionResultsFacade.fetchLogs(builder.build());
+    }
+
     @GetMapping(value = "info", produces = MediaType.APPLICATION_JSON_VALUE)
     String executedInfo() {
         return executionFacade.info();

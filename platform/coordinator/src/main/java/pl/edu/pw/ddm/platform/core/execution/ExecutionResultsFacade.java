@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,17 @@ public class ExecutionResultsFacade {
         return logsCollector.collectAll(addresses, desc);
     }
 
+    public String fetchLogs(@NonNull FetchLogsRequest request) {
+        // TODO collect first if not done yet
+        if (request.start != null) {
+            return logsCollector.fetchSince(request.executionId, request.nodeId, request.start);
+        } else if (request.last != null) {
+            return logsCollector.fetchLast(request.executionId, request.nodeId, request.last);
+        } else {
+            throw new IllegalArgumentException("Start nor last amount of lines not provided.");
+        }
+    }
+
     public File[] nodesResultsFiles(@NonNull LoadResultFilesRequest request) {
         return resultsCollector.load(request.executionId);
     }
@@ -59,6 +71,19 @@ public class ExecutionResultsFacade {
 
         @NonNull
         private final String executionId;
+    }
+
+    @Builder
+    public static class FetchLogsRequest {
+
+        @NonNull
+        private final String executionId;
+
+        @NonNull
+        private final String nodeId;
+
+        private final Integer start;
+        private final Integer last;
     }
 
     @Value(staticConstructor = "of")

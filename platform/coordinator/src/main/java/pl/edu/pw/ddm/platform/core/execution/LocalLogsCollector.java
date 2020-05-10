@@ -84,7 +84,7 @@ class LocalLogsCollector implements LogsCollector {
             // TODO optimize
             long count = Files.lines(path)
                     .count();
-            lines = lines.skip(count - limitOrLast);
+            lines = lines.skip(Math.max(0, count - limitOrLast));
         }
 
         return lines.collect(Collectors.joining(System.lineSeparator()));

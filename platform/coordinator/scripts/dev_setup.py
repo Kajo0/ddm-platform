@@ -26,6 +26,7 @@ api = {
     'execution': {
         'info': '/coordinator/command/execution/info',
         'collectLogs': '/coordinator/command/execution/logs/collect/{executionId}',
+        'fetchLogs': '/coordinator/command/execution/logs/fetch/{executionId}/{nodeId}/{count}',
         'collectResults': '/coordinator/command/execution/results/collect/{executionId}',
         'start': '/coordinator/command/execution/start/{instanceId}/{algorithmId}/{trainDataId}',
         'status': '/coordinator/command/execution/status/{executionId}',
@@ -165,6 +166,18 @@ def collectLogs(executionId):
     return response
 
 
+def fetchLogs(executionId, nodeId, count):
+    print("fetchLogs executionId='{}' nodeId='{}' count='{}'".format(executionId, nodeId, count))
+    url = baseUrl + api['execution']['fetchLogs'].format(**{
+        'executionId': executionId,
+        'nodeId': nodeId,
+        'count': count
+    })
+    response = requests.get(url).text
+    print('  response size: ' + str(len(response)))
+    return response
+
+
 def collectResults(executionId):
     print("collectResults executionId='{}'".format(executionId))
     url = baseUrl + api['execution']['collectResults'].format(**{'executionId': executionId})
@@ -204,12 +217,14 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
     return executionId
 
 
-def executionStatus(executionId):
+def executionStatus(executionId, debug=True):
     print("executionStatus executionId='{}'".format(executionId))
     url = baseUrl + api['execution']['status'].format(**{'executionId': executionId})
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
 def createInstance(workers, cpu=2, memory=2, disk=10):
@@ -226,12 +241,14 @@ def createInstance(workers, cpu=2, memory=2, disk=10):
     return instanceId
 
 
-def instanceInfo():
+def instanceInfo(debug=True):
     print('instanceInfo')
     url = baseUrl + api['instance']['info']
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
 def destroyAll():
@@ -359,6 +376,26 @@ def logs(oneNode=False):
     collectLogs(last.get('execution_id'))
 
 
+def lastlog(oneNode=False):
+    last = loadLast(oneNode)
+    executionId = last.get('execution_id')
+    appId = executionStatus(executionId, False)['appId']
+    nodes = instanceInfo(False)[last.get('instance_id')]['nodes']
+
+    collectLogs(executionId)
+
+    logs = {}
+    for nodeId in nodes:
+        n = nodes[nodeId]
+        logs[nodeId] = {}
+        logs[nodeId]['type'] = n['type']
+        logs[nodeId]['log'] = fetchLogs(executionId, nodeId, -10)
+
+    for log in logs:
+        print('\n\n     =====================================================> ' + logs[log]['type'] + ' [' + log + ']')
+        print(logs[log]['log'])
+
+
 def results(oneNode=False):
     last = loadLast(oneNode)
     collectResults(last.get('execution_id'))
@@ -403,6 +440,8 @@ elif command == 'status':
     status(oneNode)
 elif command == 'logs':
     logs(oneNode)
+elif command == 'lastlog':
+    lastlog(oneNode)
 elif command == 'results':
     results(oneNode)
 elif command == 'stats':

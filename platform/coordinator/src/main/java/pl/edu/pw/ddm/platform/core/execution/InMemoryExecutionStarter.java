@@ -28,8 +28,8 @@ class InMemoryExecutionStarter implements ExecutionStarter {
     private final Map<String, ExecutionStarter.ExecutionDesc> executionMap = new HashMap<>();
 
     @Override
-    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String trainDataId, String testDataId, String distanceFunctionId, String distanceFunctionName, Map<String, String> executionParams) {
-        log.info("Starting algorithm with id '{}' train data with id '{}' test data with id '{}' distance function id '{}' and name '{}' on master node '{}'. (execution params: '{}')", algorithmId, trainDataId, testDataId, distanceFunctionId, distanceFunctionName, masterAddr, executionParams);
+    public String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String trainDataId, String testDataId, String distanceFunctionId, String distanceFunctionName, Integer cpuCores, Integer memoryInGb, Map<String, String> executionParams) {
+        log.info("Starting algorithm with id '{}' train data with id '{}' test data with id '{}' distance function id '{}' and name '{}' with '{}' cpus and '{}'gb memory on master node '{}'. (execution params: '{}')", algorithmId, trainDataId, testDataId, distanceFunctionId, distanceFunctionName, cpuCores, memoryInGb, masterAddr, executionParams);
 
         // TODO broadcast algorithm if not present there
         // TODO broadcast distance function if not present there
@@ -39,6 +39,8 @@ class InMemoryExecutionStarter implements ExecutionStarter {
         body.add("distanceFunctionName", distanceFunctionName);
         body.add("distanceFunctionPackageName", distanceFunctionName);
         body.add("executionParams", toJsonParams(executionParams));
+        body.add("cpuCores", String.valueOf(cpuCores));
+        body.add("memoryInGb", String.valueOf(memoryInGb));
         if (distanceFunctionId != null) {
             body.add("distanceFunctionId", distanceFunctionId);
         }

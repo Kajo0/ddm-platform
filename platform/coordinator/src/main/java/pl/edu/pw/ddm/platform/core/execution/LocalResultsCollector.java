@@ -166,6 +166,7 @@ class LocalResultsCollector implements ResultsCollector {
 
     private void saveDescription(ExecutionStarter.ExecutionDesc desc) throws IOException {
         // TODO refactor a bit and save as .json
+        // TODO save cpu & memory info -> instance config
         var objMapper = new ObjectMapper();
         Properties prop = new Properties();
         prop.setProperty("workers", String.valueOf(instanceFacade.addresses(InstanceFacade.AddressRequest.of(desc.getInstanceId())).size() - 1));

@@ -46,7 +46,8 @@ public class ExecutionFacade {
         }
         // TODO add precondition to avoid both distance function id and name which does not matche id
 
-        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.trainDataId, request.testDataId, distanceFunctionId, distanceFunctionName, request.executionParams);
+        // TODO handle when cpu/memory not equal for all
+        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.trainDataId, request.testDataId, distanceFunctionId, distanceFunctionName, masterAddr.getCpu(), masterAddr.getMemory(), request.executionParams);
     }
 
     public String stop(@NonNull StopRequest request) {

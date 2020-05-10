@@ -12,6 +12,9 @@ public class InstanceAddrDto {
     private String port;
     private String uiPort;
     private String agentPort;
+    private Integer cpu;
+    private Integer memory;
+    private Integer disk;
 
     public String agentAddress() {
         return address + ":" + agentPort;

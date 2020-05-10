@@ -54,6 +54,9 @@ class InstanceConfig {
         private String port;
         private String uiPort;
         private String agentPort;
+        private Integer cpu;
+        private Integer memory;
+        private Integer disk;
 
         @Override
         public String toString() {

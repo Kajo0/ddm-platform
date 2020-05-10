@@ -17,7 +17,7 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 interface ExecutionStarter {
 
-    String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String trainDataId, String testDataId, String distanceFunctionId, String distanceFunctionName, Map<String, String> executionParams);
+    String start(InstanceAddrDto masterAddr, String instanceId, String algorithmId, String trainDataId, String testDataId, String distanceFunctionId, String distanceFunctionName, Integer cpuCores, Integer memoryInGb, Map<String, String> executionParams);
 
     String stop(String executionId);
 

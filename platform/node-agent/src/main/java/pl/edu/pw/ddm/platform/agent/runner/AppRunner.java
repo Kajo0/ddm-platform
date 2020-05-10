@@ -106,7 +106,8 @@ public class AppRunner {
                 .redirectOutput(prepareMasterLogFile(executionId))
                 .addSparkArg("spark.locality.wait", "3600s")
                 .setDeployMode("client")
-                .setConf(SparkLauncher.EXECUTOR_MEMORY, "4g"); // TODO change it based on params and instance availability
+                .setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(params.cpuCount))
+                .setConf(SparkLauncher.EXECUTOR_MEMORY, params.memoryInGb + "g");
 
         ArgJsonBuilder.ArgJsonBuilderBuilder jsonArgsBuilder = ArgJsonBuilder.toBuilder(params, masterNode, workerNodes, executionId);
 
@@ -209,6 +210,9 @@ public class AppRunner {
         private String distanceFunctionId;
         private String distanceFunctionName;
         private Map<String, String> executionParams;
+
+        private Integer cpuCount;
+        private Integer memoryInGb;
     }
 
     @Data

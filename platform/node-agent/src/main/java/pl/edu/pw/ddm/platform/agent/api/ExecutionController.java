@@ -38,6 +38,8 @@ class ExecutionController {
                @RequestParam(value = "testDataId", required = false) String testDataId,
                @RequestParam(value = "distanceFunctionId", required = false) String distanceFunctionId,
                @RequestParam("distanceFunctionName") String distanceFunctionName,
+               @RequestParam("cpuCores") Integer cpuCores,
+               @RequestParam("memoryInGb") Integer memoryInGb,
                @RequestParam("executionParams") String executionParamsJson) {
         if (appRunner.isProgramRunning()) {
             // TODO change response
@@ -53,6 +55,8 @@ class ExecutionController {
                     .testDataId(testDataId)
                     .distanceFunctionId(Strings.emptyToNull(distanceFunctionId))
                     .distanceFunctionName(distanceFunctionName)
+                    .cpuCount(cpuCores)
+                    .memoryInGb(memoryInGb)
                     .executionParams(mapFromJsonString(executionParamsJson))
                     .build();
 

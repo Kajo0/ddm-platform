@@ -28,7 +28,7 @@ public class InstanceFacade {
     private final Environment env;
 
     public String create(@NonNull CreateRequest request) {
-        return creator.create(request.workerNodes);
+        return creator.create(request.workerNodes, request.cpuCount, request.memoryInGb, request.diskInGb);
     }
 
     public String destroy(@NonNull DestroyRequest request) {
@@ -82,7 +82,12 @@ public class InstanceFacade {
         @NonNull
         private final String ddmModel;
 
+        @NonNull
         private final Integer workerNodes;
+
+        private final Integer cpuCount;
+        private final Integer memoryInGb;
+        private final Integer diskInGb;
     }
 
     @Value(staticConstructor = "of")

@@ -212,10 +212,16 @@ def executionStatus(executionId):
     pprint.pprint(formatted)
 
 
-def createInstance(workers):
-    print("createInstance workers='{}'".format(workers))
+def createInstance(workers, cpu=2, memory=2, disk=10):
+    print("createInstance workers='{}' cpu='{}' memory='{}' disk='{}'".format(workers, cpu, memory, disk))
     url = baseUrl + api['instance']['create'].format(**{'workers': workers})
-    instanceId = requests.get(url).text
+    instanceId = requests.post(url,
+                               data={
+                                   'cpu': cpu,
+                                   'memory': memory,
+                                   'disk': disk
+                               }
+                               ).text
     print('  instanceId: ' + instanceId)
     return instanceId
 
@@ -289,7 +295,7 @@ def setupDefault(workers=2, oneNode=False):
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
-    instanceId = createInstance(workers)
+    instanceId = createInstance(workers, 2, 2, 10)  # cpu, memory, disk
 
     time.sleep(workers * 5)
     broadcastJar(instanceId, algorithmId)
@@ -373,7 +379,8 @@ def clear():
 
 
 if len(sys.argv) < 2:
-    print('  Provide command! [setup, clear, reload, execute, status, logs, results, validate, stats, info [data, alg, func, exec, inst]]')
+    print(
+        '  Provide command! [setup, clear, reload, execute, status, logs, results, validate, stats, info [data, alg, func, exec, inst]]')
     sys.exit(1)
 
 command = sys.argv[1]

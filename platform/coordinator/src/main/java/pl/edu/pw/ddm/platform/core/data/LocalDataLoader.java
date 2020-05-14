@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.NotImplementedException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.pw.ddm.platform.core.util.IdGenerator;
@@ -30,8 +31,8 @@ import pl.edu.pw.ddm.platform.core.util.IdGenerator;
 @Service
 class LocalDataLoader implements DataLoader {
 
-    // TODO move to properties
-    private static final String DATA_PATH = "/coordinator/data";
+    @Value("${paths.datasets}")
+    private String datasetsPath;
 
     private final Map<String, DataDesc> dataMap = new HashMap<>();
 
@@ -97,7 +98,7 @@ class LocalDataLoader implements DataLoader {
     private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, String separator, Integer idIndex, Integer labelIndex, boolean deductType) throws IOException {
         // TODO check type inside file
         String type = FilenameUtils.getExtension(name);
-        Path dataPath = Paths.get(DATA_PATH, id + "." + type);
+        Path dataPath = Paths.get(datasetsPath, id + "." + type);
         Files.write(dataPath, bytes);
 
         if (idIndex == null) {
@@ -122,7 +123,7 @@ class LocalDataLoader implements DataLoader {
     @PostConstruct
     void init() throws IOException {
         // TODO save on PreDestroy and collect or keep removed
-        Files.createDirectories(Paths.get(DATA_PATH));
+        Files.createDirectories(Paths.get(datasetsPath));
     }
 
     @PreDestroy

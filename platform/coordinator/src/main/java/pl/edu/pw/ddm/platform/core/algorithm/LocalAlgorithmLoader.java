@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.core.algorithm;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.core.util.IdGenerator;
 
@@ -20,15 +22,10 @@ import pl.edu.pw.ddm.platform.core.util.IdGenerator;
 @Service
 class LocalAlgorithmLoader implements AlgorithmLoader {
 
-    // TODO move to properties
-    private static final String ALGORITHMS_PATH = "/coordinator/algorithms";
+    @Value("${paths.algorithms}")
+    private String algorithmsPath;
 
     private final Map<String, AlgorithmDesc> algorithmMap = new HashMap<>();
-
-    LocalAlgorithmLoader() throws IOException {
-        // TODO save on PreDestroy and collect or keep removed
-        Files.createDirectories(Paths.get(ALGORITHMS_PATH));
-    }
 
     @SneakyThrows
     @Override
@@ -36,7 +33,7 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
         var id = IdGenerator.generate(name + "/" + jar.length);
 
         String ext = FilenameUtils.getExtension(name);
-        Path algPath = Paths.get(ALGORITHMS_PATH, id + "." + ext);
+        Path algPath = Paths.get(algorithmsPath, id + "." + ext);
         Files.deleteIfExists(algPath);
         Files.write(algPath, jar);
 
@@ -76,6 +73,12 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
     @Override
     public Map<String, AlgorithmDesc> allAlgorithmsInfo() {
         return algorithmMap;
+    }
+
+    @PostConstruct
+    void init() throws IOException {
+        // TODO save on PreDestroy and collect or keep removed
+        Files.createDirectories(Paths.get(algorithmsPath));
     }
 
     @PreDestroy

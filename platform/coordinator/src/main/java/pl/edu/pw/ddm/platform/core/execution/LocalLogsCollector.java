@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,12 +30,14 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 @Slf4j
 @Service
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalLogsCollector implements LogsCollector {
 
-    // TODO move to properties
-    private static final String LOGS_PATH = "/coordinator/logs";
-    private static final String LOGFILE_SUFFIX = ".log";
+    @Value("${paths.logs.path}")
+    private String logsPath;
+
+    @Value("${paths.logs.node-file-suffix}")
+    private String logFileSuffix;
 
     private final RestTemplate restTemplate;
 
@@ -67,7 +69,7 @@ class LocalLogsCollector implements LogsCollector {
 
     @SneakyThrows
     public String fetch(String executionId, String nodeId, Integer start, Integer limitOrLast) {
-        Path path = Paths.get(LOGS_PATH, executionId, nodeId + LOGFILE_SUFFIX);
+        Path path = Paths.get(logsPath, executionId, nodeId + logFileSuffix);
         if (Files.notExists(path)) {
             log.warn("No log file '{}' exists.", path);
             return "no log";
@@ -109,7 +111,7 @@ class LocalLogsCollector implements LogsCollector {
     }
 
     private void saveLogs(List<NodeLogsPair> files, String executionId) throws IOException {
-        Path path = Paths.get(LOGS_PATH, executionId);
+        Path path = Paths.get(logsPath, executionId);
         if (Files.exists(path)) {
             log.warn("Removing previous logs path '{}'.", path);
             FileUtils.deleteDirectory(path.toFile());
@@ -117,7 +119,7 @@ class LocalLogsCollector implements LogsCollector {
         Files.createDirectories(path);
 
         for (NodeLogsPair pair : files) {
-            Path nodeFile = path.resolve(pair.nodeId + LOGFILE_SUFFIX);
+            Path nodeFile = path.resolve(pair.nodeId + logFileSuffix);
             log.info("Saving file '{}' with node logs.", nodeFile);
             Files.write(nodeFile, pair.logData.getBytes());
         }
@@ -125,19 +127,19 @@ class LocalLogsCollector implements LogsCollector {
 
     @PostConstruct
     void init() throws IOException {
-        Files.createDirectories(Paths.get(LOGS_PATH));
+        Files.createDirectories(Paths.get(logsPath));
     }
 
     @PreDestroy
     void destroy() throws IOException {
         log.info("PreDestroy " + this.getClass().getSimpleName());
 
-        Path path = Paths.get(LOGS_PATH);
+        Path path = Paths.get(logsPath);
         log.info("Removing logs directory with content.");
         FileUtils.deleteDirectory(path.toFile());
     }
 
-    @Value(staticConstructor = "of")
+    @lombok.Value(staticConstructor = "of")
     private static class NodeLogsPair {
 
         private String nodeId;

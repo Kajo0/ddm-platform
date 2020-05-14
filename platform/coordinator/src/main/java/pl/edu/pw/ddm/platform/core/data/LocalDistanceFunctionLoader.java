@@ -14,6 +14,7 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.pw.ddm.platform.core.util.IdGenerator;
@@ -23,8 +24,8 @@ import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 @Service
 class LocalDistanceFunctionLoader implements DistanceFunctionLoader {
 
-    // TODO move to properties
-    private static final String FUNC_PATH = "/coordinator/distance_functions";
+    @Value("${paths.distance-functions}")
+    private String distanceFunctionsPath;
 
     private final Map<String, DistanceFunctionDesc> distanceFunctionsMap = new HashMap<>();
 
@@ -34,7 +35,7 @@ class LocalDistanceFunctionLoader implements DistanceFunctionLoader {
         var id = IdGenerator.generate(file.getOriginalFilename() + file.getSize());
 
         String ext = FilenameUtils.getExtension(file.getOriginalFilename());
-        Path funcPath = Paths.get(FUNC_PATH, id + "." + ext);
+        Path funcPath = Paths.get(distanceFunctionsPath, id + "." + ext);
         Files.write(funcPath, file.getBytes());
 
         try {
@@ -82,7 +83,7 @@ class LocalDistanceFunctionLoader implements DistanceFunctionLoader {
     @PostConstruct
     void init() throws IOException {
         // TODO save on PreDestroy and collect or keep removed
-        Files.createDirectories(Paths.get(FUNC_PATH));
+        Files.createDirectories(Paths.get(distanceFunctionsPath));
     }
 
     @PreDestroy

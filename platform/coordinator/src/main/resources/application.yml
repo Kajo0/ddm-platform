@@ -6,3 +6,18 @@ spring:
     multipart:
       max-file-size: 1000MB
       max-request-size: 1000MB
+
+paths:
+  root: /coordinator
+  algorithms: ${paths.root}/algorithms
+  distance-functions: ${paths.root}/distance_functions
+  datasets: ${paths.root}/datasets
+  logs:
+    path: ${paths.root}/logs
+    node-file-suffix: .log
+  results:
+    path: ${paths.root}/results
+    archive-path: ${paths.root}/archive_results
+    node-filename-suffix: -results.txt
+    stats-filename: stats.json
+    execution-desc-filename: description.properties

@@ -19,11 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.io.PatternFilenameFilter;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -40,17 +40,25 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 @Slf4j
 @Service
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalResultsCollector implements ResultsCollector {
 
-    // TODO move to properties
-    private static final String RESULTS_PATH = "/coordinator/results";
-    private static final String RESULTS_SUFFIX = "-results.txt";
-    private static final String STATS_FILE = "stats.json";
-    private static final String EXECUTION_DESCRIPTION = "description.properties";
-    private static final String ARCHIVE_RESULTS_PATH = "/coordinator/archive_results";
+    @Value("${paths.results.path}")
+    private String resultsPath;
 
-    private static final FilenameFilter RESULT_FILE_FILTER = new PatternFilenameFilter(".*" + RESULTS_SUFFIX + "$");
+    @Value("${paths.results.archive-path}")
+    private String archivePath;
+
+    @Value("${paths.results.node-filename-suffix}")
+    private String resultsSuffix;
+
+    @Value("${paths.results.stats-filename}")
+    private String statsFilename;
+
+    @Value("${paths.results.execution-desc-filename}")
+    private String executionDescFilename;
+
+    private FilenameFilter resultFileFilter;
 
     private final RestTemplate restTemplate;
     private final InstanceFacade instanceFacade;
@@ -94,18 +102,18 @@ class LocalResultsCollector implements ResultsCollector {
     // TODO move to loader or sth
     @Override
     public File[] load(String executionId) {
-        Path path = Paths.get(RESULTS_PATH, executionId);
+        Path path = Paths.get(resultsPath, executionId);
         Preconditions.checkState(path.toFile().exists(), "Result directory for execution id: '%s' not exists.", executionId);
 
         return path.toFile()
-                .listFiles(RESULT_FILE_FILTER);
+                .listFiles(resultFileFilter);
     }
 
     // TODO move to loader or sth
     @SneakyThrows
     @Override
     public ExecutionStats loadStats(String executionId) {
-        Path path = Paths.get(RESULTS_PATH, executionId, STATS_FILE);
+        Path path = Paths.get(resultsPath, executionId, statsFilename);
         Preconditions.checkState(path.toFile().exists(), "Result stats file for execution id: '%s' not exists.", executionId);
 
         return new ObjectMapper().readValue(path.toFile(), ExecutionStats.class);
@@ -142,7 +150,7 @@ class LocalResultsCollector implements ResultsCollector {
     }
 
     private void saveResults(List<NodeResultsPair> files, String executionId) throws IOException {
-        Path path = Paths.get(RESULTS_PATH, executionId);
+        Path path = Paths.get(resultsPath, executionId);
         if (Files.exists(path)) {
             log.warn("Removing previous results path '{}'.", path);
             FileUtils.deleteDirectory(path.toFile());
@@ -150,14 +158,14 @@ class LocalResultsCollector implements ResultsCollector {
         Files.createDirectories(path);
 
         for (NodeResultsPair pair : files) {
-            Path nodeFile = path.resolve(pair.nodeId + RESULTS_SUFFIX);
+            Path nodeFile = path.resolve(pair.nodeId + resultsSuffix);
             log.info("Saving file '{}' with node results.", nodeFile);
             Files.write(nodeFile, pair.results);
         }
     }
 
     private void saveStats(ExecutionStats stats, String executionId) throws IOException {
-        Path path = Paths.get(RESULTS_PATH, executionId, STATS_FILE);
+        Path path = Paths.get(resultsPath, executionId, statsFilename);
         log.info("Saving file '{}' with execution results stats.", path);
         String json = new ObjectMapper().writerWithDefaultPrettyPrinter()
                 .writeValueAsString(stats);
@@ -176,21 +184,23 @@ class LocalResultsCollector implements ResultsCollector {
         prop.setProperty("execution", objMapper.writeValueAsString(desc));
         prop.setProperty("saveTimestamp", LocalDateTime.now().toString());
 
-        Path path = Paths.get(RESULTS_PATH, desc.getId(), EXECUTION_DESCRIPTION);
+        Path path = Paths.get(resultsPath, desc.getId(), executionDescFilename);
         prop.store(Files.newOutputStream(path), null);
     }
 
     @PostConstruct
     void init() throws IOException {
-        Files.createDirectories(Paths.get(RESULTS_PATH));
-        Files.createDirectories(Paths.get(ARCHIVE_RESULTS_PATH));
+        this.resultFileFilter = new PatternFilenameFilter(".*" + resultsSuffix + "$");
+
+        Files.createDirectories(Paths.get(resultsPath));
+        Files.createDirectories(Paths.get(archivePath));
     }
 
     @PreDestroy
     void destroy() throws IOException {
         log.info("PreDestroy " + this.getClass().getSimpleName());
-        Path archive = Paths.get(ARCHIVE_RESULTS_PATH);
-        File[] toMove = Paths.get(RESULTS_PATH)
+        Path archive = Paths.get(archivePath);
+        File[] toMove = Paths.get(resultsPath)
                 .toFile()
                 .listFiles();
 
@@ -201,7 +211,7 @@ class LocalResultsCollector implements ResultsCollector {
         }
     }
 
-    @Value(staticConstructor = "of")
+    @lombok.Value(staticConstructor = "of")
     private static class NodeResultsPair {
 
         private String nodeId;

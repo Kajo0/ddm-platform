@@ -7,21 +7,26 @@ import java.nio.file.Paths;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 class LocalResultsLoader implements ResultsLoader {
 
-    // TODO properties
-    private static final String EXECUTION_DIR = "/ddm/execution";
-    private final static String RESULTS_FILE = "results.txt";
-    private final static String STATS_FILE = "stats.json";
+    @Value("${paths.execution.path}")
+    private String executionPath;
+
+    @Value("${paths.execution.results-filename}")
+    private String resultsFilename;
+
+    @Value("${paths.execution.statistics-filename}")
+    private String statisticsFilename;
 
     @Override
     public File load(String executionId) {
         log.info("Loading results file for execution id '{}'.", executionId);
-        Path path = Paths.get(LocalResultsLoader.EXECUTION_DIR, executionId, RESULTS_FILE);
+        Path path = Paths.get(executionPath, executionId, resultsFilename);
         if (Files.exists(path)) {
             return path.toFile();
         } else {
@@ -34,7 +39,7 @@ class LocalResultsLoader implements ResultsLoader {
     @Override
     public String loadJsonStats(String executionId) {
         log.info("Loading results stats for execution id '{}'.", executionId);
-        Path path = Paths.get(LocalResultsLoader.EXECUTION_DIR, executionId, STATS_FILE);
+        Path path = Paths.get(executionPath, executionId, statisticsFilename);
         if (Files.exists(path)) {
             return new String(Files.readAllBytes(path));
         } else {

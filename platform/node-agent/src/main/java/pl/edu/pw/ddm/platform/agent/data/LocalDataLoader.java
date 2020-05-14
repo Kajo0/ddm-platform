@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.agent.data;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,6 +9,7 @@ import java.util.Properties;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.agent.data.dto.DataDesc;
 
@@ -15,17 +17,13 @@ import pl.edu.pw.ddm.platform.agent.data.dto.DataDesc;
 @Service
 class LocalDataLoader implements DataLoader {
 
-    // TODO properties
-    private static final String DATA_PATH = "/ddm/data";
-
-    LocalDataLoader() throws IOException {
-        Files.createDirectories(Paths.get(DATA_PATH));
-    }
+    @Value("${paths.datasets}")
+    private String datasetsPath;
 
     @SneakyThrows
     @Override
     public boolean save(byte[] bytes, DataType type, DataDesc dataDesc) {
-        Path path = Paths.get(DATA_PATH, dataDesc.getId(), type.getCode());
+        Path path = Paths.get(datasetsPath, dataDesc.getId(), type.getCode());
         Files.createDirectories(path.getParent());
 
         boolean exist = Files.deleteIfExists(path);
@@ -48,8 +46,15 @@ class LocalDataLoader implements DataLoader {
         prop.setProperty(DescriptionKey.ATTRIBUTES_AMOUNT.getCode(), String.valueOf(dataDesc.getAttributesAmount()));
         prop.setProperty(DescriptionKey.COLUMNS_TYPES.getCode(), String.join(",", dataDesc.getColTypes()));
 
-        Path path = Paths.get(DATA_PATH, dataDesc.getId(), DataType.DESCRIPTION.getCode());
+        Path path = Paths.get(datasetsPath, dataDesc.getId(), DataType.DESCRIPTION.getCode());
         prop.store(Files.newOutputStream(path), null);
     }
+
+    @PostConstruct
+    void init() throws IOException {
+        Files.createDirectories(Paths.get(datasetsPath));
+    }
+
+    // TODO remove after destroy? when not docker
 
 }

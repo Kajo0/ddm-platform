@@ -31,7 +31,7 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
     public Iterator<ModelWrapper> call(Iterator<GlobalModel> iterator) throws Exception {
         Integer id = PersistentIdStamper.read();
 
-        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getTrainDataId(), initParams.getTestDataId());
+        NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDatasetsPath(), initParams.getTrainDataId(), initParams.getTestDataId());
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         LocalModel previousModel = ModelPersister.loadLocal(initParams.getExecutionId());

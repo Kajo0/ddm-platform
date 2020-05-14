@@ -61,6 +61,7 @@ public final class CentralRunner {
         System.out.println("  workerNodes                 = " + args.getWorkerNodes());
         System.out.println("  algorithmId                 = " + args.getAlgorithmId());
         System.out.println("  algorithmPackageName        = " + args.getAlgorithmPackageName());
+        System.out.println("  datasetsPath                = " + args.getDatasetsPath());
         System.out.println("  trainDataId                 = " + args.getTrainDataId());
         System.out.println("  testDataId                  = " + args.getTestDataId());
         System.out.println("  executionId                 = " + args.getExecutionId());
@@ -151,15 +152,16 @@ public final class CentralRunner {
     }
 
     private static InitParamsDto createInitParams(JsonArgsDto args) {
-        return new InitParamsDto(
-                args.getTrainDataId(),
-                args.getTestDataId(),
-                args.getExecutionId(),
-                args.getAlgorithmPackageName(),
-                args.getDistanceFunctionName(),
-                args.getDistanceFunctionPackageName(),
-                args.getExecutionParams()
-        );
+        return InitParamsDto.builder()
+                .datasetsPath(args.getDatasetsPath())
+                .trainDataId(args.getTrainDataId())
+                .testDataId(args.getTestDataId())
+                .executionId(args.getExecutionId())
+                .algorithmPackageName(args.getAlgorithmPackageName())
+                .distanceFunctionName(args.getDistanceFunctionName())
+                .distanceFunctionPackageName(args.getDistanceFunctionPackageName())
+                .executionParams(args.getExecutionParams())
+                .build();
     }
 
 }

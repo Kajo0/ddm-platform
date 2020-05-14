@@ -18,8 +18,7 @@ import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 
 public class NodeDataProvider implements DataProvider {
 
-    private static final String DATA_PATH = "/ddm/data/";
-
+    private final String dataPath;
     // TODO think about, both might be same named as they have different ids
     private final String trainDataId;
     private final String testDataId;
@@ -33,7 +32,8 @@ public class NodeDataProvider implements DataProvider {
     @Getter
     private long loadingMillis;
 
-    public NodeDataProvider(String trainDataId, String testDataId) {
+    public NodeDataProvider(String dataPath, String trainDataId, String testDataId) {
+        this.dataPath = dataPath;
         this.trainDataId = trainDataId;
         this.trainDataDesc = loadDescription(trainDataId);
         this.testDataId = testDataId;
@@ -71,7 +71,7 @@ public class NodeDataProvider implements DataProvider {
     @SneakyThrows
     private DataDesc loadDescription(String dataId) {
         Properties prop = new Properties();
-        File file = Paths.get(DATA_PATH + dataId + "/desc").toFile();
+        File file = Paths.get(dataPath + "/" + dataId + "/desc").toFile();
         try (FileInputStream fis = new FileInputStream(file)) {
             prop.load(fis);
         }
@@ -88,7 +88,7 @@ public class NodeDataProvider implements DataProvider {
     private void loadTraining() {
         long start = System.currentTimeMillis();
 
-        trainingSet = loadCsvData(DATA_PATH + trainDataId + "/train", trainDataDesc);
+        trainingSet = loadCsvData(dataPath + "/" + trainDataId + "/train", trainDataDesc);
 
         long end = System.currentTimeMillis();
         loadingMillis += end - start;
@@ -97,7 +97,7 @@ public class NodeDataProvider implements DataProvider {
     private void loadTest() {
         long start = System.currentTimeMillis();
 
-        testSet = loadCsvData(DATA_PATH + testDataId + "/test", testDataDesc);
+        testSet = loadCsvData(dataPath + "/" + testDataId + "/test", testDataDesc);
 
         long end = System.currentTimeMillis();
         loadingMillis += end - start;

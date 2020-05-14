@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.agent.util.ProfileConstants;
@@ -17,13 +18,14 @@ import pl.edu.pw.ddm.platform.agent.util.ProfileConstants;
 @Profile(ProfileConstants.WORKER)
 class LocalWorkerExecutionLogsProvider implements ExecutionLogsProvider {
 
-    private static final String SPARK_LOG_DIR = "/spark/work";
+    @Value("${paths.execution.logs.spark-work-dir}")
+    private String sparkLogDir;
 
     @SneakyThrows
     @Override
     public String loadAll(String executionId, String appId) {
         log.info("Loading execution logs for execution id '{}' and app id '{}'.", executionId, appId);
-        Path appPath = Paths.get(SPARK_LOG_DIR, appId);
+        Path appPath = Paths.get(sparkLogDir, appId);
         if (Files.exists(appPath)) {
             // FIXME add some speicif logger or load via spark node API
             return Files.find(appPath, 10, (filePath, fileAttr) -> fileAttr.isRegularFile() && "stdout".equals(filePath.toFile().getName()))

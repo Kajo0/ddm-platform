@@ -1,3 +1,4 @@
+# TODO AppAlgorithmsConfig make it deps
 apps:
   runner:
     path: /apps/app-runner-java.jar

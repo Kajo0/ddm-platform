@@ -46,9 +46,14 @@ import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance;
 @EnableConfigurationProperties({AppAlgorithmsConfig.class, CoordinatorApiConfig.class})
 public class AppRunner {
 
-    // TODO properties
-    private static final String EXECUTION_DIR = "/ddm/execution";
-    private final static String LOG_FILE = "central.log";
+    @Value("${paths.datasets}")
+    private String datasetsPath;
+
+    @Value("${paths.execution.path}")
+    private String executionPath;
+
+    @Value("${paths.execution.logs.central-filename}")
+    private String centralLogFilename;
 
     private static final String SPARK_MASTER_PORT = "7077";
 
@@ -128,7 +133,8 @@ public class AppRunner {
             jsonArgsBuilder.distanceFunctionPackageName(EuclideanDistance.class.getPackage().getName());
         }
 
-        String jsonArgs = jsonArgsBuilder.build()
+        String jsonArgs = jsonArgsBuilder.datasetsPath(datasetsPath)
+                .build()
                 .toJsonArgs();
         log.info("Launching spark process on master '{}' with args: '{}'.", masterNode, jsonArgs);
         runningApp = launcher.addAppArgs(jsonArgs)
@@ -142,7 +148,7 @@ public class AppRunner {
     }
 
     private File prepareMasterLogFile(String executionId) throws IOException {
-        Path path = Paths.get(EXECUTION_DIR, executionId, LOG_FILE);
+        Path path = Paths.get(executionPath, executionId, centralLogFilename);
         Files.createDirectories(path.getParent());
         return Files.createFile(path)
                 .toFile();
@@ -200,6 +206,8 @@ public class AppRunner {
         }
     }
 
+    // TODO remove execution artifacts on destroy? when no docker
+
     @Builder
     public static class AppRunnerParamsDto {
 
@@ -231,6 +239,7 @@ public class AppRunner {
         private String instanceId;
         private String algorithmId;
         private String algorithmPackageName;
+        private String datasetsPath;
         private String trainDataId;
         private String testDataId;
         private String distanceFunctionId;

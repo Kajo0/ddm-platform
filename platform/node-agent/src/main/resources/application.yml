@@ -16,9 +16,28 @@ coordinator:
 spark:
   home: ${SPARK_HOME:/home/mmarkiew/dev/spark}
 
+# TODO AppAlgorithmsConfig include as dependency and run
 apps:
   runner:
     path: /home/mmarkiew/stud/ddm-platform/platform/app-runner-java/build/libs/app-runner-java-0.0.1-SNAPSHOT-all.jar
     main-class: pl.edu.pw.ddm.platform.runner.CentralRunner
   algorithms:
     - /home/mmarkiew/stud/ddm-platform/platform/algorithms/clustering/aoptkm/build/libs/aoptkm-1.0-SNAPSHOT-all.jar
+
+paths:
+  root: /ddm
+  datasets: ${paths.root}/datasets
+  distance-functions:
+    path: ${paths.root}/distance_functions
+    desc-filename: desc.properties
+  algorithms:
+    path: ${paths.root}/algorithms
+    desc-filename: desc.properties
+  execution:
+    path: ${paths.root}/execution
+    status-filename: status.json
+    results:-filename: results.txt
+    statistics-filename: stats.json
+    logs:
+      central-filename: central.log
+      spark-work-dir: /spark/work

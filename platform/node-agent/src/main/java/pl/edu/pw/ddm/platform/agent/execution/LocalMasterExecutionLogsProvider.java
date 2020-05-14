@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.agent.util.ProfileConstants;
@@ -15,15 +16,17 @@ import pl.edu.pw.ddm.platform.agent.util.ProfileConstants;
 @Profile(ProfileConstants.MASTER)
 class LocalMasterExecutionLogsProvider implements ExecutionLogsProvider {
 
-    // TODO properties
-    private static final String EXECUTION_DIR = "/ddm/execution";
-    private final static String LOG_FILE = "central.log";
+    @Value("${paths.execution.path}")
+    private String executionPath;
+
+    @Value("${paths.execution.logs.central-filename}")
+    private String centralLogFilename;
 
     @SneakyThrows
     @Override
     public String loadAll(String executionId, String appId) {
         log.info("Loading execution logs for execution id '{}' and app id '{}'.", executionId, appId);
-        Path path = Paths.get(EXECUTION_DIR, executionId, LOG_FILE);
+        Path path = Paths.get(executionPath, executionId, centralLogFilename);
         if (Files.exists(path)) {
             return new String(Files.readAllBytes(path));
         } else {

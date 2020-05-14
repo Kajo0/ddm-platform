@@ -13,6 +13,7 @@ import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.agent.algorithm.dto.AlgorithmDesc;
 
@@ -20,14 +21,16 @@ import pl.edu.pw.ddm.platform.agent.algorithm.dto.AlgorithmDesc;
 @Service
 class LocalAlgorithmLoader implements AlgorithmLoader {
 
-    // TODO properties
-    private static final String ALGORITHMS_PATH = "/ddm/algorithms";
-    private static final String DESCRIPTION_FILENAME = "desc";
+    @Value("${paths.algorithms.path}")
+    private String algorithmsPath;
+
+    @Value("${paths.algorithms.desc-filename}")
+    private String descriptionFilename;
 
     @SneakyThrows
     @Override
     public boolean save(byte[] bytes, AlgorithmDesc algorithmDesc) {
-        Path path = Paths.get(ALGORITHMS_PATH, algorithmDesc.getId(), algorithmDesc.getId());
+        Path path = Paths.get(algorithmsPath, algorithmDesc.getId(), algorithmDesc.getId());
         boolean exist = Files.exists(path.getParent());
         if (exist) {
             log.info("Previous algorithm file deleted.");
@@ -45,7 +48,7 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
     @Override
     public Path pathToFile(String algorithmId) {
         log.info("Loading algorithm file path with id '{}'.", algorithmId);
-        Path path = Paths.get(ALGORITHMS_PATH, algorithmId, algorithmId);
+        Path path = Paths.get(algorithmsPath, algorithmId, algorithmId);
         Preconditions.checkState(Files.exists(path), "Algorithm file with id %s not found.", algorithmId);
         return path;
     }
@@ -60,14 +63,14 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
         prop.setProperty(DescriptionKey.ID.getCode(), algorithmDesc.getId());
         prop.setProperty(DescriptionKey.PACKAGE.getCode(), algorithmDesc.getPackageName());
 
-        Path path = Paths.get(ALGORITHMS_PATH, algorithmDesc.getId(), DESCRIPTION_FILENAME);
+        Path path = Paths.get(algorithmsPath, algorithmDesc.getId(), descriptionFilename);
         prop.store(Files.newOutputStream(path), null);
     }
 
     @SneakyThrows
     private AlgorithmDesc loadDescription(String algorithmId) {
         Properties prop = new Properties();
-        File file = Paths.get(ALGORITHMS_PATH, algorithmId, DESCRIPTION_FILENAME).toFile();
+        File file = Paths.get(algorithmsPath, algorithmId, descriptionFilename).toFile();
         try (FileInputStream fis = new FileInputStream(file)) {
             prop.load(fis);
         }
@@ -80,7 +83,9 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
 
     @PostConstruct
     void init() throws IOException {
-        Files.createDirectories(Paths.get(ALGORITHMS_PATH));
+        Files.createDirectories(Paths.get(algorithmsPath));
     }
+
+    // TODO clear on destroy when no docker?
 
 }

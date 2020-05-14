@@ -13,6 +13,7 @@ import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.ddm.platform.agent.data.dto.DistanceFunctionDesc;
 
@@ -20,14 +21,16 @@ import pl.edu.pw.ddm.platform.agent.data.dto.DistanceFunctionDesc;
 @Service
 class LocalDistanceFunctionLoader implements DistanceFunctionLoader {
 
-    // TODO properties
-    private static final String FUNCTIONS_PATH = "/ddm/distance_functions";
-    private static final String DESCRIPTION_FILENAME = "desc";
+    @Value("${paths.distance-functions.path}")
+    private String distanceFunctionsPath;
+
+    @Value("${paths.distance-functions.desc-filename}")
+    private String descFilename;
 
     @SneakyThrows
     @Override
     public boolean save(byte[] bytes, DistanceFunctionDesc distanceFunctionDesc) {
-        Path path = Paths.get(FUNCTIONS_PATH, distanceFunctionDesc.getId(), distanceFunctionDesc.getId());
+        Path path = Paths.get(distanceFunctionsPath, distanceFunctionDesc.getId(), distanceFunctionDesc.getId());
         boolean exist = Files.exists(path.getParent());
         if (exist) {
             log.info("Previous distance function file deleted.");
@@ -45,7 +48,7 @@ class LocalDistanceFunctionLoader implements DistanceFunctionLoader {
     @Override
     public Path pathToFile(String distanceFunctionId) {
         log.info("Loading distance function file with id '{}'.", distanceFunctionId);
-        Path path = Paths.get(FUNCTIONS_PATH, distanceFunctionId, distanceFunctionId);
+        Path path = Paths.get(distanceFunctionsPath, distanceFunctionId, distanceFunctionId);
         Preconditions.checkState(Files.exists(path), "Distance function file with id %s not found.", distanceFunctionId);
         return path;
     }
@@ -61,14 +64,14 @@ class LocalDistanceFunctionLoader implements DistanceFunctionLoader {
         prop.setProperty(DescriptionKey.PACKAGE.getCode(), distanceFunctionDesc.getPackageName());
         prop.setProperty(DescriptionKey.FUNCTION_NAME.getCode(), distanceFunctionDesc.getFunctionName());
 
-        Path path = Paths.get(FUNCTIONS_PATH, distanceFunctionDesc.getId(), DESCRIPTION_FILENAME);
+        Path path = Paths.get(distanceFunctionsPath, distanceFunctionDesc.getId(), descFilename);
         prop.store(Files.newOutputStream(path), null);
     }
 
     @SneakyThrows
     private DistanceFunctionDesc loadDescription(String distanceFunctionId) {
         Properties prop = new Properties();
-        File file = Paths.get(FUNCTIONS_PATH, distanceFunctionId, DESCRIPTION_FILENAME).toFile();
+        File file = Paths.get(distanceFunctionsPath, distanceFunctionId, descFilename).toFile();
         try (FileInputStream fis = new FileInputStream(file)) {
             prop.load(fis);
         }
@@ -82,7 +85,9 @@ class LocalDistanceFunctionLoader implements DistanceFunctionLoader {
 
     @PostConstruct
     void init() throws IOException {
-        Files.createDirectories(Paths.get(FUNCTIONS_PATH));
+        Files.createDirectories(Paths.get(distanceFunctionsPath));
     }
+
+    // TODO remove on destroy? when no docker
 
 }

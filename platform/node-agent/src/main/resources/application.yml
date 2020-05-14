@@ -15,6 +15,7 @@ coordinator:
 
 spark:
   home: ${SPARK_HOME:/home/mmarkiew/dev/spark}
+  master-port: 7077
 
 # TODO AppAlgorithmsConfig include as dependency and run
 apps:

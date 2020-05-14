@@ -21,18 +21,25 @@ class LocalInstanceCreator implements InstanceCreator {
 
     private static final Long GB_BYTE_MULTIPLIER = 1024 * 1024 * 1024L;
 
-    private static final String SPARK_MASTER_UI_PORT = "8080";
-    private static final String SPARK_WORKER_UI_PORT = "8081";
-    private static final String SPARK_MASTER_PORT = "7077";
-    private static final String NODE_AGENT_PORT = "7100";
-
     private final InstanceConfig instanceConfig;
-    private final String port;
+    private final String coordinatorPort;
+    private final String nodeAgentPort;
+    private final String sparkMasterPort;
+    private final String sparkMasterUiPort;
+    private final String sparkWorkerUiPort;
 
     LocalInstanceCreator(InstanceConfig instanceConfig,
-                         @Value("${server.port}") String port) {
+                         @Value("${server.port}") String serverPort,
+                         @Value("${communiaction.node-agent-port}") String nodeAgentPort,
+                         @Value("${communiaction.spark.master-port}") String sparkMasterPort,
+                         @Value("${communiaction.spark.master-ui-port}") String sparkMasterUiPort,
+                         @Value("${communiaction.spark.worker-ui-port}") String sparkWorkerUiPort) {
         this.instanceConfig = instanceConfig;
-        this.port = port;
+        this.coordinatorPort = serverPort;
+        this.nodeAgentPort = nodeAgentPort;
+        this.sparkMasterPort = sparkMasterPort;
+        this.sparkMasterUiPort = sparkMasterUiPort;
+        this.sparkWorkerUiPort = sparkWorkerUiPort;
     }
 
     @Override
@@ -54,7 +61,7 @@ class LocalInstanceCreator implements InstanceCreator {
         var agentPort = findOpenPort().toString();
         var masterName = "platform-spark-master-" + instanceId;
         var hc = new HostConfig()
-                .withPortBindings(PortBinding.parse(uiPort + ":" + SPARK_MASTER_UI_PORT), PortBinding.parse(masterPort + ":" + SPARK_MASTER_PORT), PortBinding.parse(agentPort + ":" + NODE_AGENT_PORT))
+                .withPortBindings(PortBinding.parse(uiPort + ":" + sparkMasterUiPort), PortBinding.parse(masterPort + ":" + sparkMasterPort), PortBinding.parse(agentPort + ":" + nodeAgentPort))
                 .withNetworkMode(networkName);
         if (cpuCores != null) {
             hc.withCpuCount(cpuCores.longValue());
@@ -86,7 +93,7 @@ class LocalInstanceCreator implements InstanceCreator {
             var port = findOpenPort().toString();
             var workerAgentPort = findOpenPort().toString();
             var hcw = new HostConfig()
-                    .withPortBindings(PortBinding.parse(port + ":" + SPARK_WORKER_UI_PORT), PortBinding.parse(workerAgentPort + ":" + NODE_AGENT_PORT))
+                    .withPortBindings(PortBinding.parse(port + ":" + sparkWorkerUiPort), PortBinding.parse(workerAgentPort + ":" + nodeAgentPort))
                     .withNetworkMode(networkName);
             if (cpuCores != null) {
                 hcw.withCpuCount(cpuCores.longValue());
@@ -177,7 +184,7 @@ class LocalInstanceCreator implements InstanceCreator {
         List<String> envs = new ArrayList<>();
         envs.add("INIT_DAEMON_STEP=setup_spark");
         envs.add("COORDINATOR_HOST=");
-        envs.add("COORDINATOR_PORT=" + port);
+        envs.add("COORDINATOR_PORT=" + coordinatorPort);
 
         if (cpuCount != null) {
             log.info("Setting master cores count={}.", cpuCount);
@@ -196,9 +203,9 @@ class LocalInstanceCreator implements InstanceCreator {
 
     private List<String> prepareWorkerEnv(String masterName, Integer cpuCount, Integer memoryInGb) {
         List<String> envs = new ArrayList<>();
-        envs.add("SPARK_MASTER=spark://" + masterName + ":" + SPARK_MASTER_PORT);
+        envs.add("SPARK_MASTER=spark://" + masterName + ":" + sparkMasterPort);
         envs.add("COORDINATOR_HOST=");
-        envs.add("COORDINATOR_PORT=" + port);
+        envs.add("COORDINATOR_PORT=" + coordinatorPort);
 
         if (cpuCount != null) {
             log.info("Setting worker cores count={}.", cpuCount);

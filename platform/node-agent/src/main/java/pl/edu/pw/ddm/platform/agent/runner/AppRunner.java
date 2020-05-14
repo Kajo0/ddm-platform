@@ -55,7 +55,8 @@ public class AppRunner {
     @Value("${paths.execution.logs.central-filename}")
     private String centralLogFilename;
 
-    private static final String SPARK_MASTER_PORT = "7077";
+    @Value("${spark.master-port}")
+    private String sparkMasterPort;
 
     private final RestTemplate restTemplate;
     private final AlgorithmLoader algorithmLoader;
@@ -168,7 +169,7 @@ public class AppRunner {
 
         String master;
         if (agentOnMasterNode) {
-            master = InetAddress.getLocalHost().getHostName() + ":" + SPARK_MASTER_PORT;
+            master = InetAddress.getLocalHost().getHostName() + ":" + sparkMasterPort;
             log.info("Setting spark master address to: '{}'.", master);
         } else {
             master = Optional.of(map.get("master"))

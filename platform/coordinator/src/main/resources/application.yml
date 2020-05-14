@@ -21,3 +21,10 @@ paths:
     node-filename-suffix: -results.txt
     stats-filename: stats.json
     execution-desc-filename: description.properties
+
+communiaction:
+  node-agent-port: 7100
+  spark:
+    master-port: 7077
+    master-ui-port: 8080
+    worker-ui-port: 8081

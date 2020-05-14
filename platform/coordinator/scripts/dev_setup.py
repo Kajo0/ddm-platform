@@ -417,7 +417,7 @@ def clear():
 
 if len(sys.argv) < 2:
     print(
-        '  Provide command! [setup, clear, reload, execute, status, logs, results, validate, stats, info [data, alg, func, exec, inst]]')
+        '  Provide command! [setup, clear, reload, execute, status, logs, lastlog, results, validate, stats, info [data, alg, func, exec, inst]]')
     sys.exit(1)
 
 command = sys.argv[1]

@@ -1,8 +1,6 @@
 package pl.edu.pw.ddm.platform.runner.utils;
 
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -20,7 +18,6 @@ public class AlgorithmProcessorInitializer {
     public LocalProcessor initLocalProcessor(@NonNull String packageName) {
         return refs(packageName, LocalProcessor.class)
                 .stream()
-                .peek(System.out::println)
                 .findFirst()
                 .orElseThrow(() -> new ProcessorNotFoundException("local"))
                 .getDeclaredConstructor()
@@ -31,7 +28,6 @@ public class AlgorithmProcessorInitializer {
     public GlobalProcessor initGlobalProcessor(@NonNull String packageName) {
         return refs(packageName, GlobalProcessor.class)
                 .stream()
-                .peek(System.out::println)
                 .findFirst()
                 .orElseThrow(() -> new ProcessorNotFoundException("global"))
                 .getDeclaredConstructor()
@@ -42,7 +38,6 @@ public class AlgorithmProcessorInitializer {
     public MiningMethod initMiningMethod(@NonNull String packageName) {
         return refs(packageName, MiningMethod.class)
                 .stream()
-                .peek(System.out::println)
                 .findFirst()
                 .orElseThrow(() -> new ProcessorNotFoundException("method"))
                 .getDeclaredConstructor()
@@ -51,12 +46,7 @@ public class AlgorithmProcessorInitializer {
 
     @SneakyThrows
     public DistanceFunction initDistanceFunction(@NonNull String packageName, @NonNull String name) {
-        List<Class<? extends DistanceFunction>> list = refs(packageName, DistanceFunction.class)
-                .stream()
-                // TODO remove debug peek sysout
-                .peek(System.out::println)
-                .collect(Collectors.toList());
-
+        Set<Class<? extends DistanceFunction>> list = refs(packageName, DistanceFunction.class);
         for (Class<? extends DistanceFunction> clazz : list) {
             DistanceFunction instance = clazz.getDeclaredConstructor()
                     .newInstance();

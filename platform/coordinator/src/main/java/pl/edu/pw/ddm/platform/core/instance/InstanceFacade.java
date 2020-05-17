@@ -9,7 +9,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Singular;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -26,6 +29,17 @@ public class InstanceFacade {
     private final InstanceConfig instanceConfig;
     private final InstanceCreator creator;
     private final Environment env;
+
+    public String setup(@NonNull SetupRequest request) {
+        ManualInstanceSetupValidator validator = new ManualInstanceSetupValidator(request);
+        validator.validate();
+
+        var data = validator.toInstanceData();
+        log.info("Setup instance config: '{}'.", data);
+        instanceConfig.add(data);
+
+        return data.getId();
+    }
 
     public String create(@NonNull CreateRequest request) {
         return creator.create(request.workerNodes, request.cpuCount, request.memoryInGb, request.diskInGb);
@@ -74,6 +88,47 @@ public class InstanceFacade {
             return instanceConfig.getInstanceMap()
                     .toString();
         }
+    }
+
+    @Getter
+    @Builder
+    public static class SetupRequest {
+
+        @NonNull
+        private final String ddmModel;
+
+        @Singular("node")
+        private final List<ManualSetupNode> nodes;
+
+        @Getter
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class ManualSetupNode {
+
+            private String name;
+
+            @NonNull
+            private String type;
+
+            @NonNull
+            private String address;
+
+            @NonNull
+            private String port;
+
+            private String uiPort;
+
+            @NonNull
+            private String agentPort;
+
+            @NonNull
+            private Integer cpu;
+
+            @NonNull
+            private Integer memoryInGb;
+        }
+
     }
 
     @Builder

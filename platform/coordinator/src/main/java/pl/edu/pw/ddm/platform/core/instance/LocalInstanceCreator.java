@@ -5,7 +5,6 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
@@ -14,6 +13,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import pl.edu.pw.ddm.platform.core.util.IdGenerator;
 
 @Slf4j
 @Service
@@ -44,8 +44,7 @@ class LocalInstanceCreator implements InstanceCreator {
 
     @Override
     public String create(int workers, Integer cpuCores, Integer memoryInGb, Integer diskInGb) {
-        var instanceId = UUID.randomUUID()
-                .toString();
+        var instanceId = IdGenerator.instanceId();
         var client = DockerClientBuilder.getInstance()
                 .build();
 
@@ -84,9 +83,9 @@ class LocalInstanceCreator implements InstanceCreator {
         client.startContainerCmd(masterContainer.getId())
                 .exec();
 
-        var masterId = masterContainer.getId();
+        var masterId = IdGenerator.nodeId("master", masterContainer.getId());
         var nodes = new HashMap<String, InstanceConfig.InstanceNode>();
-        nodes.put(masterId, new InstanceConfig.InstanceNode(masterId, masterName, "master", "localhost", masterPort, uiPort, agentPort, cpuCores, memoryInGb, diskInGb));
+        nodes.put(masterId, new InstanceConfig.InstanceNode(masterId, masterContainer.getId(), masterName, "master", "localhost", masterPort, uiPort, agentPort, cpuCores, memoryInGb, diskInGb));
 
         // Create worker nodes
         for (int i = 1; i <= workers; ++i) {
@@ -117,11 +116,11 @@ class LocalInstanceCreator implements InstanceCreator {
             client.startContainerCmd(container.getId())
                     .exec();
 
-            var workerId = container.getId();
-            nodes.put(workerId, new InstanceConfig.InstanceNode(workerId, containerName, "worker", "localhost", port, null, workerAgentPort, cpuCores, memoryInGb, diskInGb));
+            var workerId = IdGenerator.nodeId("worker", container.getId());
+            nodes.put(workerId, new InstanceConfig.InstanceNode(workerId, container.getId(), containerName, "worker", "localhost", port, null, workerAgentPort, cpuCores, memoryInGb, diskInGb));
         }
 
-        var data = new InstanceConfig.InstanceData(instanceId, networkName, nodes);
+        var data = new InstanceConfig.InstanceData(instanceId, InstanceConfig.InstanceType.LOCAL_DOCKER, networkName, nodes);
         instanceConfig.add(data);
         return instanceId;
     }
@@ -139,7 +138,7 @@ class LocalInstanceCreator implements InstanceCreator {
         instance.getNodes()
                 .values()
                 .parallelStream()
-                .map(InstanceConfig.InstanceNode::getId)
+                .map(InstanceConfig.InstanceNode::getContainerId)
                 .forEach(containerId -> {
                     log.debug("Stopping container: '{}'.", containerId);
                     client.stopContainerCmd(containerId)

@@ -1,0 +1,80 @@
+version: '2.2'
+
+networks:
+  platform-network-0:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+
+services:
+  spark-master:
+    image: ddm-platform-master:latest
+    container_name: platform-spark-master-0
+    ports:
+      - 10030:8080
+      - 10000:7077
+      - 10050:7100
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+      - COORDINATOR_HOST=
+      - COORDINATOR_PORT=7000
+      - SPARK_WORKER_CORES=4
+      - SPARK_EXECUTOR_CORES=4
+      - SPARK_DRIVER_MEMORY=2G
+      - SPARK_EXECUTOR_MEMORY=2G
+      - SPARK_WORKER_MEMORY=2g
+      - constraint:node==<yourmasternode>
+    networks:
+      - platform-network-0
+    cpus: '4'
+    cpu_count: '4'
+    mem_limit: 2G
+
+  spark-worker-1:
+    image: ddm-platform-worker:latest
+    container_name: platform-spark-worker-1
+    depends_on:
+      - spark-master
+    ports:
+      - 10001:8081
+      - 10051:7100
+    environment:
+      - COORDINATOR_HOST=
+      - COORDINATOR_PORT=7000
+      - SPARK_WORKER_CORES=4
+      - SPARK_EXECUTOR_CORES=4
+      - SPARK_DRIVER_MEMORY=2G
+      - SPARK_EXECUTOR_MEMORY=2G
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_MASTER=spark://spark-master:7077
+      - constraint:node==<yourworkernode>
+    networks:
+      - platform-network-0
+    cpus: '4'
+    cpu_count: '4'
+    mem_limit: 2G
+
+  spark-worker-2:
+    image: ddm-platform-worker:latest
+    container_name: platform-spark-worker-2
+    depends_on:
+      - spark-master
+    ports:
+      - 10002:8081
+      - 10052:7100
+    environment:
+      - COORDINATOR_HOST=
+      - COORDINATOR_PORT=7000
+      - SPARK_WORKER_CORES=4
+      - SPARK_EXECUTOR_CORES=4
+      - SPARK_DRIVER_MEMORY=2G
+      - SPARK_EXECUTOR_MEMORY=2G
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_MASTER=spark://spark-master:7077
+      - constraint:node==<yourworkernode>
+    networks:
+      - platform-network-0
+    cpus: '4'
+    cpu_count: '4'
+    mem_limit: 2G

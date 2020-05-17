@@ -31,6 +31,7 @@ class InstanceConfig {
     static class InstanceData {
 
         private String id;
+        private InstanceType type;
         private String networkName;
         private Map<String, InstanceNode> nodes;
 
@@ -48,6 +49,7 @@ class InstanceConfig {
     static class InstanceNode {
 
         private String id;
+        private String containerId;
         private String name;
         private String type;
         private String address;
@@ -66,6 +68,11 @@ class InstanceConfig {
                 return super.toString();
             }
         }
+    }
+
+    enum InstanceType {
+        LOCAL_DOCKER,
+        MANUAL_SETUP
     }
 
 }

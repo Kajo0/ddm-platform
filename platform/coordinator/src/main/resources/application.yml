@@ -2,6 +2,8 @@ server:
   port: 7000
 
 spring:
+  profiles:
+    active: instance-local-docker
   servlet:
     multipart:
       max-file-size: 1000MB

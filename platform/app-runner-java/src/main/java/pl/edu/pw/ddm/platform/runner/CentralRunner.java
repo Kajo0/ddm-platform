@@ -84,6 +84,20 @@ public final class CentralRunner {
     }
 
     private void run() {
+        // TODO Improve catching exception per node or sth similar
+        try {
+            runInternal();
+        } catch (Exception e) {
+            // TODO get failed node address from exception message or from sc if possible
+            System.err.println("Exception occurred: " + e.getMessage());
+            e.printStackTrace();
+            statusPersister.error(e.getMessage());
+        } finally {
+            sc.stop();
+        }
+    }
+
+    private void runInternal() {
         statusPersister.started();
         // TODO send clear ID to every agent
         performEachNodeDistributionWorkaround();
@@ -112,7 +126,6 @@ public final class CentralRunner {
         ExecutionStatisticsPersister.save(summarizer.prepareStats(), initParams.getExecutionId());
 
         statusPersister.finish();
-        sc.stop();
     }
 
     private void performEachNodeDistributionWorkaround() {

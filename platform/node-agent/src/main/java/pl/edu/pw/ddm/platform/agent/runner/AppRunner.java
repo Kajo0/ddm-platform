@@ -112,6 +112,7 @@ public class AppRunner {
                 .redirectOutput(prepareMasterLogFile(executionId))
                 .addSparkArg("spark.locality.wait", "3600s")
                 .setDeployMode("client")
+                .setConf("spark.task.maxFailures", "1")
                 .setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(params.cpuCount))
                 .setConf(SparkLauncher.EXECUTOR_MEMORY, params.memoryInGb + "g");
 

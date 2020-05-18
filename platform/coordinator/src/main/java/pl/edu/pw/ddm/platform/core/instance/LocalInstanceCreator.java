@@ -131,6 +131,10 @@ class LocalInstanceCreator implements InstanceCreator {
         if (instance == null) {
             throw new IllegalArgumentException("No instance with id " + id + " to destroy.");
         }
+        if (instance.getType() != InstanceConfig.InstanceType.LOCAL_DOCKER) {
+            log.warn("Trying to destroy non local-docker instance.");
+            return false;
+        }
 
         var client = DockerClientBuilder.getInstance()
                 .build();

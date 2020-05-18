@@ -70,7 +70,20 @@ class InMemoryExecutionStarter implements ExecutionStarter {
 
     @Override
     public String stop(String executionId) {
-        return "TODO - not implemented stop: " + executionId;
+        log.info("Stopping execution with id '{}'", executionId);
+
+        // TODO add null check
+        ExecutionDesc currentStatus = executionMap.get(executionId);
+        // TODO use appId in the future
+        String appId = currentStatus.getAppId() != null ? currentStatus.getAppId() : "dummy";
+
+        // TODO check status before request - it may be not necessary
+
+        String url = InstanceAgentAddressFactory.stopExecution(currentStatus.getMasterAddr(), executionId, appId);
+        String response = restTemplate.postForObject(url, null, String.class);
+        log.debug("Execution stop data response: '{}'.", response);
+
+        return response;
     }
 
     @Override
@@ -123,6 +136,11 @@ class InMemoryExecutionStarter implements ExecutionStarter {
         if ("ERROR".equals(update.getStage())) {
             log.info("Execution '{}' status changed to 'ERROR' with message '{}'.", currentExec.getId(), update.getMessage());
             statusBuilder.status(ExecutionDesc.ExecutionStatus.FAILED)
+                    .message(update.getMessage())
+                    .stopped(update.getLastUpdate());
+        } else if ("STOPPED".equals(update.getStage())) {
+            log.info("Execution '{}' status changed to 'STOPPED'.", currentExec.getId());
+            statusBuilder.status(ExecutionDesc.ExecutionStatus.STOPPED)
                     .message(update.getMessage())
                     .stopped(update.getLastUpdate());
         } else if ("FINISHED".equals(update.getStage())) {

@@ -68,9 +68,13 @@ class ExecutionController {
         }
     }
 
-    @GetMapping("stop/{executionId}")
-    String stop(@PathVariable String executionId) {
-        return "not implemented yet - stop execution of " + executionId;
+    @PostMapping("stop/{executionId}/{appId}")
+    String stop(@PathVariable String executionId, @PathVariable String appId) {
+        if (appRunner.stopProgram(executionId, appId)) {
+            return "ok";
+        } else {
+            return "not running";
+        }
     }
 
     // TODO define model

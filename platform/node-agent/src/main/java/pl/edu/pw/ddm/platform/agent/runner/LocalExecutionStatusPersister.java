@@ -1,5 +1,6 @@
-package pl.edu.pw.ddm.platform.runner.utils;
+package pl.edu.pw.ddm.platform.agent.runner;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,81 +19,44 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-@AllArgsConstructor(staticName = "of")
-public class ExecutionStatusPersister {
-    // FIXME change also in node-agent LocalExecutionStatusPersister as this class is copied there to update status when stopping app
+@Service
+class LocalExecutionStatusPersister {
+    // TODO make common save model with app-runner-java as this class is copy
 
-    private final static String DIR = "/ddm/execution";
-    private final static String FILE = "status.json";
+    @Value("${paths.execution.path}")
+    private String executionPath;
 
-    private final String executionId;
+    @Value("${paths.execution.status-filename}")
+    private String statusFilename;
 
-    public void init(String appId) {
+    public void init(String executionId, String appId) {
         ExecutionStatus status = ExecutionStatus.builder()
                 .appId(appId)
                 .startTime(LocalDateTime.now())
                 .lastUpdate(LocalDateTime.now())
                 .stage(ExecutionStage.INITIALIZING.code)
                 .build();
-        save(status);
+        save(executionId, status);
     }
 
-    // TODO handle errors somehow by catching it and rethrowing
-    public void error(String msg) {
+    public void stop(String executionId) throws IOException {
         ExecutionStatus status = load(executionId);
-        status.setStage(ExecutionStage.ERROR.code);
-        status.setMessage(msg);
-        save(status);
+        status.next(ExecutionStage.STOPPED);
+        status.setMessage("Stop on demand.");
+        save(executionId, status);
     }
 
-    public void started() {
-        next(ExecutionStage.STARTED);
-    }
-
-    public void processLocal() {
-        next(ExecutionStage.PROCESSING_LOCAL);
-    }
-
-    public void processGlobal() {
-        next(ExecutionStage.PROCESSING_GLOBAL);
-    }
-
-    public void updateLocal() {
-        next(ExecutionStage.UPDATING_LOCAL);
-    }
-
-    public void validate() {
-        next(ExecutionStage.VALIDATION);
-    }
-
-    public void summarize() {
-        next(ExecutionStage.SUMMARIZING);
-    }
-
-    public void stop() {
-        next(ExecutionStage.STOPPED);
-    }
-
-    public void finish() {
-        next(ExecutionStage.FINISHED);
-    }
-
-    @SneakyThrows
-    public static ExecutionStatus load(String executionId) {
-        Path path = Paths.get(DIR, executionId, FILE);
+    public ExecutionStatus load(String executionId) throws IOException {
+        Path path = Paths.get(executionPath, executionId, statusFilename);
         return new ObjectMapper().readValue(path.toFile(), ExecutionStatus.class);
     }
 
-    private void next(ExecutionStage stage) {
-        ExecutionStatus status = load(executionId);
-        status.next(stage);
-        save(status);
-    }
-
     @SneakyThrows
-    private void save(ExecutionStatus status) {
-        Path path = Paths.get(DIR, executionId, FILE);
+    private void save(String executionId, ExecutionStatus status) {
+        Path path = Paths.get(executionPath, executionId, statusFilename);
         Files.createDirectories(path.getParent());
         Files.write(path, new ObjectMapper().writeValueAsString(status).getBytes());
     }

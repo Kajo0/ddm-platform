@@ -28,6 +28,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -61,6 +62,7 @@ public class AppRunner {
     private final RestTemplate restTemplate;
     private final AlgorithmLoader algorithmLoader;
     private final DistanceFunctionLoader distanceFunctionLoader;
+    private final LocalExecutionStatusPersister executionStatusPersister;
     private final CoordinatorApiConfig coordinatorApiConfig;
     private final String sparkHome;
     private final String runnerJarPath;
@@ -70,11 +72,12 @@ public class AppRunner {
 
     private String coordinatorBaseUrl;
 
-    private Process runningApp;
+    private SparkAppHandle runningApp;
 
     AppRunner(RestTemplate restTemplate,
               AlgorithmLoader algorithmLoader,
               DistanceFunctionLoader distanceFunctionLoader,
+              LocalExecutionStatusPersister executionStatusPersister,
               AppAlgorithmsConfig algorithmsConfig,
               CoordinatorApiConfig coordinatorApiConfig,
               Environment env,
@@ -82,6 +85,7 @@ public class AppRunner {
         this.restTemplate = restTemplate;
         this.algorithmLoader = algorithmLoader;
         this.distanceFunctionLoader = distanceFunctionLoader;
+        this.executionStatusPersister = executionStatusPersister;
         this.sparkHome = sparkHome;
         this.coordinatorApiConfig = coordinatorApiConfig;
         this.runnerJarPath = algorithmsConfig.getRunner().getPath();
@@ -140,13 +144,38 @@ public class AppRunner {
                 .toJsonArgs();
         log.info("Launching spark process on master '{}' with args: '{}'.", masterNode, jsonArgs);
         runningApp = launcher.addAppArgs(jsonArgs)
-                .launch();
+                .startApplication(new AppHandleListener());
 
         return executionId;
     }
 
     public boolean isProgramRunning() {
-        return runningApp != null && runningApp.isAlive();
+        return runningApp != null && !runningApp.getState().isFinal();
+    }
+
+    public boolean stopProgram(String executionId, String appId) {
+        // TODO make use of arguments
+        if (!isProgramRunning()) {
+            log.warn("No App is not running.");
+            return false;
+        } else {
+            // TODO check for events if really stopped and eventually kill it
+            log.warn("Stopping program with executionId '{}' and appId '{}'.", executionId, appId);
+            runningApp.stop();
+            try {
+                executionStatusPersister.stop(executionId);
+            } catch (IOException e) {
+                log.warn("Status not found so creating stopped one for executionId '{}' and appId '{}'.", executionId, appId);
+                executionStatusPersister.init(executionId, appId);
+                try {
+                    executionStatusPersister.stop(executionId);
+                } catch (IOException ex) {
+                    log.error("Exception during saving stop status for app.", ex);
+                    // ignore
+                }
+            }
+            return true;
+        }
     }
 
     private File prepareMasterLogFile(String executionId) throws IOException {

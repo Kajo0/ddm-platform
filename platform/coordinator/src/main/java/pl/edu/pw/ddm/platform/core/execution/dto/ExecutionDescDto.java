@@ -18,6 +18,7 @@ public class ExecutionDescDto {
     private String message;
     private String appId;
     private LocalDateTime started;
+    private LocalDateTime updated;
     private LocalDateTime stopped;
 
 }

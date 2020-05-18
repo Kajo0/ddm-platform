@@ -47,6 +47,11 @@ interface ExecutionStarter {
         @JsonSerialize(using = LocalDateTimeSerializer.class)
         private LocalDateTime started = LocalDateTime.now();
 
+        @Builder.Default
+        @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+        @JsonSerialize(using = LocalDateTimeSerializer.class)
+        private LocalDateTime updated = LocalDateTime.now();
+
         @JsonDeserialize(using = LocalDateTimeDeserializer.class)
         @JsonSerialize(using = LocalDateTimeSerializer.class)
         private LocalDateTime stopped;
@@ -54,7 +59,8 @@ interface ExecutionStarter {
         private String message;
 
         boolean isRunning() {
-            return status == ExecutionStatus.STARTED;
+            return status == ExecutionStatus.INITIALIZING ||
+                    status == ExecutionStatus.STARTED;
         }
 
         boolean isCompleted() {
@@ -64,6 +70,7 @@ interface ExecutionStarter {
         @Getter
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
         enum ExecutionStatus {
+            INITIALIZING("initializing"),
             STARTED("started"),
             STOPPED("stopped"),
             FAILED("failed"),

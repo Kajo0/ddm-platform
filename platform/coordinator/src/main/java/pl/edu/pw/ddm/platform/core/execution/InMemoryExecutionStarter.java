@@ -60,7 +60,7 @@ class InMemoryExecutionStarter implements ExecutionStarter {
                 .distanceFunctionId(distanceFunctionId)
                 .distanceFunctionName(distanceFunctionName)
                 .masterAddr(masterAddr)
-                .status(ExecutionDesc.ExecutionStatus.STARTED)
+                .status(ExecutionDesc.ExecutionStatus.INITIALIZING)
                 .started(LocalDateTime.now())
                 .build();
         executionMap.put(executionId, desc);
@@ -147,6 +147,11 @@ class InMemoryExecutionStarter implements ExecutionStarter {
             log.info("Execution '{}' status changed to 'FINISHED'.", currentExec.getId());
             statusBuilder.status(ExecutionDesc.ExecutionStatus.FINISHED)
                     .stopped(update.getLastUpdate());
+        } else {
+            log.info("Execution '{}' status changed to '{}' with message '{}'.", currentExec.getId(), update.getStage(), update.getMessage());
+            statusBuilder.status(ExecutionDesc.ExecutionStatus.STARTED)
+                    .message(update.getMessage())
+                    .updated(update.getLastUpdate());
         }
 
         ExecutionDesc nextStatus = statusBuilder.build();

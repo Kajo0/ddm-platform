@@ -98,9 +98,9 @@ public final class CentralRunner {
     }
 
     private void runInternal() {
-        statusPersister.started();
         // TODO send clear ID to every agent
         performEachNodeDistributionWorkaround();
+        statusPersister.started();
 
         TimeStatistics stats = new TimeStatistics();
         stats.setStart(LocalDateTime.now());

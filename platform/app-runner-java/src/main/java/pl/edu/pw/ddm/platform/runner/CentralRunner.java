@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -140,6 +141,7 @@ public final class CentralRunner {
         localModels = sc.parallelize(nodeStubList, nodeStubList.size())
                 .mapPartitions(new LocalProcessRunner(initParams))
                 .collect();
+        verifyUniqueNodeExecutors(localModels);
     }
 
     @SneakyThrows
@@ -156,12 +158,22 @@ public final class CentralRunner {
         updatedAcks = sc.parallelize(globals, nodeStubList.size())
                 .mapPartitions(new LocalUpdateRunner(initParams))
                 .collect();
+        verifyUniqueNodeExecutors(updatedAcks);
     }
 
     private void executeMethod() {
         executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
                 .mapPartitions(new LocalExecutionRunner(initParams))
                 .collect();
+        verifyUniqueNodeExecutors(executionAcks);
+    }
+
+    private void verifyUniqueNodeExecutors(List<ModelWrapper> models) {
+        long uniqueAddresses = models.stream()
+                .map(ModelWrapper::getAddress)
+                .distinct()
+                .count();
+        Preconditions.checkState(uniqueAddresses == models.size(), "Not all nodes has been used during processing.");
     }
 
     private static InitParamsDto createInitParams(JsonArgsDto args) {

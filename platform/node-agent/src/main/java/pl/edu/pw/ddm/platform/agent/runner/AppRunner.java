@@ -222,7 +222,7 @@ public class AppRunner {
     private void findGateway() throws IOException {
         if (StringUtils.isBlank(coordinatorApiConfig.getHost())) {
             Process result = Runtime.getRuntime()
-                    .exec("traceroute -m 1 www.google.com");
+                    .exec("traceroute -m 1 8.8.8.8");
             try (InputStreamReader isr = new InputStreamReader(result.getInputStream()); BufferedReader output = new BufferedReader(isr)) {
                 output.readLine(); // skip line
                 StringTokenizer tokenizer = new StringTokenizer(output.readLine());

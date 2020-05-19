@@ -118,13 +118,12 @@ public final class CentralRunner {
         stats.setEnd(LocalDateTime.now());
 
         statusPersister.summarize();
-        CentralDdmSummarizer summarizer = new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes(), stats)
-                .printModelsSummary()
+        CentralDdmSummarizer summarizer = new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes(), stats);
+        ExecutionStatisticsPersister.save(initParams.getExecutionPath(), summarizer.prepareStats(), initParams.getExecutionId());
+        summarizer.printModelsSummary()
                 .printDispersionSummary()
                 .printTimeSummary()
                 .printTransferSummary();
-
-        ExecutionStatisticsPersister.save(initParams.getExecutionPath(), summarizer.prepareStats(), initParams.getExecutionId());
 
         statusPersister.finish();
     }

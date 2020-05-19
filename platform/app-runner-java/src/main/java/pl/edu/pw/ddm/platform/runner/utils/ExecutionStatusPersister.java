@@ -23,9 +23,9 @@ import lombok.SneakyThrows;
 public class ExecutionStatusPersister {
     // FIXME change also in node-agent LocalExecutionStatusPersister as this class is copied there to update status when stopping app
 
-    private final static String DIR = "/ddm/execution";
-    private final static String FILE = "status.json";
+    private final static String FILE = ControlFileNames.STATUS;
 
+    private final String executionPath;
     private final String executionId;
 
     public void init(String appId) {
@@ -79,8 +79,8 @@ public class ExecutionStatusPersister {
     }
 
     @SneakyThrows
-    public static ExecutionStatus load(String executionId) {
-        Path path = Paths.get(DIR, executionId, FILE);
+    public ExecutionStatus load(String executionId) {
+        Path path = Paths.get(executionPath, executionId, FILE);
         return new ObjectMapper().readValue(path.toFile(), ExecutionStatus.class);
     }
 
@@ -92,7 +92,7 @@ public class ExecutionStatusPersister {
 
     @SneakyThrows
     private void save(ExecutionStatus status) {
-        Path path = Paths.get(DIR, executionId, FILE);
+        Path path = Paths.get(executionPath, executionId, FILE);
         Files.createDirectories(path.getParent());
         Files.write(path, new ObjectMapper().writeValueAsString(status).getBytes());
     }

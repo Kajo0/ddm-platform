@@ -37,7 +37,7 @@ class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrap
         LocalModel model = processor.processLocal(dataProvider, paramProvider);
         LocalDateTime end = LocalDateTime.now();
 
-        ModelPersister.saveLocal(model, initParams.getExecutionId());
+        ModelPersister.saveLocal(initParams.getExecutionPath(), model, initParams.getExecutionId());
 
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);
         wrapper.getTimeStatistics().setStart(start);

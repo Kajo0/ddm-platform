@@ -9,23 +9,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.Value;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
+import pl.edu.pw.ddm.platform.runner.utils.ControlFileNames;
 
+@RequiredArgsConstructor
 public class NodeResultCollector implements ResultCollector {
 
-    private final static String PATH = "/ddm/execution";
-    private final static String RESULTS = "results.txt";
+    private final static String RESULTS = ControlFileNames.RESULTS;
 
+    private final String executionPath;
     private final String executionId;
 
     @Getter
     private List<NodeResultData> results = new LinkedList<>();
-
-    public NodeResultCollector(String executionId) {
-        this.executionId = executionId;
-    }
 
     @Override
     public void collect(String id, String result) {
@@ -40,7 +39,7 @@ public class NodeResultCollector implements ResultCollector {
 
     @SneakyThrows
     public void saveResults() {
-        Path path = Paths.get(PATH, executionId, RESULTS);
+        Path path = Paths.get(executionPath, executionId, RESULTS);
         Files.createDirectories(path.getParent());
         Files.deleteIfExists(path);
 

@@ -36,9 +36,11 @@ paths:
     desc-filename: desc.properties
   execution:
     path: ${paths.root}/execution
+# vvv   don't change as ControlFileNames is source of truth vvv
     status-filename: status.json
     results:-filename: results.txt
     statistics-filename: stats.json
+# ^^^   don't change as ControlFileNames is source of truth ^^^
     logs:
       central-filename: central.log
       spark-work-dir: /spark/work

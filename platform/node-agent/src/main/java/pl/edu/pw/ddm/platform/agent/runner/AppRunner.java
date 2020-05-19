@@ -140,6 +140,7 @@ public class AppRunner {
         }
 
         String jsonArgs = jsonArgsBuilder.datasetsPath(datasetsPath)
+                .executionPath(executionPath)
                 .build()
                 .toJsonArgs();
         log.info("Launching spark process on master '{}' with args: '{}'.", masterNode, jsonArgs);
@@ -270,6 +271,7 @@ public class AppRunner {
         private String instanceId;
         private String algorithmId;
         private String algorithmPackageName;
+        private String executionPath;
         private String datasetsPath;
         private String trainDataId;
         private String testDataId;

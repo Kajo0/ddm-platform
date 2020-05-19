@@ -17,6 +17,7 @@ import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 class InitParamsDto implements Serializable {
 
     private String datasetsPath;
+    private String executionPath;
     private String trainDataId;
     private String testDataId;
     private String executionId;

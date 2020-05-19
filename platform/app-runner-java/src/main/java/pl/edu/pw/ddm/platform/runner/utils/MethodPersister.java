@@ -15,17 +15,16 @@ import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 @UtilityClass
 public class MethodPersister {
 
-    private final static String DIR = "/ddm/execution";
-    private final static String FILE = "method.data";
+    private final static String FILE = ControlFileNames.FINAL_METHOD;
 
     @SneakyThrows
-    public boolean save(MiningMethod method, String executionId) {
+    public boolean save(String executionPath, MiningMethod method, String executionId) {
         boolean updated = false;
 
-        Path path = Paths.get(DIR, executionId, FILE);
+        Path path = Paths.get(executionPath, executionId, FILE);
         Files.createDirectories(path.getParent());
         if (Files.exists(path)) {
-            updated = removeLocal(executionId);
+            updated = removeLocal(executionPath, executionId);
         }
 
         try (FileOutputStream fos = new FileOutputStream(path.toFile());
@@ -37,8 +36,8 @@ public class MethodPersister {
     }
 
     @SneakyThrows
-    public MiningMethod load(String executionId) {
-        Path path = Paths.get(DIR, executionId, FILE);
+    public MiningMethod load(String executionPath, String executionId) {
+        Path path = Paths.get(executionPath, executionId, FILE);
         if (Files.notExists(path)) {
             return null;
         } else {
@@ -50,8 +49,8 @@ public class MethodPersister {
     }
 
     @SneakyThrows
-    public boolean removeLocal(String executionId) {
-        Path path = Paths.get(DIR, executionId, FILE);
+    public boolean removeLocal(String executionPath, String executionId) {
+        Path path = Paths.get(executionPath, executionId, FILE);
         return Files.deleteIfExists(path);
     }
 

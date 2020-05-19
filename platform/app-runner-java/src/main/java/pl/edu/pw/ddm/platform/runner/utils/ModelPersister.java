@@ -16,17 +16,16 @@ import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 @UtilityClass
 public class ModelPersister {
 
-    private final static String PATH = "/ddm/execution/";
-    private final static String LOCAL = "local_model.data";
+    private final static String LOCAL = ControlFileNames.LOCAL_MODEL;
 
     @SneakyThrows
-    public boolean saveLocal(BaseModel model, String executionId) {
+    public boolean saveLocal(String executionPath, BaseModel model, String executionId) {
         boolean updated = false;
 
-        Path path = Paths.get(PATH, executionId, LOCAL);
+        Path path = Paths.get(executionPath, executionId, LOCAL);
         Files.createDirectories(path.getParent());
         if (Files.exists(path)) {
-            updated = removeLocal(executionId);
+            updated = removeLocal(executionPath, executionId);
         }
 
         try (FileOutputStream fos = new FileOutputStream(path.toFile());
@@ -38,8 +37,8 @@ public class ModelPersister {
     }
 
     @SneakyThrows
-    public LocalModel loadLocal(String executionId) {
-        Path path = Paths.get(PATH, executionId, LOCAL);
+    public LocalModel loadLocal(String executionPath, String executionId) {
+        Path path = Paths.get(executionPath, executionId, LOCAL);
         if (Files.notExists(path)) {
             return null;
         } else {
@@ -51,8 +50,8 @@ public class ModelPersister {
     }
 
     @SneakyThrows
-    public boolean removeLocal(String executionId) {
-        Path path = Paths.get(PATH, executionId, LOCAL);
+    public boolean removeLocal(String executionPath, String executionId) {
+        Path path = Paths.get(executionPath, executionId, LOCAL);
         return Files.deleteIfExists(path);
     }
 

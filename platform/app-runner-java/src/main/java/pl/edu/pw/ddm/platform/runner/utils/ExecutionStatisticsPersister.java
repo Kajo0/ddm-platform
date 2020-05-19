@@ -21,12 +21,11 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ExecutionStatisticsPersister {
 
-    private final static String DIR = "/ddm/execution";
-    private final static String FILE = "stats.json";
+    private final static String FILE = ControlFileNames.STATISTICS;
 
     @SneakyThrows
-    public void save(Stats stats, String executionId) {
-        Path path = Paths.get(DIR, executionId, FILE);
+    public void save(String executionPath, Stats stats, String executionId) {
+        Path path = Paths.get(executionPath, executionId, FILE);
         Files.createDirectories(path.getParent());
         Files.write(path, new ObjectMapper().writeValueAsString(stats).getBytes());
     }

@@ -48,7 +48,7 @@ public final class CentralRunner {
         SparkContext ssc = SparkContext.getOrCreate();
         this.sc = JavaSparkContext.fromSparkContext(ssc);
 
-        this.statusPersister = ExecutionStatusPersister.of(initParams.getExecutionId());
+        this.statusPersister = ExecutionStatusPersister.of(initParams.getExecutionPath(), initParams.getExecutionId());
         this.statusPersister.init(this.sc.getConf().getAppId());
     }
 
@@ -61,6 +61,7 @@ public final class CentralRunner {
         System.out.println("  workerNodes                 = " + args.getWorkerNodes());
         System.out.println("  algorithmId                 = " + args.getAlgorithmId());
         System.out.println("  algorithmPackageName        = " + args.getAlgorithmPackageName());
+        System.out.println("  executionPath               = " + args.getExecutionPath());
         System.out.println("  datasetsPath                = " + args.getDatasetsPath());
         System.out.println("  trainDataId                 = " + args.getTrainDataId());
         System.out.println("  testDataId                  = " + args.getTestDataId());
@@ -123,7 +124,7 @@ public final class CentralRunner {
                 .printTimeSummary()
                 .printTransferSummary();
 
-        ExecutionStatisticsPersister.save(summarizer.prepareStats(), initParams.getExecutionId());
+        ExecutionStatisticsPersister.save(initParams.getExecutionPath(), summarizer.prepareStats(), initParams.getExecutionId());
 
         statusPersister.finish();
     }
@@ -166,6 +167,7 @@ public final class CentralRunner {
 
     private static InitParamsDto createInitParams(JsonArgsDto args) {
         return InitParamsDto.builder()
+                .executionPath(args.getExecutionPath())
                 .datasetsPath(args.getDatasetsPath())
                 .trainDataId(args.getTrainDataId())
                 .testDataId(args.getTestDataId())

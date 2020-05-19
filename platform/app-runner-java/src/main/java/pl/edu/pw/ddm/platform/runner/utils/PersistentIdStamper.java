@@ -10,7 +10,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PersistentIdStamper {
 
-    private final static String PATH = "/ddm/metrics_id.txt";
+    private final static String PATH = ControlFileNames.METRICS_ID;
 
     @SneakyThrows
     public Integer save(Integer id) {

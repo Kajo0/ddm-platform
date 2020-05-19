@@ -103,10 +103,9 @@ public class ExecutionStatisticsPersister {
             return getTotalExecution() - getExecutionLoading();
         }
 
-
         @JsonProperty("ddmTotalWithoutLoading")
         long getDdmTotalWithoutLoading() {
-            return ddmTotalProcessing - getLocalLoading();
+            return ddmTotalProcessing - getLocalLoading() - getExecutionLoading();
         }
 
         @Value(staticConstructor = "of")

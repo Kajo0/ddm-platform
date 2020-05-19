@@ -53,13 +53,15 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
 
     private TimeStatistics classify(Classifier classifier) {
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDatasetsPath(), initParams.getTrainDataId(), initParams.getTestDataId());
-        SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test());
         NodeResultCollector resultCollector = new NodeResultCollector(initParams.getExecutionPath(), initParams.getExecutionId());
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         TimeStatistics stats = new TimeStatistics();
         stats.setStart(LocalDateTime.now());
+
+        SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.test()); // TODO lazy loading to avoid such an error with collecting duration
         classifier.classify(sampleProvider, paramProvider, resultCollector);
+
         stats.setEnd(LocalDateTime.now());
         stats.setDataLoadingMillis(dataProvider.getLoadingMillis());
 
@@ -69,13 +71,16 @@ class LocalExecutionRunner implements FlatMapFunction<Iterator<Integer>, ModelWr
 
     private TimeStatistics cluster(Clustering clustering) {
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDatasetsPath(), initParams.getTrainDataId(), initParams.getTestDataId());
-        SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.training()); // TODO think if not test for clustering means eg training
         NodeResultCollector resultCollector = new NodeResultCollector(initParams.getExecutionPath(), initParams.getExecutionId());
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
         TimeStatistics stats = new TimeStatistics();
         stats.setStart(LocalDateTime.now());
+
+        // TODO think if not test for clustering means eg training
+        SampleProvider sampleProvider = NodeSampleProvider.fromData(dataProvider.training()); // TODO lazy loading to avoid such an error with collecting duration
         clustering.cluster(sampleProvider, paramProvider, resultCollector);
+
         stats.setEnd(LocalDateTime.now());
         stats.setDataLoadingMillis(dataProvider.getLoadingMillis());
 

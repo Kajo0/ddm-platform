@@ -7,6 +7,14 @@ function checkError() {
   fi
 }
 
+cd ../../model-interface
+./gradlew clean build publishToMavenLocal ; checkError
+cd -
+
+cd ../../algorithms/distance-functions
+./gradlew clean build publishToMavenLocal ; checkError
+cd -
+
 cd ../../algorithms/clustering/aoptkm
 ./gradlew clean shadowJar ; checkError
 cd -

@@ -11,6 +11,10 @@ cd ../../metrics
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -
 
+cd ../../model-interface
+./gradlew clean build publishToMavenLocal ; checkError
+cd -
+
 cd ../../algorithms/distance-functions
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -

@@ -27,8 +27,11 @@ cd ../../app-runner-java
 ./gradlew clean shadowJar ; checkError
 cd -
 
-cp ../../node-agent/build/libs/node-agent-*.jar ./worker/apps/ ; checkError
+mkdir -p ./master/apps
+mkdir -p ./worker/apps
+
 cp ../../node-agent/build/libs/node-agent-*.jar ./master/apps/ ; checkError
+cp ../../node-agent/build/libs/node-agent-*.jar ./worker/apps/ ; checkError
 
 # TODO remove - from classpath or distributed
 cp ../../app-runner-java/build/libs/app-runner-java-*-all.jar ./master/apps/ ; checkError

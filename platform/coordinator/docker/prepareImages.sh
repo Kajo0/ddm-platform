@@ -7,6 +7,14 @@ function checkError() {
   fi
 }
 
+cd ../../metrics
+./gradlew clean build publishToMavenLocal ; checkError
+cd -
+
+cd ../../algorithms/distance-functions
+./gradlew clean build publishToMavenLocal ; checkError
+cd -
+
 cd ../../node-agent
 ./gradlew clean build ; checkError
 cd -

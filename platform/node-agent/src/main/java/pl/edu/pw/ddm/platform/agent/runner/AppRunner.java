@@ -56,8 +56,18 @@ public class AppRunner {
     @Value("${paths.execution.logs.central-filename}")
     private String centralLogFilename;
 
+    @Value("${spark.master-host}")
+    private String sparkMasterHost;
+
     @Value("${spark.master-port}")
     private String sparkMasterPort;
+
+    // TODO extract all sparkXXX to properties component
+    @Value("${spark.driver-port}")
+    private String sparkDriverPort;
+
+    @Value("${spark.block-manager-port}")
+    private String sparkBlockManagerPort;
 
     private final RestTemplate restTemplate;
     private final AlgorithmLoader algorithmLoader;
@@ -117,6 +127,9 @@ public class AppRunner {
                 .addSparkArg("spark.locality.wait", "3600s")
                 .setDeployMode("client")
                 .setConf("spark.task.maxFailures", "1")
+                .setConf("spark.driver.host", sparkMasterHost)
+                .setConf("spark.driver.port", sparkDriverPort)
+                .setConf("spark.blockManager.port", sparkBlockManagerPort)
                 .setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(params.cpuCount))
                 .setConf(SparkLauncher.EXECUTOR_MEMORY, params.memoryInGb + "g");
 

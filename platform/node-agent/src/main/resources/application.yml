@@ -15,7 +15,10 @@ coordinator:
 
 spark:
   home: ${SPARK_HOME:/home/mmarkiew/dev/spark}
+  master-host: spark-master
   master-port: 7077
+  driver-port: 11000
+  block-manager-port: 12000
 
 # TODO AppAlgorithmsConfig include as dependency and run
 apps:

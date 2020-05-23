@@ -41,6 +41,7 @@ class StatusProvider {
     static class NodeConfiguration {
 
         private String localHostName;
+        private String localHostIp;
     }
 
 }

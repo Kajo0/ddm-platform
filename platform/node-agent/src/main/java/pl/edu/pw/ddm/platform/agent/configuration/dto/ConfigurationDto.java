@@ -8,5 +8,6 @@ import lombok.Data;
 public class ConfigurationDto {
 
     private String localHostName;
+    private String localHostIp;
 
 }

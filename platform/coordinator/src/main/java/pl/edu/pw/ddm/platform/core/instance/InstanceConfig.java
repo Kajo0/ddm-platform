@@ -45,6 +45,14 @@ class InstanceConfig {
         return !StringUtils.equals(previous, name);
     }
 
+    boolean updateLocalhostIp(String id, String nodeId, String ip) {
+        InstanceNode node = node(id, nodeId);
+        String previous = node.localhostIp;
+        node.localhostIp = ip;
+
+        return !StringUtils.equals(previous, ip);
+    }
+
     private InstanceNode node(String id, String nodeId) {
         return instanceMap.get(id)
                 .nodes
@@ -80,6 +88,7 @@ class InstanceConfig {
         private String type;
         private String address;
         private String localhostName;
+        private String localhostIp;
         private boolean alive;
         private String port;
         private String uiPort;

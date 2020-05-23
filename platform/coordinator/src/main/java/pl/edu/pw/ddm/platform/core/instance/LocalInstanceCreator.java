@@ -50,7 +50,7 @@ class LocalInstanceCreator implements InstanceCreator {
 
         // Create network
         var networkName = "platform-network-" + instanceId;
-        client.createNetworkCmd()
+        var network = client.createNetworkCmd()
                 .withName(networkName)
                 .exec();
 
@@ -91,6 +91,7 @@ class LocalInstanceCreator implements InstanceCreator {
                 "master",
                 "localhost",
                 null,
+                null,
                 false,
                 masterPort,
                 uiPort,
@@ -100,12 +101,25 @@ class LocalInstanceCreator implements InstanceCreator {
                 diskInGb)
         );
 
+        // FIXME not necessary for now but in some way possible to connect by ip containers
+//        Network inspect = client.inspectNetworkCmd()
+//                .withNetworkId(network.getId())
+//                .exec();
+//        String masterIp = inspect.getContainers()
+//                .values()
+//                .stream()
+//                .findFirst()
+//                .map(Network.ContainerNetworkConfig::getIpv4Address)
+//                .map(ipWithMask -> StringUtils.substringBefore(ipWithMask, "/"))
+//                .orElseThrow(() -> new IllegalStateException("Cannot find master ip address"));
+
         // Create worker nodes
         for (int i = 1; i <= workers; ++i) {
             var port = findOpenPort().toString();
             var workerAgentPort = findOpenPort().toString();
             var hcw = new HostConfig()
                     .withPortBindings(PortBinding.parse(port + ":" + sparkWorkerUiPort), PortBinding.parse(workerAgentPort + ":" + nodeAgentPort))
+//                    .withExtraHosts("spark-master:" + masterIp) // FIXME for master cannot be done and name is in node-agent application.yml so commented fo now
                     .withNetworkMode(networkName);
             if (cpuCores != null) {
                 hcw.withCpuCount(cpuCores.longValue());
@@ -136,6 +150,7 @@ class LocalInstanceCreator implements InstanceCreator {
                     containerName,
                     "worker",
                     "localhost",
+                    null,
                     null,
                     false,
                     port,

@@ -42,6 +42,7 @@ class ManualInstanceSetupValidator {
                         n.getType(),
                         n.getAddress(),
                         null,
+                        null,
                         false,
                         n.getPort(),
                         n.getUiPort(),

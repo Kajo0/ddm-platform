@@ -99,17 +99,18 @@ public class InstanceFacade {
     }
 
     public boolean updateConfig(@NonNull UpdateConfigRequest request) {
-        var nodes = instanceConfig.get(request.instanceId)
-                .getNodes()
+        var instance = instanceConfig.get(request.instanceId);
+        var nodes = instance.getNodes()
                 .values();
 
         nodes.forEach(n -> {
             var config = statusProvider.collectConfig(n);
             instanceConfig.updateLocalhostName(request.instanceId, n.getId(), config.getLocalHostName());
+            instanceConfig.updateLocalhostIp(request.instanceId, n.getId(), config.getLocalHostIp());
         });
 
         return nodes.stream()
-                .allMatch(setupUpdater::updateSetup);
+                .allMatch(node -> setupUpdater.updateSetup(instance, node));
     }
 
     // TODO remove debug

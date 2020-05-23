@@ -15,10 +15,13 @@ class DefaultConfigurationProvider implements ConfigurationProvider {
     @Override
     public ConfigurationDto info() {
         String localhost = InetAddress.getLocalHost().getHostName();
+        String ip = InetAddress.getLocalHost().getHostAddress();
         log.info("Info localhost name: " + localhost);
+        log.info("Info localhost ip: " + ip);
 
         return ConfigurationDto.builder()
                 .localHostName(localhost)
+                .localHostIp(ip)
                 .build();
     }
 

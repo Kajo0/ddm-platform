@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +24,17 @@ import pl.edu.pw.ddm.platform.core.util.ProfileConstants;
 
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class InstanceFacade {
 
     private final InstanceConfig instanceConfig;
     private final InstanceCreator creator;
+    private final StatusProvider statusProvider;
+    private final SetupUpdater setupUpdater;
     private final Environment env;
+
+    @org.springframework.beans.factory.annotation.Value("${communiaction.node-agent-port}")
+    private String nodeAgentPort;
 
     public String setup(@NonNull SetupRequest request) {
         ManualInstanceSetupValidator validator = new ManualInstanceSetupValidator(request);
@@ -71,13 +77,39 @@ public class InstanceFacade {
                     .orElseThrow(() -> new IllegalStateException("No master node found for instance: " + request.instanceId));
             try {
                 masterAddr.setAddress(InetAddress.getLocalHost().getHostAddress());
-                masterAddr.setAgentPort("7100");
+                masterAddr.setAgentPort(nodeAgentPort);
             } catch (UnknownHostException e) {
                 log.error("Getting localhost address error.", e);
             }
         }
 
         return addr;
+    }
+
+    public boolean status(@NonNull StatusRequest request) {
+        return instanceConfig.get(request.instanceId)
+                .getNodes()
+                .values()
+                .stream()
+                .allMatch(n -> {
+                    boolean status = statusProvider.checkStatus(n);
+                    instanceConfig.updateAlive(request.instanceId, n.getId(), status);
+                    return status;
+                });
+    }
+
+    public boolean updateConfig(@NonNull UpdateConfigRequest request) {
+        var nodes = instanceConfig.get(request.instanceId)
+                .getNodes()
+                .values();
+
+        nodes.forEach(n -> {
+            var config = statusProvider.collectConfig(n);
+            instanceConfig.updateLocalhostName(request.instanceId, n.getId(), config.getLocalHostName());
+        });
+
+        return nodes.stream()
+                .allMatch(setupUpdater::updateSetup);
     }
 
     // TODO remove debug
@@ -154,6 +186,20 @@ public class InstanceFacade {
 
     @Value(staticConstructor = "of")
     public static class AddressRequest {
+
+        @NonNull
+        private final String instanceId;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class StatusRequest {
+
+        @NonNull
+        private final String instanceId;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class UpdateConfigRequest {
 
         @NonNull
         private final String instanceId;

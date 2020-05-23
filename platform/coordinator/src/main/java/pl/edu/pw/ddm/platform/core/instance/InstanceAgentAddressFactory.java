@@ -49,6 +49,18 @@ public class InstanceAgentAddressFactory {
         return base(dto) + "results/" + executionId + "/stats";
     }
 
+    public String healthCheckStatus(@NonNull InstanceAddrDto dto) {
+        return base(dto) + "health-check/status";
+    }
+
+    public String collectConfig(@NonNull InstanceAddrDto dto) {
+        return base(dto) + "config/info";
+    }
+
+    public String configSetup(@NonNull InstanceAddrDto dto) {
+        return base(dto) + "config/setup";
+    }
+
     private String base(@NonNull InstanceAddrDto dto) {
         return "http://" + dto.agentAddress() + "/agent/";
     }

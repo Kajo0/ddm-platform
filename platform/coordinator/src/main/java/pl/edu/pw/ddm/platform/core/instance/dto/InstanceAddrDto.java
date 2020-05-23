@@ -9,6 +9,8 @@ public class InstanceAddrDto {
     private String name;
     private String type;
     private String address;
+    private String localhostName;
+    private boolean alive;
     private String port;
     private String uiPort;
     private String agentPort;

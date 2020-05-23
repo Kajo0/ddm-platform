@@ -5,8 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Value;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +29,28 @@ class InstanceConfig {
         return instanceMap.remove(id);
     }
 
+    boolean updateAlive(String id, String nodeId, boolean alive) {
+        InstanceNode node = node(id, nodeId);
+        boolean previous = node.alive;
+        node.alive = alive;
+
+        return previous != alive;
+    }
+
+    boolean updateLocalhostName(String id, String nodeId, String name) {
+        InstanceNode node = node(id, nodeId);
+        String previous = node.localhostName;
+        node.localhostName = name;
+
+        return !StringUtils.equals(previous, name);
+    }
+
+    private InstanceNode node(String id, String nodeId) {
+        return instanceMap.get(id)
+                .nodes
+                .get(nodeId);
+    }
+
     @Value
     static class InstanceData {
 
@@ -45,7 +69,9 @@ class InstanceConfig {
         }
     }
 
-    @Value
+    // TODO make it more immutable and allow update only certain fields
+    @Getter
+    @AllArgsConstructor
     static class InstanceNode {
 
         private String id;
@@ -53,6 +79,8 @@ class InstanceConfig {
         private String name;
         private String type;
         private String address;
+        private String localhostName;
+        private boolean alive;
         private String port;
         private String uiPort;
         private String agentPort;

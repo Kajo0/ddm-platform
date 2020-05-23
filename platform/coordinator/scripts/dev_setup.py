@@ -33,11 +33,14 @@ api = {
         'stop': '/coordinator/command/execution/stop/{executionId}'
     },
     'instance': {
-        'create': '/coordinator/command/instance/create/{workers}',
+        'config-update': '/coordinator/command/instance/config/{instanceId}/update',
+        'info': '/coordinator/command/instance/info',
+        'addresses': '/coordinator/command/instance/info/{instanceId}',
+        'status': '/coordinator/command/instance/status/{instanceId}',
+
         'destroy': '/coordinator/command/instance/destroy/{instanceId}',
         'destroyAll': '/coordinator/command/instance/destroy/all',
-        'info': '/coordinator/command/instance/info',
-        'addresses': '/coordinator/command/instance/info/{instanceId}'
+        'create': '/coordinator/command/instance/create/{workers}'
     },
     'results': {
         'validate': '/coordinator/command/results/validate/{executionId}',
@@ -241,6 +244,26 @@ def createInstance(workers, cpu=2, memory=2, disk=10):
     return instanceId
 
 
+def instanceStatus(instanceId, debug=True):
+    if debug:
+        print("instanceStatus instanceId='{}'".format(instanceId))
+    url = baseUrl + api['instance']['status'].format(**{'instanceId': instanceId})
+    response = requests.get(url)
+    if debug:
+        print('  response: ' + response.text)
+    return response.status_code
+
+
+def instanceConfigUpdate(instanceId, debug=True):
+    if debug:
+        print("instanceConfigUpdate instanceId='{}'".format(instanceId))
+    url = baseUrl + api['instance']['config-update'].format(**{'instanceId': instanceId})
+    response = requests.get(url)
+    if debug:
+        print('  response: ' + response.text)
+    return response.status_code
+
+
 def instanceInfo(debug=True):
     print('instanceInfo')
     url = baseUrl + api['instance']['info']
@@ -314,11 +337,17 @@ def setupDefault(workers=2, oneNode=False):
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
     instanceId = createInstance(workers, 2, 2, 10)  # cpu, memory, disk
 
-    time.sleep(workers * 5)
+    print('Wait for setup', end='', flush=True)
+    while instanceStatus(instanceId, False) != 200:
+        print('.', end='', flush=True)
+        time.sleep(2)
+    print('')
+
     broadcastJar(instanceId, algorithmId)
     scatterData(instanceId, trainDataId, 'uniform', None, 'train')
     scatterData(instanceId, testDataId, 'dummy', None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
+    instanceConfigUpdate(instanceId)
 
     saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
@@ -348,8 +377,22 @@ def reload(oneNode=False):
 
     scatterData(instanceId, testDataId, 'dummy', None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
+    instanceConfigUpdate(instanceId)
 
     saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
+
+
+def instStatus(oneNode=False):
+    last = loadLast(oneNode)
+    instanceId = last.get('instance_id')
+    print(instanceId)
+    instanceStatus(instanceId)
+
+
+def instConfUpdate(oneNode=False):
+    last = loadLast(oneNode)
+    instanceId = last.get('instance_id')
+    instanceConfigUpdate(instanceId)
 
 
 def execute(oneNode=False):
@@ -417,7 +460,7 @@ def clear():
 
 if len(sys.argv) < 2:
     print(
-        '  Provide command! [setup, clear, reload, execute, status, logs, lastlog, results, validate, stats, info [data, alg, func, exec, inst]]')
+        '  Provide command! [setup, inststatus, confupdate, clear, reload, execute, status, logs, lastlog, results, validate, stats, info [data, alg, func, exec, inst]]')
     sys.exit(1)
 
 command = sys.argv[1]
@@ -430,6 +473,10 @@ if command == 'setup':
         setupDefault(1, oneNode)
     else:
         setupDefault()
+elif command == 'inststatus':
+    instStatus(oneNode)
+elif command == 'confupdate':
+    instConfUpdate(oneNode)
 elif command == 'clear':
     clear()
 elif command == 'reload':

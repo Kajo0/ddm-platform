@@ -181,11 +181,12 @@ def fetchLogs(executionId, nodeId, count):
     return response
 
 
-def collectResults(executionId):
+def collectResults(executionId, debug=True):
     print("collectResults executionId='{}'".format(executionId))
     url = baseUrl + api['execution']['collectResults'].format(**{'executionId': executionId})
     response = requests.get(url).text
-    print('  response: ' + response)
+    if debug:
+        print('  response: ' + response)
     return response
 
 
@@ -284,6 +285,18 @@ def destroyAll():
 
 def validateResults(executionId, metrics):
     print("validateResults executionId='{}' metrics='{}'".format(executionId, metrics))
+
+    # TODO check if results are collected instead of always collecting
+    status = executionStatus(executionId, False)
+    try:
+        if status['status'] != 'FINISHED':
+            raise ValueError(status['status'])
+    except ValueError as err:
+        print('Not finished or started: ', err)
+        return
+
+    collectResults(executionId, False)
+
     url = baseUrl + api['results']['validate'].format(**{'executionId': executionId})
     response = requests.post(url,
                              data={'metrics': metrics}

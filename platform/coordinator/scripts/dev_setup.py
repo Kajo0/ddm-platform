@@ -338,7 +338,7 @@ def loadLast(oneNode):
     return dict(config['onenode' if oneNode else 'last'])
 
 
-def setupDefault(workers=2, oneNode=False):
+def setupDefault(workers=2, cpu=2, memory=2, oneNode=False):
     algorithmId = None
     if oneNode:
         algorithmId = loadJar('./samples/k-means-weka.jar')
@@ -348,7 +348,7 @@ def setupDefault(workers=2, oneNode=False):
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
-    instanceId = createInstance(workers, 2, 2, 10)  # cpu, memory, disk
+    instanceId = createInstance(workers, cpu, memory, 10)  # cpu, memory, disk
 
     print('Wait for setup', end='', flush=True)
     while instanceStatus(instanceId, False) != 200:
@@ -483,9 +483,9 @@ if len(sys.argv) > 2 and sys.argv[2] == 'onenode':
 
 if command == 'setup':
     if oneNode:
-        setupDefault(1, oneNode)
+        setupDefault(1, 2, 4, True)
     else:
-        setupDefault()
+        setupDefault(2, 2, 2, False)
 elif command == 'inststatus':
     instStatus(oneNode)
 elif command == 'confupdate':

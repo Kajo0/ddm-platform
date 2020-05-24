@@ -56,7 +56,7 @@ public class AppRunner {
     @Value("${paths.execution.logs.central-filename}")
     private String centralLogFilename;
 
-    @Value("${spark.master-host}")
+    @Value("${spark.master-host:}")
     private String sparkMasterHost;
 
     @Value("${spark.master-port}")

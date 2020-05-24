@@ -18,14 +18,14 @@ import org.springframework.stereotype.Service;
 @Service
 class DockerConfigurationService implements ConfigurationService {
 
-    @Value("${spark.master-host}")
+    @Value("${spark.master-host:}")
     private String sparkMasterHost;
 
     @Override
     public void setup(String masterPublicAddr) throws AccessDeniedException {
         log.info("Provided config: masterPublicAddress='{}'.", masterPublicAddr);
         try {
-            if (StringUtils.isNotBlank(masterPublicAddr)) {
+            if (StringUtils.isNotBlank(masterPublicAddr) && StringUtils.isNotEmpty(sparkMasterHost)) {
                 updateMasterHost(masterPublicAddr);
             }
         } catch (AccessDeniedException e) {

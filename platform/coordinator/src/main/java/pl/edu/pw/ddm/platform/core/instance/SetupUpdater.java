@@ -44,7 +44,12 @@ class SetupUpdater {
             case LOCAL_DOCKER:
                 return master.getLocalhostIp();
             case MANUAL_SETUP:
-                return master.getAddress();
+                String addr = master.getAddress();
+                if ("localhost".equals(addr)) {
+                    return null;
+                } else {
+                    return addr;
+                }
 
             default:
                 throw new IllegalStateException("Unknown instance type: " + instance.getType());

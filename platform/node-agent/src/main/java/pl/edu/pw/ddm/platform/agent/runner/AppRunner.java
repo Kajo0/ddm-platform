@@ -127,11 +127,16 @@ public class AppRunner {
                 .addSparkArg("spark.locality.wait", "3600s")
                 .setDeployMode("client")
                 .setConf("spark.task.maxFailures", "1")
-                .setConf("spark.driver.host", sparkMasterHost)
                 .setConf("spark.driver.port", sparkDriverPort)
                 .setConf("spark.blockManager.port", sparkBlockManagerPort)
+                .setConf("spark.shuffle.io.connectionTimeout", "1s")
+                .setConf("spark.shuffle.io.maxRetries", "1")
                 .setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(params.cpuCount))
                 .setConf(SparkLauncher.EXECUTOR_MEMORY, params.memoryInGb + "g");
+
+        if (StringUtils.isNotBlank(sparkMasterHost)) {
+            launcher.setConf("spark.driver.host", sparkMasterHost);
+        }
 
         ArgJsonBuilder.ArgJsonBuilderBuilder jsonArgsBuilder = ArgJsonBuilder.toBuilder(params, masterNode, workerNodes, executionId);
 

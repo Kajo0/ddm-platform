@@ -31,13 +31,18 @@ interface ResultsCollector {
             private long ddmTotalProcessing;
 
             private long localProcessing;
+            private long maxLocalProcessing;
             private long localLoading;
+            private long maxLocalLoading;
             private long executionLoading;
+            private long maxExecutionLoading;
             private long total;
+            private long totalMaxProcessing;
             private long totalExecution;
+            private long maxExecution;
             private long totalWithoutLoading;
             private long totalExecutionWithoutLoading;
-            private long ddmTotalWithoutLoading;
+            private long ddmTotalWithoutMaxLoadings;
 
             @Data
             static class LocalStats {

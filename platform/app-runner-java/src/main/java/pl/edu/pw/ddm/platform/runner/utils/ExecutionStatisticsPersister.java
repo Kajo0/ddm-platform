@@ -64,12 +64,30 @@ public class ExecutionStatisticsPersister {
                     .reduce(0L, Long::sum);
         }
 
+        @JsonProperty("maxLocalProcessing")
+        long getMaxLocalProcessing() {
+            return Stream.of(localsProcessings.values(), localsUpdates.values())
+                    .flatMap(Collection::stream)
+                    .map(LocalStats::getProcessing)
+                    .max(Long::compare)
+                    .orElse(0L);
+        }
+
         @JsonProperty("localLoading")
         long getLocalLoading() {
             return Stream.of(localsProcessings.values(), localsUpdates.values())
                     .flatMap(Collection::stream)
                     .map(LocalStats::getLoading)
                     .reduce(0L, Long::sum);
+        }
+
+        @JsonProperty("maxLocalLoading")
+        long getMaxLocalLoading() {
+            return Stream.of(localsProcessings.values(), localsUpdates.values())
+                    .flatMap(Collection::stream)
+                    .map(LocalStats::getLoading)
+                    .max(Long::compare)
+                    .orElse(0L);
         }
 
         @JsonProperty("executionLoading")
@@ -80,9 +98,23 @@ public class ExecutionStatisticsPersister {
                     .reduce(0L, Long::sum);
         }
 
+        @JsonProperty("maxExecutionLoading")
+        long getMaxExecutionLoading() {
+            return localsExecutions.values()
+                    .stream()
+                    .map(LocalStats::getLoading)
+                    .max(Long::compare)
+                    .orElse(0L);
+        }
+
         @JsonProperty("total")
         long getTotal() {
             return getLocalProcessing() + globalProcessing;
+        }
+
+        @JsonProperty("totalMaxProcessing")
+        long getTotalMaxProcessing() {
+            return getMaxLocalProcessing() + globalProcessing;
         }
 
         @JsonProperty("totalExecution")
@@ -91,6 +123,15 @@ public class ExecutionStatisticsPersister {
                     .stream()
                     .map(LocalStats::getProcessing)
                     .reduce(0L, Long::sum);
+        }
+
+        @JsonProperty("maxExecution")
+        long getMaxExecution() {
+            return localsExecutions.values()
+                    .stream()
+                    .map(LocalStats::getProcessing)
+                    .max(Long::compare)
+                    .orElse(0L);
         }
 
         @JsonProperty("totalWithoutLoading")
@@ -103,9 +144,9 @@ public class ExecutionStatisticsPersister {
             return getTotalExecution() - getExecutionLoading();
         }
 
-        @JsonProperty("ddmTotalWithoutLoading")
-        long getDdmTotalWithoutLoading() {
-            return ddmTotalProcessing - getLocalLoading() - getExecutionLoading();
+        @JsonProperty("ddmTotalWithoutMaxLoadings")
+        long getDdmTotalWithoutMaxLoadings() {
+            return ddmTotalProcessing - getMaxLocalLoading() - getMaxExecutionLoading();
         }
 
         @Value(staticConstructor = "of")

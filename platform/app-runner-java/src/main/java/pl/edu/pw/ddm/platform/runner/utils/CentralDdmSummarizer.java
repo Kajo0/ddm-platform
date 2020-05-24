@@ -77,13 +77,16 @@ public class CentralDdmSummarizer {
 
         System.out.println("====== Time Summary:");
         System.out.println("  Total time (ddm global): " + DurationFormatUtils.formatDurationHMS(time.getDdmTotalProcessing()) + " (" + time.getDdmTotalProcessing() + "ms)");
-        System.out.println("  Total time without data loading (ddm global): " + DurationFormatUtils.formatDurationHMS(time.getDdmTotalWithoutLoading()) + " (" + (time.getDdmTotalWithoutLoading()) + "ms)");
+        System.out.println("  Total time without max data loading (ddm global): " + DurationFormatUtils.formatDurationHMS(time.getDdmTotalWithoutMaxLoadings()) + " (" + (time.getDdmTotalWithoutMaxLoadings()) + "ms)");
         System.out.println("  Total building time (local + global): " + DurationFormatUtils.formatDurationHMS(time.getTotal()) + " (" + time.getTotal() + "ms)");
         System.out.println("  Total building time loading (local + global): " + DurationFormatUtils.formatDurationHMS(time.getLocalLoading()) + " (" + time.getLocalLoading() + "ms)");
         System.out.println("  Total building time without loading (local + global): " + DurationFormatUtils.formatDurationHMS(time.getTotalWithoutLoading()) + " (" + (time.getTotalWithoutLoading()) + "ms)");
+        System.out.println("  Total max building time without loading (max local + global): " + DurationFormatUtils.formatDurationHMS(time.getTotalMaxProcessing()) + " (" + (time.getTotalMaxProcessing()) + "ms)");
+        System.out.println("  Total building time (global): " + DurationFormatUtils.formatDurationHMS(time.getGlobalProcessing()) + " (" + time.getGlobalProcessing() + "ms)");
         System.out.println("  Total evaluation time: " + DurationFormatUtils.formatDurationHMS(time.getTotalExecution()) + " (" + time.getTotalExecution() + "ms)");
         System.out.println("  Total evaluation time loading: " + DurationFormatUtils.formatDurationHMS(time.getExecutionLoading()) + " (" + time.getExecutionLoading() + "ms)");
         System.out.println("  Total evaluation time without loading: " + DurationFormatUtils.formatDurationHMS(time.getTotalExecutionWithoutLoading()) + " (" + (time.getTotalExecutionWithoutLoading()) + "ms)");
+        System.out.println("  Total max evaluation time without loading: " + DurationFormatUtils.formatDurationHMS(time.getMaxExecution()) + " (" + (time.getMaxExecution()) + "ms)");
         System.out.println("  Local processing (ms):");
         time.getLocalsProcessings()
                 .values()

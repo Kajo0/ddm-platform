@@ -21,6 +21,9 @@ class LocalInstanceCreator implements InstanceCreator {
 
     private static final Long GB_BYTE_MULTIPLIER = 1024 * 1024 * 1024L;
 
+    // according to https://medium.com/@christopher.batey/cpu-considerations-for-java-applications-running-in-docker-and-kubernetes-7925865235b7
+    private static final Integer DEFAULT_CPU_SHARES = 1024;
+
     private final InstanceConfig instanceConfig;
     private final String coordinatorPort;
     private final String nodeAgentPort;
@@ -63,7 +66,8 @@ class LocalInstanceCreator implements InstanceCreator {
                 .withPortBindings(PortBinding.parse(uiPort + ":" + sparkMasterUiPort), PortBinding.parse(masterPort + ":" + sparkMasterPort), PortBinding.parse(agentPort + ":" + nodeAgentPort))
                 .withNetworkMode(networkName);
         if (cpuCores != null) {
-            hc.withCpuCount(cpuCores.longValue());
+//            hc.withCpuCount(cpuCores.longValue());
+            hc.withCpuShares(DEFAULT_CPU_SHARES * cpuCores);
         }
         if (memoryInGb != null) {
             hc.withMemory(memoryInGb.longValue() * GB_BYTE_MULTIPLIER);
@@ -122,7 +126,8 @@ class LocalInstanceCreator implements InstanceCreator {
 //                    .withExtraHosts("spark-master:" + masterIp) // FIXME for master cannot be done and name is in node-agent application.yml so commented fo now
                     .withNetworkMode(networkName);
             if (cpuCores != null) {
-                hcw.withCpuCount(cpuCores.longValue());
+//                hcw.withCpuCount(cpuCores.longValue());
+                hcw.withCpuShares(DEFAULT_CPU_SHARES * cpuCores);
             }
             if (memoryInGb != null) {
                 hcw.withMemory(memoryInGb.longValue() * GB_BYTE_MULTIPLIER);

@@ -8,6 +8,7 @@ RUN apk add --no-cache busybox-extras
 ADD apps/node-agent-*.jar /apps/node-agent.jar
 
 COPY entrypoint.sh /
+COPY spark-env.sh /spark/conf/
 
 EXPOSE 7100
 

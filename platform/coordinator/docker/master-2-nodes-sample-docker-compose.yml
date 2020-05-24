@@ -15,6 +15,8 @@ services:
       - 10030:8080
       - 10000:7077
       - 10050:7100
+      - 11000:11000
+      - 12000:12000
     environment:
       - INIT_DAEMON_STEP=setup_spark
       - COORDINATOR_HOST=
@@ -24,7 +26,6 @@ services:
       - SPARK_DRIVER_MEMORY=2G
       - SPARK_EXECUTOR_MEMORY=2G
       - SPARK_WORKER_MEMORY=2g
-      - constraint:node==<yourmasternode>
     networks:
       - platform-network-0
     cpus: '4'
@@ -48,7 +49,6 @@ services:
       - SPARK_EXECUTOR_MEMORY=2G
       - SPARK_WORKER_MEMORY=2g
       - SPARK_MASTER=spark://spark-master:7077
-      - constraint:node==<yourworkernode>
     networks:
       - platform-network-0
     cpus: '4'
@@ -72,7 +72,6 @@ services:
       - SPARK_EXECUTOR_MEMORY=2G
       - SPARK_WORKER_MEMORY=2g
       - SPARK_MASTER=spark://spark-master:7077
-      - constraint:node==<yourworkernode>
     networks:
       - platform-network-0
     cpus: '4'

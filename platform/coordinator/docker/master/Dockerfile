@@ -10,6 +10,7 @@ ADD apps/node-agent-*.jar /apps/node-agent.jar
 ADD apps/app-runner-java-*.jar /apps/app-runner-java.jar
 
 COPY entrypoint.sh /
+COPY spark-env.sh /spark/conf/
 
 EXPOSE 7100
 

@@ -144,6 +144,11 @@ class SvmWekaSpec extends Specification {
         Collection<Data> data
 
         @Override
+        DataDesc getDataDescription() {
+            return null
+        }
+
+        @Override
         Collection<Data> training() {
             return data
         }

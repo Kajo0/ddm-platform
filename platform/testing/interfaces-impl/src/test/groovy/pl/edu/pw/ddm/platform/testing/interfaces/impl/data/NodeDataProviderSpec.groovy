@@ -1,19 +1,24 @@
 package pl.edu.pw.ddm.platform.testing.interfaces.impl.data
 
+import pl.edu.pw.ddm.platform.interfaces.data.DataProvider
 import spock.lang.Specification
 
 class NodeDataProviderSpec extends Specification {
 
     def "should load data from path"() {
         given:
+        def desc = DataProvider.DataDesc.builder()
+                .separator(',')
+                .idIndex(0)
+                .labelIndex(5)
+                .attributesAmount(4)
+                .colTypes(['numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'nominal'] as String[])
+                .build()
         def dataProvider = new NodeDataProvider(
                 getClass().getResource('/iris.train').path,
                 getClass().getResource('/iris.test').path,
-                ',',
-                0,
-                5,
-                4,
-                ['numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'nominal'] as String[]
+                desc,
+                false
         )
 
         when:

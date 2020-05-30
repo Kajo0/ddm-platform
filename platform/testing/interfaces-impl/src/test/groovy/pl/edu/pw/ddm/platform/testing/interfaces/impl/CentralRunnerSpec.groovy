@@ -1,6 +1,7 @@
 package pl.edu.pw.ddm.platform.testing.interfaces.impl
 
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.AoptkmDDM
+import pl.edu.pw.ddm.platform.interfaces.data.DataProvider
 import pl.edu.pw.ddm.platform.metrics.ClusteringMetrics
 import pl.edu.pw.ddm.platform.metrics.dto.IdLabel
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeDataProvider
@@ -37,15 +38,14 @@ class CentralRunnerSpec extends Specification {
         def cr = new CentralRunner(config)
 
         and:
-        def dp = new NodeDataProvider(
-                trainDataPath,
-                null,
-                ',',
-                0,
-                5,
-                4,
-                ['numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'nominal'] as String[]
-        )
+        def desc = DataProvider.DataDesc.builder()
+                .separator(',')
+                .idIndex(0)
+                .labelIndex(5)
+                .attributesAmount(4)
+                .colTypes(['numeric', 'numeric', 'numeric', 'numeric', 'numeric', 'nominal'] as String[])
+                .build()
+        def dp = new NodeDataProvider(trainDataPath, null, desc, false)
         def labels = dp.training()
                 .collect { IdLabel.of(it.id, it.label) }
 

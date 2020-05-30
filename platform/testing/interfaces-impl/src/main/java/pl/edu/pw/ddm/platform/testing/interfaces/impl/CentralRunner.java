@@ -51,16 +51,16 @@ public class CentralRunner {
         );
     }
 
+    @SneakyThrows
     private DataProvider dataProvider(String dataPath, ExecutionConfig config) {
-        return new NodeDataProvider(
-                dataPath,
-                config.getTestDataPath(),
-                config.getSeparator(),
-                config.getIdIndex(),
-                config.getLabelIndex(),
-                config.getAttributesAmount(),
-                config.getColTypes()
-        );
+        DataProvider.DataDesc desc = DataProvider.DataDesc.builder()
+                .separator(config.getSeparator())
+                .idIndex(config.getIdIndex())
+                .labelIndex(config.getLabelIndex())
+                .attributesAmount(config.getAttributesAmount())
+                .colTypes(config.getColTypes())
+                .build();
+        return new NodeDataProvider(dataPath, config.getTestDataPath(), desc, true);
     }
 
     public NodeResultCollector run() {

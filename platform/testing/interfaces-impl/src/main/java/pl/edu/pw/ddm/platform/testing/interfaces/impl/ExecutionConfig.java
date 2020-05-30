@@ -41,9 +41,7 @@ public final class ExecutionConfig {
     @NonNull
     private final Integer attributesAmount;
 
-    @NonNull
     private final String[] colTypes;
-
     private final DistanceFunction distanceFunction;
 
     @NonNull

@@ -45,6 +45,11 @@ public class NodeDataProvider implements DataProvider {
     }
 
     @Override
+    public DataDesc getDataDescription() {
+        return trainDataDesc;
+    }
+
+    @Override
     public Collection<Data> training() {
         if (trainingSet == null) {
             loadTraining();

@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.testing.interfaces.impl.data;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,39 +10,36 @@ import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 
-@RequiredArgsConstructor
 public class NodeDataProvider implements DataProvider {
 
     @NonNull
     private final String dataPath;
-
     private final String testDataPath;
-
-    @NonNull
-    private final String separator;
-
-    @NonNull
-    private final Integer idIndex;
-
-    @NonNull
-    private final Integer labelIndex;
-
-    @NonNull
-    private final Integer attributesAmount;
-
-    @NonNull
-    private final String[] colTypes;
-
-    private String[] attributesColTypes;
+    private final DataDesc dataDesc;
 
     private Collection<Data> trainingSet;
     private Collection<Data> testSet;
     private Collection<Data> allSet;
+
+    public NodeDataProvider(@NonNull String dataPath, String testDataPath, @NonNull DataDesc dataDesc, boolean deductAttributesType) throws IOException {
+        this.dataPath = dataPath;
+        this.testDataPath = testDataPath;
+        this.dataDesc = dataDesc;
+
+        if (deductAttributesType && dataDesc.getColTypes() == null) {
+            AttributeTypeDetector detector = new AttributeTypeDetector(dataPath, dataDesc);
+            dataDesc.setColTypes(detector.detect());
+        }
+    }
+
+    @Override
+    public DataDesc getDataDescription() {
+        return dataDesc;
+    }
 
     @Override
     public Collection<Data> training() {
@@ -65,21 +63,6 @@ public class NodeDataProvider implements DataProvider {
             loadAll();
         }
         return allSet;
-    }
-
-    private String[] getAttributesColTypes() {
-        if (attributesColTypes != null) {
-            return attributesColTypes;
-        }
-
-        attributesColTypes = new String[attributesAmount];
-        for (int i = 0, j = 0; i < colTypes.length; ++i) {
-            if (i != idIndex && i != labelIndex) {
-                attributesColTypes[j++] = colTypes[i];
-            }
-        }
-
-        return attributesColTypes;
     }
 
     private void loadTraining() {
@@ -107,7 +90,7 @@ public class NodeDataProvider implements DataProvider {
 
         return Files.readAllLines(path)
                 .stream()
-                .map(l -> toArray(l, separator))
+                .map(l -> toArray(l, dataDesc.getSeparator()))
                 .map(this::toNodeData)
                 .collect(Collectors.toList());
     }
@@ -117,17 +100,17 @@ public class NodeDataProvider implements DataProvider {
     }
 
     private NodeData toNodeData(String[] values) {
-        String[] attributes = new String[getAttributesColTypes().length];
+        String[] attributes = new String[dataDesc.getAttributesColTypes().length];
         for (int i = 0, j = 0; i < values.length; ++i) {
-            if (i != idIndex && i != labelIndex) {
+            if (i != dataDesc.getIdIndex() && i != dataDesc.getLabelIndex()) {
                 attributes[j++] = values[i];
             }
         }
 
-        String id = values[idIndex];
-        String label = labelIndex != null ? values[labelIndex] : null;
+        String id = values[dataDesc.getIdIndex()];
+        String label = dataDesc.getLabelIndex() != null ? values[dataDesc.getLabelIndex()] : null;
 
-        return new NodeData(String.valueOf(id), String.valueOf(label), attributes, getAttributesColTypes());
+        return new NodeData(String.valueOf(id), String.valueOf(label), attributes, dataDesc.getAttributesColTypes());
     }
 
 }

@@ -87,7 +87,7 @@ class DataDescriber {
             result[i] = first[i].equals(second[i]) ? first[i] : "nominal";
         }
 
-        return first;
+        return result;
     }
 
     private String[] deductLine(String[] attributes) {

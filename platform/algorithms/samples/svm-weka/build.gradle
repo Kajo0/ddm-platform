@@ -32,7 +32,7 @@ dependencies {
     implementation 'nz.ac.waikato.cms.weka:weka-stable:3.8.4'
 
     testImplementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
-    testImplementation 'pl.edu.pw.ddm.platform.testing.interfaces.impl:interfaces-impl:0.0.1-SNAPSHOT'
+    testImplementation 'pl.edu.pw.ddm.platform.testing:interfaces-impl:0.0.1-SNAPSHOT'
 
     testImplementation platform('org.spockframework:spock-bom:2.0-M1-groovy-2.5')
     testImplementation 'org.spockframework:spock-core'

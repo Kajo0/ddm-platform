@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 
-group 'pl.edu.pw.ddm.platform.testing.interfaces.impl'
+group 'pl.edu.pw.ddm.platform.testing'
 version '0.0.1-SNAPSHOT'
 
 sourceCompatibility = JavaVersion.VERSION_1_8

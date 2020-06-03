@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.algorithms.clustering.lct;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
@@ -20,7 +21,7 @@ public class LModel implements LocalModel {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor(staticName = "of")
-    public static class LocalCluster {
+    public static class LocalCluster implements Serializable {
 
         private double[] centroid;
         private int size;

@@ -19,6 +19,10 @@ cd ../../algorithms/clustering/aoptkm
 ./gradlew clean shadowJar ; checkError
 cd -
 
+cd ../../algorithms/clustering/lct
+./gradlew clean shadowJar ; checkError
+cd -
+
 cd ../../algorithms/samples/random-classifier
 ./gradlew clean build ; checkError
 cd -
@@ -36,6 +40,7 @@ cd ../../algorithms/samples/equality-distance
 cd -
 
 cp ../../algorithms/clustering/aoptkm/build/libs/aoptkm-*-all.jar ./samples/aoptkm.jar ; checkError
+cp ../../algorithms/clustering/lct/build/libs/lct-*-all.jar ./samples/lct.jar ; checkError
 cp ../../algorithms/samples/random-classifier/build/libs/random-classifier-*.jar ./samples/random-classifier.jar ; checkError
 cp ../../algorithms/samples/k-means-weka/build/libs/k-means-weka-*.jar ./samples/k-means-weka.jar ; checkError
 cp ../../algorithms/samples/svm-weka/build/libs/svm-weka-*.jar ./samples/svm-weka.jar ; checkError

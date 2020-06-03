@@ -207,13 +207,14 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
         'groups': '3',
         'iterations': '20',
         'epsilon': '0.002',
-        'preCalcCentroids': 'true'
+        'distanceFunctionName': distanceFuncName,
+        # 'distanceFunctionId': '1156746230', # loaded equality
+        'preCalcCentroids': 'true',
+        'b': '2'
     })
     executionId = requests.post(url,
                                 data={
                                     'testDataId': testDataId,
-                                    'distanceFunctionName': distanceFuncName,
-                                    # 'distanceFunctionId': '1156746230', # loaded equality
                                     'executionParams': jsonParams
                                 }
                                 ).text
@@ -375,6 +376,7 @@ def reload(oneNode=False):
         # algorithmId = loadJar('./samples/svm-weka.jar')
     else:
         algorithmId = loadJar('./samples/aoptkm.jar')
+        # algorithmId = loadJar('./samples/lct.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')
 
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
@@ -417,6 +419,7 @@ def execute(oneNode=False):
     distanceFunctionId = last.get('distance_function_id')
 
     executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId)
+    # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, 'euclidean')
     # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
     saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, executionId)

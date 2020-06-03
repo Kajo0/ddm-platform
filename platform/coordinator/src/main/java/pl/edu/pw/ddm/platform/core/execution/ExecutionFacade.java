@@ -94,7 +94,6 @@ public class ExecutionFacade {
         private final String trainDataId;
 
         private final String testDataId;
-        private final String distanceFunctionId;
 
         @NonNull
         @Builder.Default

@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.algorithms.clustering.lct;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import lombok.Builder;
@@ -16,7 +17,7 @@ public class GModel implements GlobalModel {
     private final Set<GlobalCluster> clusters;
 
     @Value(staticConstructor = "of")
-    public static class GlobalCluster {
+    public static class GlobalCluster implements Serializable {
 
         double[] centroid;
         String label;

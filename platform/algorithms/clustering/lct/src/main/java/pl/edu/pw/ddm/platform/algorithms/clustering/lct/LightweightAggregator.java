@@ -80,6 +80,9 @@ public class LightweightAggregator implements GlobalProcessor<LModel, GModel> {
             for (int x = 0; x < border.size(); ++x) {
                 LModel.LocalCluster clusterX = border.get(x);
                 GlobalCluster clusterJ = findClosestBut(clusterX, clusterI);
+                if (clusterJ == null) {
+                    continue;
+                }
 
                 double var = clusterI.getVariance() + clusterJ.getVariance();
                 double varnew = var(clusterI, clusterJ, clusterX);
@@ -118,7 +121,7 @@ public class LightweightAggregator implements GlobalProcessor<LModel, GModel> {
         return globalClusters.stream()
                 .filter(c -> c != clusterI)
                 .min(Comparator.comparingDouble((LModel.LocalCluster c) -> EUCLIDEAN_DISTANCE.distance(clusterX.getCentroid(), c.getCentroid())))
-                .orElseThrow(() -> new IllegalStateException("Cannot find any closest global cluster."));
+                .orElse(null);
     }
 
     @Getter

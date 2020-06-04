@@ -41,8 +41,8 @@ public class LightweightLocalSiteProcessor implements LocalProcessor<LModel, GMo
                 .map(this::square)
                 .map(stdDevs -> {
                     double variance = DoubleStream.of(stdDevs)
-                            .average()
-                            .orElse(0);
+                            .map(sd -> sd * sd)
+                            .sum();
                     return Double.isNaN(variance) ? 0 : variance;
                 })
                 .mapToDouble(d -> d)

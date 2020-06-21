@@ -204,6 +204,7 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
         'trainDataId': trainDataId
     })
     jsonParams = json.dumps({
+        'seed': str(int(round(time.time()))),
         'groups': '3',
         'iterations': '20',
         'epsilon': '0.002',
@@ -376,6 +377,7 @@ def reload(oneNode=False):
         # algorithmId = loadJar('./samples/svm-weka.jar')
     else:
         algorithmId = loadJar('./samples/aoptkm.jar')
+        # algorithmId = loadJar('./samples/dkmeans.jar')
         # algorithmId = loadJar('./samples/lct.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')
 

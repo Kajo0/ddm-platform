@@ -1,11 +1,16 @@
 package pl.edu.pw.ddm.platform.interfaces.algorithm;
 
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
+/**
+ * @deprecated Use {@link CentralDdmPipeline} instead
+ */
+@Deprecated
 public interface LocalProcessor<LModel extends LocalModel, GModel extends GlobalModel, MMethod extends MiningMethod> {
 
     LModel processLocal(DataProvider dataProvider, ParamProvider paramProvider);

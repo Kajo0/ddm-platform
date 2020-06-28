@@ -7,8 +7,10 @@ import java.util.stream.Collectors;
 
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.AutoOpticsKm;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.point.ObjectPoint;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
@@ -16,7 +18,13 @@ import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
 import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 
-public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, GlobalProcessor<LModel, GModel>, Clustering {
+public class AoptkmDDM implements LocalProcessor<LModel, GModel, AoptkmDDM>,
+        GlobalProcessor<LModel, GModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LModel, GModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LModel, GModel, AoptkmDDM>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig,
+        Clustering {
 
     private List<ObjectPoint> globalCentroids;
 
@@ -28,7 +36,7 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, Gl
     }
 
     @Override
-    public Clustering updateLocal(LModel localModel, GModel globalModel, DataProvider dataProvider, ParamProvider paramProvider) {
+    public AoptkmDDM updateLocal(LModel localModel, GModel globalModel, DataProvider dataProvider, ParamProvider paramProvider) {
         globalCentroids = globalModel.getCentroids();
         return this;
     }
@@ -62,7 +70,15 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, Clustering>, Gl
 
     @Override
     public String name() {
-        return "AOPTKM";
+        return "Opt-DKM";
+    }
+
+    @Override
+    public DdmPipeline pipeline() {
+        return CentralDdmPipeline.builder()
+                .local(this.getClass())
+                .global(this.getClass())
+                .lastLocal(this.getClass());
     }
 
 }

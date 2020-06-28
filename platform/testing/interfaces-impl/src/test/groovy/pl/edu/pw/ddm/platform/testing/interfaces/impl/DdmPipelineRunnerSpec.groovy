@@ -7,17 +7,16 @@ import pl.edu.pw.ddm.platform.metrics.dto.IdLabel
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeDataProvider
 import spock.lang.Specification
 
-class CentralRunnerSpec extends Specification {
+class DdmPipelineRunnerSpec extends Specification {
 
-    def "should run old (deprecated) Central runner"() {
+    def "should run DDM pipeline runner"() {
         given:
         def aoptkm = new AoptkmDDM()
         def trainDataPath = getClass().getResource('/iris.train').path
 
         and:
-        def config = ExecutionConfig.builder()
-                .localProcessor(aoptkm)
-                .globalProcessor(aoptkm)
+        def config = DdmExecutionConfig.builder()
+                .algorithmConfig(aoptkm)
                 .miningMethod(aoptkm)
                 .dataPath([trainDataPath])
                 .testDataPath(getClass().getResource('/iris.test').path)
@@ -35,7 +34,7 @@ class CentralRunnerSpec extends Specification {
                         'exactKGroups': 'false',
                 ])
                 .build()
-        def cr = new CentralRunner(config)
+        def cr = new DdmPipelineRunner(config)
 
         and:
         def desc = DataProvider.DataDesc.builder()

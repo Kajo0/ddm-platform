@@ -19,6 +19,10 @@ import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeParamProvider;
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeResultCollector;
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeSampleProvider;
 
+/**
+ * @deprecated Use {@link DdmPipelineRunner}
+ */
+@Deprecated
 public class CentralRunner {
 
     private final GlobalProcessor globalProcessor;

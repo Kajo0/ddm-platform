@@ -6,24 +6,16 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 
-/**
- * @deprecated Use {@link DdmExecutionConfig}
- */
 @Getter
 @Builder
-@Deprecated
-public final class ExecutionConfig {
+public final class DdmExecutionConfig {
 
     @NonNull
-    private final LocalProcessor localProcessor;
-
-    @NonNull
-    private final GlobalProcessor globalProcessor;
+    private final AlgorithmConfig algorithmConfig;
 
     @NonNull
     private final MiningMethod miningMethod;

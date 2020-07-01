@@ -9,5 +9,6 @@ public class AlgorithmDesc {
 
     private String id;
     private String packageName;
+    private String pipeline;
 
 }

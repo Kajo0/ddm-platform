@@ -9,11 +9,25 @@ import org.reflections.Reflections;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
-import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 
 @UtilityClass
 public class AlgorithmProcessorInitializer {
 
+    @SneakyThrows
+    public <T> T initProcessor(@NonNull String packageName, Class<? extends T> processor, Class<T> clazz) {
+        return refs(packageName, clazz)
+                .stream()
+                .filter(processor::equals)
+                .findFirst()
+                .orElseThrow(() -> new ProcessorNotFoundException("processor [" + packageName + "] " + processor))
+                .getConstructor()
+                .newInstance();
+    }
+
+    /**
+     * @deprecated Use initProcessor
+     */
+    @Deprecated
     @SneakyThrows
     public LocalProcessor initLocalProcessor(@NonNull String packageName) {
         return refs(packageName, LocalProcessor.class)
@@ -24,22 +38,16 @@ public class AlgorithmProcessorInitializer {
                 .newInstance();
     }
 
+    /**
+     * @deprecated Use initProcessor
+     */
+    @Deprecated
     @SneakyThrows
     public GlobalProcessor initGlobalProcessor(@NonNull String packageName) {
         return refs(packageName, GlobalProcessor.class)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new ProcessorNotFoundException("global"))
-                .getDeclaredConstructor()
-                .newInstance();
-    }
-
-    @SneakyThrows
-    public MiningMethod initMiningMethod(@NonNull String packageName) {
-        return refs(packageName, MiningMethod.class)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new ProcessorNotFoundException("method"))
                 .getDeclaredConstructor()
                 .newInstance();
     }

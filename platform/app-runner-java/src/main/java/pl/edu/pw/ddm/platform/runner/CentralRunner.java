@@ -2,7 +2,6 @@ package pl.edu.pw.ddm.platform.runner;
 
 import java.net.InetAddress;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +12,7 @@ import com.google.common.base.Preconditions;
 import lombok.SneakyThrows;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
@@ -32,9 +32,9 @@ public final class CentralRunner {
 
     private List<ModelWrapper> localModels;
     private ModelWrapper globalModel;
-    private List<ModelWrapper> updatedAcks;
-    private List<ModelWrapper> executionAcks;
+    private CentralDdmSummarizer summarizer;
 
+    // FIXME sneaky throws log to std out
     @SneakyThrows
     public CentralRunner(String jsonArgs) {
         this.args = JsonArgsDto.fromJson(jsonArgs);
@@ -43,7 +43,6 @@ public final class CentralRunner {
         this.nodeStubList = IntStream.range(0, args.getWorkerNodes().size())
                 .boxed()
                 .collect(Collectors.toList());
-        this.localModels = new ArrayList<>(nodeStubList.size());
         printRunConfig();
 
         SparkContext ssc = SparkContext.getOrCreate();
@@ -62,6 +61,7 @@ public final class CentralRunner {
         System.out.println("  workerNodes                 = " + args.getWorkerNodes());
         System.out.println("  algorithmId                 = " + args.getAlgorithmId());
         System.out.println("  algorithmPackageName        = " + args.getAlgorithmPackageName());
+        System.out.println("  pipeline                    = " + args.getPipeline());
         System.out.println("  executionPath               = " + args.getExecutionPath());
         System.out.println("  datasetsPath                = " + args.getDatasetsPath());
         System.out.println("  trainDataId                 = " + args.getTrainDataId());
@@ -106,20 +106,18 @@ public final class CentralRunner {
 
         TimeStatistics stats = new TimeStatistics();
         stats.setStart(LocalDateTime.now());
+        summarizer = new CentralDdmSummarizer(args.getMasterNode(), args.getWorkerNodes(), stats);
 
-        statusPersister.processLocal();
-        processLocal();
-        statusPersister.processGlobal();
-        processGlobal();
-        statusPersister.updateLocal();
-        updateLocal();
+        args.pipeline()
+                .getStages()
+                .forEach(this::processStage);
 
         statusPersister.validate();
-        executeMethod();
+        List<ModelWrapper> acks = executeMethod();
+        summarizer.setExecutionAcks(acks);
         stats.setEnd(LocalDateTime.now());
 
         statusPersister.summarize();
-        CentralDdmSummarizer summarizer = new CentralDdmSummarizer(localModels, globalModel, updatedAcks, executionAcks, args.getMasterNode(), args.getWorkerNodes(), stats);
         ExecutionStatisticsPersister.save(initParams.getExecutionPath(), summarizer.prepareStats(), initParams.getExecutionId());
         summarizer.printModelsSummary()
                 .printDispersionSummary()
@@ -129,6 +127,45 @@ public final class CentralRunner {
         statusPersister.finish();
     }
 
+    private void processStage(DdmPipeline.ProcessingStage processingStage) {
+        DdmPipeline.Stage stage = processingStage.getStage();
+
+        switch (stage) {
+            case LOCAL: {
+                statusPersister.processLocal();
+                localModels = processLocal(processingStage);
+                summarizer.addLocalModels(localModels);
+                return;
+            }
+            case GLOBAL: {
+                statusPersister.processGlobal();
+                globalModel = processGlobal(processingStage);
+                summarizer.addGlobalModel(globalModel);
+                return;
+            }
+            case LOCAL_REPEAT: {
+                statusPersister.repeatLocal();
+                localModels = repeatLocal(processingStage);
+                summarizer.addLocalModels(localModels);
+                return;
+            }
+            case GLOBAL_UPDATE: {
+                statusPersister.updateGlobal();
+                globalModel = updateGlobal(processingStage);
+                summarizer.addGlobalModel(globalModel);
+                return;
+            }
+            case LOCAL_UPDATE: {
+                statusPersister.updateLocal();
+                localModels = updateLocal(processingStage);
+                summarizer.addLocalModels(localModels);
+                return;
+            }
+            default:
+                throw new UnsupportedOperationException("Unknown DDM pipeline processing stage");
+        }
+    }
+
     private void performEachNodeDistributionWorkaround() {
         sc.parallelize(nodeStubList, nodeStubList.size())
                 .map(n -> InetAddress.getLocalHost())
@@ -136,36 +173,62 @@ public final class CentralRunner {
                 .forEach(System.out::println);
     }
 
-    private void processLocal() {
+    @SneakyThrows
+    private List<ModelWrapper> processLocal(DdmPipeline.ProcessingStage processingStage) {
         // FIXME not using preferred locations
-        localModels = sc.parallelize(nodeStubList, nodeStubList.size())
-                .mapPartitions(new LocalProcessRunner(initParams))
+        List<ModelWrapper> localModels = sc.parallelize(nodeStubList, nodeStubList.size())
+                .mapPartitions(new LocalProcessRunner(initParams, processingStage.processor(), processingStage.getStageIndex()))
                 .collect();
         verifyUniqueNodeExecutors(localModels);
+        return localModels;
     }
 
     @SneakyThrows
-    private void processGlobal() {
+    private ModelWrapper processGlobal(DdmPipeline.ProcessingStage processingStage) {
         Iterator<LocalModel> models = localModels.stream()
                 .map(ModelWrapper::getLocalModel)
                 .iterator();
-        globalModel = new GlobalProcessRunner(initParams).call(models)
+        return new GlobalProcessRunner(initParams, processingStage.processor(), processingStage.getStageIndex())
+                .call(models)
                 .next();
     }
 
-    private void updateLocal() {
+    @SneakyThrows
+    private List<ModelWrapper> repeatLocal(DdmPipeline.ProcessingStage processingStage) {
         List<GlobalModel> globals = Collections.nCopies(nodeStubList.size(), globalModel.getGlobalModel());
-        updatedAcks = sc.parallelize(globals, nodeStubList.size())
-                .mapPartitions(new LocalUpdateRunner(initParams))
+        List<ModelWrapper> localModels = sc.parallelize(globals, nodeStubList.size())
+                .mapPartitions(new LocalRepeatRunner(initParams, processingStage.processor(), processingStage.getStageIndex()))
                 .collect();
-        verifyUniqueNodeExecutors(updatedAcks);
+        verifyUniqueNodeExecutors(localModels);
+        return localModels;
     }
 
-    private void executeMethod() {
-        executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
+    @SneakyThrows
+    private List<ModelWrapper> updateLocal(DdmPipeline.ProcessingStage processingStage) {
+        List<GlobalModel> globals = Collections.nCopies(nodeStubList.size(), globalModel.getGlobalModel());
+        List<ModelWrapper> localModels = sc.parallelize(globals, nodeStubList.size())
+                .mapPartitions(new LocalUpdateRunner(initParams, processingStage.processor(), processingStage.getStageIndex()))
+                .collect();
+        verifyUniqueNodeExecutors(localModels);
+        return localModels;
+    }
+
+    @SneakyThrows
+    private ModelWrapper updateGlobal(DdmPipeline.ProcessingStage processingStage) {
+        Iterator<LocalModel> models = localModels.stream()
+                .map(ModelWrapper::getLocalModel)
+                .iterator();
+        return new GlobalUpdateRunner(initParams, processingStage.processor(), processingStage.getStageIndex())
+                .call(models)
+                .next();
+    }
+
+    private List<ModelWrapper> executeMethod() {
+        List<ModelWrapper> executionAcks = sc.parallelize(nodeStubList, nodeStubList.size())
                 .mapPartitions(new LocalExecutionRunner(initParams))
                 .collect();
         verifyUniqueNodeExecutors(executionAcks);
+        return executionAcks;
     }
 
     private void verifyUniqueNodeExecutors(List<ModelWrapper> models) {

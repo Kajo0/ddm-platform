@@ -62,6 +62,7 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
         Properties prop = new Properties();
         prop.setProperty(DescriptionKey.ID.getCode(), algorithmDesc.getId());
         prop.setProperty(DescriptionKey.PACKAGE.getCode(), algorithmDesc.getPackageName());
+        prop.setProperty(DescriptionKey.PIPELINE.getCode(), algorithmDesc.getPipeline());
 
         Path path = Paths.get(algorithmsPath, algorithmDesc.getId(), descriptionFilename);
         prop.store(Files.newOutputStream(path), null);
@@ -78,6 +79,7 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
         return AlgorithmDesc.builder()
                 .id(prop.getProperty(DescriptionKey.ID.getCode()))
                 .packageName(prop.getProperty(DescriptionKey.PACKAGE.getCode()))
+                .pipeline(prop.getProperty(DescriptionKey.PIPELINE.getCode()))
                 .build();
     }
 

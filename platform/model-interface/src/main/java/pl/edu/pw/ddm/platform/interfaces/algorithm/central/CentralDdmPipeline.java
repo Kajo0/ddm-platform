@@ -15,7 +15,7 @@ import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
 @ToString
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 public class CentralDdmPipeline implements DdmPipeline {
 
     @Getter
@@ -32,7 +32,7 @@ public class CentralDdmPipeline implements DdmPipeline {
     }
 
     private void addStage(Class<? extends Processor> processor, Stage stage) {
-        stages.add(ProcessingStage.of(stage, stages.size(), processor));
+        stages.add(ProcessingStage.of(stage, stages.size(), processor.getName()));
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)

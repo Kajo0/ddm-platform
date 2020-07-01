@@ -4,8 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ExecutionStatisticsPersister {
 
-    private final static String FILE = ControlFileNames.STATISTICS;
+    private final String FILE = ControlFileNames.STATISTICS;
 
     @SneakyThrows
     public void save(String executionPath, Stats stats, String executionId) {
@@ -33,8 +33,8 @@ public class ExecutionStatisticsPersister {
     @Value(staticConstructor = "of")
     static class Stats {
 
-        private TimeStats time;
-        private TransferStats transfer;
+        TimeStats time;
+        TransferStats transfer;
     }
 
     @Data
@@ -46,36 +46,53 @@ public class ExecutionStatisticsPersister {
         private long ddmTotalProcessing;
 
         @Singular
-        private Map<String, LocalStats> localsProcessings;
+        private List<ProcessingWrapper> localsProcessings;
 
         @Singular
-        private Map<String, LocalStats> localsUpdates;
+        private List<Long> globalProcessings;
 
         @Singular
         private Map<String, LocalStats> localsExecutions;
 
-        private long globalProcessing;
-
         @JsonProperty("localProcessing")
         long getLocalProcessing() {
-            return Stream.of(localsProcessings.values(), localsUpdates.values())
+            return localsProcessings.stream()
+                    .map(ProcessingWrapper::getMap)
+                    .map(Map::values)
                     .flatMap(Collection::stream)
                     .map(LocalStats::getProcessing)
                     .reduce(0L, Long::sum);
         }
 
+        @JsonProperty("globalProcessing")
+        long getGlobalProcessing() {
+            return globalProcessings.stream()
+                    .reduce(0L, Long::sum);
+        }
+
         @JsonProperty("maxLocalProcessing")
         long getMaxLocalProcessing() {
-            return Stream.of(localsProcessings.values(), localsUpdates.values())
+            return localsProcessings.stream()
+                    .map(ProcessingWrapper::getMap)
+                    .map(Map::values)
                     .flatMap(Collection::stream)
                     .map(LocalStats::getProcessing)
                     .max(Long::compare)
                     .orElse(0L);
         }
 
+        @JsonProperty("maxGlobalProcessing")
+        long getMaxGlobalProcessing() {
+            return globalProcessings.stream()
+                    .max(Long::compare)
+                    .orElse(0L);
+        }
+
         @JsonProperty("localLoading")
         long getLocalLoading() {
-            return Stream.of(localsProcessings.values(), localsUpdates.values())
+            return localsProcessings.stream()
+                    .map(ProcessingWrapper::getMap)
+                    .map(Map::values)
                     .flatMap(Collection::stream)
                     .map(LocalStats::getLoading)
                     .reduce(0L, Long::sum);
@@ -83,7 +100,9 @@ public class ExecutionStatisticsPersister {
 
         @JsonProperty("maxLocalLoading")
         long getMaxLocalLoading() {
-            return Stream.of(localsProcessings.values(), localsUpdates.values())
+            return localsProcessings.stream()
+                    .map(ProcessingWrapper::getMap)
+                    .map(Map::values)
                     .flatMap(Collection::stream)
                     .map(LocalStats::getLoading)
                     .max(Long::compare)
@@ -109,12 +128,21 @@ public class ExecutionStatisticsPersister {
 
         @JsonProperty("total")
         long getTotal() {
-            return getLocalProcessing() + globalProcessing;
+            return getLocalProcessing() + getGlobalProcessing();
         }
 
         @JsonProperty("totalMaxProcessing")
         long getTotalMaxProcessing() {
-            return getMaxLocalProcessing() + globalProcessing;
+            long maxLocalProcessings = localsProcessings.stream()
+                    .map(ProcessingWrapper::getMap)
+                    .map(Map::values)
+                    .map(values -> values.stream()
+                            .map(LocalStats::getProcessing)
+                            .max(Long::compare)
+                            .orElse(0L)
+                    )
+                    .reduce(0L, Long::sum);
+            return maxLocalProcessings + getMaxGlobalProcessing();
         }
 
         @JsonProperty("totalExecution")
@@ -150,10 +178,16 @@ public class ExecutionStatisticsPersister {
         }
 
         @Value(staticConstructor = "of")
+        static class ProcessingWrapper {
+
+            Map<String, LocalStats> map;
+        }
+
+        @Value(staticConstructor = "of")
         static class LocalStats {
 
-            private Long processing;
-            private Long loading;
+            Long processing;
+            Long loading;
         }
     }
 
@@ -166,14 +200,22 @@ public class ExecutionStatisticsPersister {
         // TODO add preprocessing etc.
 
         @Singular
-        private Map<String, Integer> localsBytes;
+        private List<Map<String, Integer>> localsBytes;
 
-        private int globalBytes;
+        @Singular
+        private List<Integer> globalsBytes;
 
         @JsonProperty("localBytes")
         int getLocalBytes() {
-            return localsBytes.values()
-                    .stream()
+            return localsBytes.stream()
+                    .map(Map::values)
+                    .flatMap(Collection::stream)
+                    .reduce(0, Integer::sum);
+        }
+
+        @JsonProperty("globalBytes")
+        int getGlobalBytes() {
+            return globalsBytes.stream()
                     .reduce(0, Integer::sum);
         }
     }

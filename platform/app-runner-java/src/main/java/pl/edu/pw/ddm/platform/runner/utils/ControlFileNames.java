@@ -7,6 +7,7 @@ public interface ControlFileNames {
     String RESULTS = "results.txt";
     String STATISTICS = "stats.json";
     String LOCAL_MODEL = "local_model.data";
+    String GLOBAL_MODEL = "global_model.data";
     String FINAL_METHOD = "method.data";
     String METRICS_ID = "/ddm/metrics_id.txt"; // FIXME unused but check
 

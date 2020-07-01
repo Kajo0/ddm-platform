@@ -78,8 +78,9 @@ public class DdmPipelineRunner {
         executeMethods();
     }
 
+    @SneakyThrows
     private void processStage(DdmPipeline.ProcessingStage processingStage) {
-        Class<? extends Processor> processor = processingStage.getProcessor();
+        Class<? extends Processor> processor = processingStage.processor();
         DdmPipeline.Stage stage = processingStage.getStage();
 
         switch (stage) {

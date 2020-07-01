@@ -8,7 +8,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.data.NodeDataProvider;
@@ -22,6 +23,8 @@ import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
 
     private final InitParamsDto initParams;
+    private final Class<? extends Processor> processor;
+    private final int stageIndex;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<Integer> iterator) throws Exception {
@@ -31,13 +34,17 @@ class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrap
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDatasetsPath(), initParams.getTrainDataId(), initParams.getTestDataId());
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
-        LocalProcessor processor = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName());
+        LocalProcessor<LocalModel> lp = AlgorithmProcessorInitializer.initProcessor(
+                initParams.getAlgorithmPackageName(),
+                (Class<LocalProcessor<LocalModel>>) processor,
+                LocalProcessor.class
+        );
 
         LocalDateTime start = LocalDateTime.now();
-        LocalModel model = processor.processLocal(dataProvider, paramProvider);
+        LocalModel model = lp.processLocal(dataProvider, paramProvider);
         LocalDateTime end = LocalDateTime.now();
 
-        ModelPersister.saveLocal(initParams.getExecutionPath(), model, initParams.getExecutionId());
+        ModelPersister.saveLocal(initParams.getExecutionPath(), model, stageIndex, initParams.getExecutionId());
 
         ModelWrapper wrapper = ModelWrapper.local(model, InetAddress.getLocalHost().toString(), id);
         wrapper.getTimeStatistics().setStart(start);

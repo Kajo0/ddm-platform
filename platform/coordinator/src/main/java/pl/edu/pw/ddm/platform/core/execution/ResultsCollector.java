@@ -24,14 +24,15 @@ interface ResultsCollector {
         @Data
         static class TimeStats {
 
-            private Map<String, LocalStats> localsProcessings;
-            private Map<String, LocalStats> localsUpdates;
-            private Map<String, LocalStats> localsExecutions;
-            private long globalProcessing;
             private long ddmTotalProcessing;
+            private List<ProcessingWrapper> localsProcessings;
+            private List<Long> globalProcessings;
+            private Map<String, LocalStats> localsExecutions;
 
             private long localProcessing;
+            private long globalProcessing;
             private long maxLocalProcessing;
+            private long maxGlobalProcessing;
             private long localLoading;
             private long maxLocalLoading;
             private long executionLoading;
@@ -45,6 +46,12 @@ interface ResultsCollector {
             private long ddmTotalWithoutMaxLoadings;
 
             @Data
+            static class ProcessingWrapper {
+
+                private Map<String, LocalStats> map;
+            }
+
+            @Data
             static class LocalStats {
 
                 private Long processing;
@@ -55,9 +62,10 @@ interface ResultsCollector {
         @Data
         static class TransferStats {
 
-            private Map<String, Integer> localsBytes;
-            private int globalBytes;
+            private List<Map<String, Integer>> localsBytes;
+            private List<Integer> globalsBytes;
             private int localBytes;
+            private int globalBytes;
         }
     }
 

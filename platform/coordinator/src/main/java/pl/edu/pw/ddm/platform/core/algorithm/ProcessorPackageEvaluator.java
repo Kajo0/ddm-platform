@@ -8,6 +8,8 @@ import java.net.URLClassLoader;
 
 import lombok.Value;
 import org.reflections.Reflections;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 
 class ProcessorPackageEvaluator {
@@ -19,11 +21,26 @@ class ProcessorPackageEvaluator {
                     .getSubTypesOf(MiningMethod.class)
                     .stream()
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Local processor not found in jar: " + jar.getName()))
-                    .getDeclaredConstructor()
+                    .orElseThrow(() -> new IllegalArgumentException("Mining method not found in jar: " + jar.getName()))
+                    .getConstructor()
                     .newInstance();
 
             return TypePackageDto.of(clazz.getClass().getPackageName(), clazz.type(), clazz.name());
+        }
+    }
+
+    DdmPipeline callForAlgorithmConfig(File jar) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        var url = new URL[]{jar.toURI().toURL()};
+        try (URLClassLoader loader = new URLClassLoader(url)) {
+            var clazz = new Reflections(loader)
+                    .getSubTypesOf(AlgorithmConfig.class)
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Algorithm config not found in jar: " + jar.getName()))
+                    .getConstructor()
+                    .newInstance();
+
+            return clazz.pipeline();
         }
     }
 

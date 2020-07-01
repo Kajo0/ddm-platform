@@ -8,7 +8,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
@@ -26,6 +27,8 @@ import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
 
     private final InitParamsDto initParams;
+    private final Class<? extends Processor> processor;
+    private final int stageIndex;
 
     @Override
     public Iterator<ModelWrapper> call(Iterator<GlobalModel> iterator) throws Exception {
@@ -34,11 +37,16 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         NodeDataProvider dataProvider = new NodeDataProvider(initParams.getDatasetsPath(), initParams.getTrainDataId(), initParams.getTestDataId());
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
-        LocalModel previousModel = ModelPersister.loadLocal(initParams.getExecutionPath(), initParams.getExecutionId());
-        LocalProcessor processor = AlgorithmProcessorInitializer.initLocalProcessor(initParams.getAlgorithmPackageName());
+        LocalModel previousModel = ModelPersister.loadLastLocal(initParams.getExecutionPath(), stageIndex, initParams.getExecutionId());
+
+        LocalUpdater<LocalModel, GlobalModel, MiningMethod> lp = AlgorithmProcessorInitializer.initProcessor(
+                initParams.getAlgorithmPackageName(),
+                (Class<LocalUpdater<LocalModel, GlobalModel, MiningMethod>>) processor,
+                LocalUpdater.class
+        );
 
         LocalDateTime start = LocalDateTime.now();
-        MiningMethod method = processor.updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
+        MiningMethod method = lp.updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);
         LocalDateTime end = LocalDateTime.now();
 
         MethodPersister.save(initParams.getExecutionPath(), method, initParams.getExecutionId());

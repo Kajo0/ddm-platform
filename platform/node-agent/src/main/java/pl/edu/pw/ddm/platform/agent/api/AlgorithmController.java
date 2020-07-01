@@ -22,10 +22,12 @@ class AlgorithmController {
     @PostMapping(value = "load")
     String load(@RequestParam("algorithmFile") MultipartFile algorithmFile,
                 @RequestParam("algorithmId") String algorithmId,
-                @RequestParam("algorithmPackageName") String algorithmPackageName) throws IOException {
+                @RequestParam("algorithmPackageName") String algorithmPackageName,
+                @RequestParam("pipeline") String pipeline) throws IOException {
         AlgorithmDesc desc = AlgorithmDesc.builder()
                 .id(algorithmId)
                 .packageName(algorithmPackageName)
+                .pipeline(pipeline)
                 .build();
         algorithmLoader.save(algorithmFile.getBytes(), desc);
         return "ok";

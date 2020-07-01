@@ -19,7 +19,8 @@ public interface AlgorithmLoader {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     enum DescriptionKey {
         ID("algorithmId"),
-        PACKAGE("packageName");
+        PACKAGE("packageName"),
+        PIPELINE("pipeline");
 
         private String code;
     }

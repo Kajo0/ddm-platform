@@ -25,6 +25,7 @@ class LocalMasterExecutionLogsProvider implements ExecutionLogsProvider {
     @SneakyThrows
     @Override
     public String loadAll(String executionId, String appId) {
+        // FIXME filter out spark INFO log
         log.info("Loading execution logs for execution id '{}' and app id '{}'.", executionId, appId);
         Path path = Paths.get(executionPath, executionId, centralLogFilename);
         if (Files.exists(path)) {

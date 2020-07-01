@@ -21,6 +21,7 @@ interface AlgorithmLoader {
         private String id;
         private String originalName;
         private String packageName;
+        private String pipeline;
         private String algorithmType;
         private String algorithmName;
         private Long sizeInBytes;

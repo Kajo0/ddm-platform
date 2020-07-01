@@ -37,6 +37,7 @@ import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.edu.pw.ddm.platform.agent.algorithm.AlgorithmLoader;
+import pl.edu.pw.ddm.platform.agent.algorithm.dto.AlgorithmDesc;
 import pl.edu.pw.ddm.platform.agent.data.DistanceFunctionLoader;
 import pl.edu.pw.ddm.platform.agent.util.IdGenerator;
 import pl.edu.pw.ddm.platform.agent.util.ProfileConstants;
@@ -117,13 +118,17 @@ public class AppRunner {
         String masterNode = nodeAddresses.getLeft();
         String workerNodes = nodeAddresses.getRight();
 
+        // TODO make one log with marked errors
+        File logFile = prepareMasterLogFile(executionId);
+
         SparkLauncher launcher = new SparkLauncher()
                 .setSparkHome(sparkHome)
                 .setMaster("spark://" + masterNode)
                 .setAppName(params.algorithmId + " (" + params.trainDataId + ") " + executionId) // FIXME
                 .setAppResource(runnerJarPath)
                 .setMainClass(runnerMainClass)
-                .redirectOutput(prepareMasterLogFile(executionId))
+                .redirectOutput(logFile)
+                .redirectError(logFile)
                 .addSparkArg("spark.locality.wait", "3600s")
                 .setDeployMode("client")
                 .setConf("spark.task.maxFailures", "1")
@@ -144,7 +149,9 @@ public class AppRunner {
         launcher.addJar(algPath.toString());
         // TODO optionally add predefined if requested
 
-        jsonArgsBuilder.algorithmPackageName(algorithmLoader.description(params.algorithmId).getPackageName());
+        AlgorithmDesc algDesc = algorithmLoader.description(params.algorithmId);
+        jsonArgsBuilder.algorithmPackageName(algDesc.getPackageName());
+        jsonArgsBuilder.pipeline(algDesc.getPipeline());
 
         if (params.distanceFunctionId != null) {
             log.info("Adding jar with custom distance function with id '{}' and name '{}'.", params.distanceFunctionId, params.distanceFunctionName);
@@ -289,6 +296,7 @@ public class AppRunner {
         private String instanceId;
         private String algorithmId;
         private String algorithmPackageName;
+        private String pipeline;
         private String executionPath;
         private String datasetsPath;
         private String trainDataId;

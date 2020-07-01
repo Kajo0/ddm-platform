@@ -2,11 +2,13 @@ package pl.edu.pw.ddm.platform.runner.utils;
 
 import static pl.edu.pw.ddm.platform.runner.utils.ExecutionStatisticsPersister.Stats;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.TimeStatistics;
@@ -14,15 +16,25 @@ import pl.edu.pw.ddm.platform.runner.models.TimeStatistics;
 @RequiredArgsConstructor
 public class CentralDdmSummarizer {
 
-    private final List<ModelWrapper> localModels;
-    private final ModelWrapper globalModel;
-    private final List<ModelWrapper> updatedAcks;
-    private final List<ModelWrapper> executionAcks;
     private final String masterAddr;
     private final List<String> workerAddrs;
     private final TimeStatistics globalStats;
 
+    private final List<List<ModelWrapper>> locals = new LinkedList<>();
+    private final List<ModelWrapper> globals = new LinkedList<>();
+
+    @Setter
+    private List<ModelWrapper> executionAcks = new LinkedList<>();
+
     private Stats stats;
+
+    public void addLocalModels(List<ModelWrapper> lms) {
+        locals.add(lms);
+    }
+
+    public void addGlobalModel(ModelWrapper gm) {
+        globals.add(gm);
+    }
 
     public Stats prepareStats() {
         if (stats != null) {
@@ -31,14 +43,32 @@ public class CentralDdmSummarizer {
 
         ExecutionStatisticsPersister.TimeStats.TimeStatsBuilder time = ExecutionStatisticsPersister.TimeStats.builder();
         time.ddmTotalProcessing(globalStats.duration());
-        time.globalProcessing(globalModel.getTimeStatistics().duration());
-        localModels.forEach(w -> time.localsProcessing(w.getAddress(), ExecutionStatisticsPersister.TimeStats.LocalStats.of(w.getTimeStatistics().duration(), w.getTimeStatistics().getDataLoadingMillis())));
-        updatedAcks.forEach(w -> time.localsUpdate(w.getAddress(), ExecutionStatisticsPersister.TimeStats.LocalStats.of(w.getTimeStatistics().duration(), w.getTimeStatistics().getDataLoadingMillis())));
-        executionAcks.forEach(w -> time.localsExecution(w.getAddress(), ExecutionStatisticsPersister.TimeStats.LocalStats.of(w.getTimeStatistics().duration(), w.getTimeStatistics().getDataLoadingMillis())));
+        globals.forEach(globalModel -> time.globalProcessing(globalModel.getTimeStatistics().duration()));
+        locals.stream()
+                .map(localModels -> localModels.stream()
+                        .collect(Collectors.toMap(
+                                ModelWrapper::getAddress,
+                                lm -> ExecutionStatisticsPersister.TimeStats.LocalStats.of(
+                                        lm.getTimeStatistics().duration(),
+                                        lm.getTimeStatistics().getDataLoadingMillis())
+                        )))
+                .map(ExecutionStatisticsPersister.TimeStats.ProcessingWrapper::of)
+                .forEach(time::localsProcessing);
+        executionAcks.forEach(w -> time.localsExecution(
+                w.getAddress(),
+                ExecutionStatisticsPersister.TimeStats.LocalStats.of(
+                        w.getTimeStatistics().duration(),
+                        w.getTimeStatistics().getDataLoadingMillis()
+                )));
 
         ExecutionStatisticsPersister.TransferStats.TransferStatsBuilder transfer = ExecutionStatisticsPersister.TransferStats.builder();
-        transfer.globalBytes(TransferSizeUtil.sizeOf(globalModel.getGlobalModel()));
-        localModels.forEach(w -> transfer.localsByte(w.getAddress(), TransferSizeUtil.sizeOf(w.getLocalModel())));
+        globals.forEach(globalModel -> transfer.globalsByte(TransferSizeUtil.sizeOf(globalModel.getGlobalModel())));
+        locals.stream()
+                .map(localModels -> localModels.stream()
+                        .collect(Collectors.toMap(
+                                ModelWrapper::getAddress,
+                                lm -> TransferSizeUtil.sizeOf(lm.getLocalModel())
+                        ))).forEach(transfer::localsByte);
 
         stats = Stats.of(time.build(), transfer.build());
         return stats;
@@ -47,11 +77,16 @@ public class CentralDdmSummarizer {
     public CentralDdmSummarizer printModelsSummary() {
         System.out.println("====== Models Summary:");
         System.out.println("  Local models:");
-        localModels.forEach(System.out::println);
-        System.out.println("  Global model:");
-        System.out.println(globalModel);
-        System.out.println("  Updated acknowledges:");
-        updatedAcks.forEach(System.out::println);
+        for (int i = 0; i < locals.size(); ++i) {
+            System.out.println("  [" + i + "] local stage");
+            locals.get(i)
+                    .forEach(System.out::println);
+        }
+        System.out.println("  Global models:");
+        for (int i = 0; i < globals.size(); ++i) {
+            System.out.println("  [" + i + "] global stage");
+            System.out.println(globals.get(i));
+        }
         System.out.println("  Execution acknowledges:");
         executionAcks.forEach(System.out::println);
 
@@ -60,12 +95,13 @@ public class CentralDdmSummarizer {
 
     public CentralDdmSummarizer printDispersionSummary() {
         System.out.println("====== Dispersion Summary:");
-        System.out.println("  Master address: " + masterAddr + " (" + globalModel.getAddress() + ")");
+        System.out.println("  Master address: " + masterAddr + " (" + globals.get(0).getAddress() + ")");
         System.out.println("  Available worker count: " + workerAddrs.size());
         System.out.println("    Used for local processing:");
-        nodeDispersionChecker(localModels);
-        System.out.println("    Used for local update:");
-        nodeDispersionChecker(updatedAcks);
+        for (int i = 0; i < locals.size(); ++i) {
+            System.out.println("  [" + i + "] local stage");
+            nodeDispersionChecker(locals.get(i));
+        }
         System.out.println("    Used for execution update:");
         nodeDispersionChecker(executionAcks);
 
@@ -83,20 +119,22 @@ public class CentralDdmSummarizer {
         System.out.println("  Total building time without loading (local + global): " + DurationFormatUtils.formatDurationHMS(time.getTotalWithoutLoading()) + " (" + (time.getTotalWithoutLoading()) + "ms)");
         System.out.println("  Total max building time without loading (max local + global): " + DurationFormatUtils.formatDurationHMS(time.getTotalMaxProcessing()) + " (" + (time.getTotalMaxProcessing()) + "ms)");
         System.out.println("  Total building time (global): " + DurationFormatUtils.formatDurationHMS(time.getGlobalProcessing()) + " (" + time.getGlobalProcessing() + "ms)");
+        System.out.println("  Max building time (global): " + DurationFormatUtils.formatDurationHMS(time.getMaxGlobalProcessing()) + " (" + time.getMaxGlobalProcessing() + "ms)");
         System.out.println("  Total evaluation time: " + DurationFormatUtils.formatDurationHMS(time.getTotalExecution()) + " (" + time.getTotalExecution() + "ms)");
         System.out.println("  Total evaluation time loading: " + DurationFormatUtils.formatDurationHMS(time.getExecutionLoading()) + " (" + time.getExecutionLoading() + "ms)");
         System.out.println("  Total evaluation time without loading: " + DurationFormatUtils.formatDurationHMS(time.getTotalExecutionWithoutLoading()) + " (" + (time.getTotalExecutionWithoutLoading()) + "ms)");
         System.out.println("  Total max evaluation time without loading: " + DurationFormatUtils.formatDurationHMS(time.getMaxExecution()) + " (" + (time.getMaxExecution()) + "ms)");
         System.out.println("  Local processing (ms):");
-        time.getLocalsProcessings()
-                .values()
-                .forEach(System.out::println);
+        for (int i = 0; i < time.getLocalsProcessings().size(); ++i) {
+            System.out.println("  [" + i + "] local stage");
+            time.getLocalsProcessings()
+                    .get(i)
+                    .getMap()
+                    .values()
+                    .forEach(System.out::println);
+        }
         System.out.println("  Global processing (ms):");
         System.out.println(time.getGlobalProcessing());
-        System.out.println("  Local update (ms):");
-        time.getLocalsUpdates()
-                .values()
-                .forEach(System.out::println);
         System.out.println("  Local execution (ms):");
         time.getLocalsExecutions()
                 .values()
@@ -110,11 +148,18 @@ public class CentralDdmSummarizer {
 
         System.out.println("====== Transfer Summary:");
         System.out.println("  Local models (bytes):");
-        transfer.getLocalsBytes()
-                .values()
-                .forEach(System.out::println);
+        for (int i = 0; i < transfer.getLocalsBytes().size(); ++i) {
+            System.out.println("  [" + i + "] local stage");
+            transfer.getLocalsBytes()
+                    .get(i)
+                    .values()
+                    .forEach(System.out::println);
+        }
         System.out.println("  Global model (bytes):");
-        System.out.println(transfer.getGlobalBytes());
+        for (int i = 0; i < transfer.getGlobalsBytes().size(); ++i) {
+            System.out.println("  [" + i + "] global stage");
+            System.out.println(transfer.getGlobalsBytes().get(i));
+        }
 
         return this;
     }

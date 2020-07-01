@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -38,9 +39,19 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
         Files.write(algPath, jar);
 
         try {
-            var typePackage = new ProcessorPackageEvaluator()
-                    .callForPackageName(algPath.toFile());
-            var alg = new AlgorithmDesc(id, name, typePackage.getPackageName(), typePackage.getAlgorithmType(), typePackage.getAlgorithmName(), (long) jar.length, algPath.toString());
+            var packageEvaluator = new ProcessorPackageEvaluator();
+            var typePackage = packageEvaluator.callForPackageName(algPath.toFile());
+            var pipeline = packageEvaluator.callForAlgorithmConfig(algPath.toFile());
+            var alg = new AlgorithmDesc(
+                    id,
+                    name,
+                    typePackage.getPackageName(),
+                    new ObjectMapper().writeValueAsString(pipeline),
+                    typePackage.getAlgorithmType(),
+                    typePackage.getAlgorithmName(),
+                    (long) jar.length,
+                    algPath.toString()
+            );
 
             if (algorithmMap.putIfAbsent(id, alg) != null) {
                 log.warn("Loaded the same jar '{}' file as before with id '{}'.", name, id);

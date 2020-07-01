@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.core.execution.dto;
 
+import java.util.List;
 import java.util.Map;
 
 import lombok.Data;
@@ -13,14 +14,16 @@ public class ExecutionStatsDto {
     @Data
     public static class TimeStatsDto {
 
-        private Map<String, LocalStatsDto> localsProcessings;
-        private Map<String, LocalStatsDto> localsUpdates;
-        private Map<String, LocalStatsDto> localsExecutions;
-        private long globalProcessing;
         private long ddmTotalProcessing;
 
+        private List<ProcessingWrapper> localsProcessings;
+        private List<Long> globalProcessings;
+        private Map<String, LocalStatsDto> localsExecutions;
+
         private long localProcessing;
+        private long globalProcessing;
         private long maxLocalProcessing;
+        private long maxGlobalProcessing;
         private long localLoading;
         private long maxLocalLoading;
         private long executionLoading;
@@ -34,6 +37,12 @@ public class ExecutionStatsDto {
         private long ddmTotalWithoutMaxLoadings;
 
         @Data
+        public static class ProcessingWrapper {
+
+            private Map<String, LocalStatsDto> map;
+        }
+
+        @Data
         public static class LocalStatsDto {
 
             private Long processing;
@@ -44,9 +53,10 @@ public class ExecutionStatsDto {
     @Data
     public static class TransferStatsDto {
 
-        private Map<String, Integer> localsBytes;
-        private int globalBytes;
+        private List<Map<String, Integer>> localsBytes;
+        private List<Integer> globalsBytes;
         private int localBytes;
+        private int globalBytes;
     }
 
 }

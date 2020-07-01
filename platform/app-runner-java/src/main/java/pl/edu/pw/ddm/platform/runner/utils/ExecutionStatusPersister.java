@@ -58,8 +58,16 @@ public class ExecutionStatusPersister {
         next(ExecutionStage.PROCESSING_GLOBAL);
     }
 
+    public void repeatLocal() {
+        next(ExecutionStage.REPEATING_LOCAL);
+    }
+
     public void updateLocal() {
         next(ExecutionStage.UPDATING_LOCAL);
+    }
+
+    public void updateGlobal() {
+        next(ExecutionStage.UPDATING_GLOBAL);
     }
 
     public void validate() {
@@ -104,6 +112,7 @@ public class ExecutionStatusPersister {
     public static class ExecutionStatus {
 
         private String appId;
+        private int stageIndex;
         private String stage;
         private String message;
 
@@ -122,6 +131,7 @@ public class ExecutionStatusPersister {
             history.add(ExecutionEntry.of(stage, lastUpdate, LocalDateTime.now()));
             stage = nextStage.code;
             lastUpdate = LocalDateTime.now();
+            ++stageIndex;
         }
     }
 
@@ -148,8 +158,10 @@ public class ExecutionStatusPersister {
         STARTED("STARTED"),
         STOPPED("STOPPED"),
         PROCESSING_LOCAL("PROCESSING_LOCAL"),
+        REPEATING_LOCAL("REPEATING_LOCAL"),
         PROCESSING_GLOBAL("PROCESSING_GLOBAL"),
         UPDATING_LOCAL("UPDATING_LOCAL"),
+        UPDATING_GLOBAL("UPDATING_GLOBAL"),
         VALIDATION("VALIDATION"),
         SUMMARIZING("SUMMARIZING"),
         FINISHED("FINISHED");

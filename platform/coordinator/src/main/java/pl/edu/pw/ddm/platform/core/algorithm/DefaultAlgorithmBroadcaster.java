@@ -39,6 +39,7 @@ class DefaultAlgorithmBroadcaster implements AlgorithmBroadcaster {
         body.add("algorithmFile", new FileSystemResource(algFile));
         body.add("algorithmId", algorithmDesc.getId());
         body.add("algorithmPackageName", algorithmDesc.getPackageName());
+        body.add("pipeline", algorithmDesc.getPipeline());
 
         String url = InstanceAgentAddressFactory.sendAlgorithm(masterAddr);
         ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);

@@ -10,18 +10,20 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalUpdater;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
+import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.data.NodeParamProvider;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
+import pl.edu.pw.ddm.platform.runner.models.StringGlobalModel;
 import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
-import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
+import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-class GlobalProcessRunner implements FlatMapFunction<Iterator<LocalModel>, ModelWrapper> {
+class GlobalUpdateRunner implements FlatMapFunction<Iterator<LocalModel>, ModelWrapper> {
 
     private final InitParamsDto initParams;
     private final Class<? extends Processor> processor;
@@ -36,19 +38,20 @@ class GlobalProcessRunner implements FlatMapFunction<Iterator<LocalModel>, Model
 
         ParamProvider paramProvider = new NodeParamProvider(initParams.findDistanceFunction(), initParams.getExecutionParams());
 
-        GlobalProcessor<LocalModel, GlobalModel> gp = AlgorithmProcessorInitializer.initProcessor(
+        GlobalUpdater<LocalModel, MiningMethod> gp = AlgorithmProcessorInitializer.initProcessor(
                 initParams.getAlgorithmPackageName(),
-                (Class<GlobalProcessor<LocalModel, GlobalModel>>) processor,
-                GlobalProcessor.class
+                (Class<GlobalUpdater<LocalModel, MiningMethod>>) processor,
+                GlobalUpdater.class
         );
 
         LocalDateTime start = LocalDateTime.now();
-        GlobalModel globalModel = gp.processGlobal(models, paramProvider);
+        MiningMethod method = gp.updateGlobal(models, paramProvider);
         LocalDateTime end = LocalDateTime.now();
 
-        ModelPersister.saveGlobal(initParams.getExecutionPath(), globalModel, stageIndex, initParams.getExecutionId());
+        MethodPersister.save(initParams.getExecutionPath(), method, initParams.getExecutionId());
 
-        ModelWrapper wrapper = ModelWrapper.global(globalModel, InetAddress.getLocalHost().toString());
+        GlobalModel model = new StringGlobalModel("ackTime=" + System.currentTimeMillis());
+        ModelWrapper wrapper = ModelWrapper.global(model, InetAddress.getLocalHost().toString());
         wrapper.getTimeStatistics().setStart(start);
         wrapper.getTimeStatistics().setEnd(end);
 

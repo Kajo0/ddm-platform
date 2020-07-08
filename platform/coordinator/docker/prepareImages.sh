@@ -7,6 +7,8 @@ function checkError() {
   fi
 }
 
+set -x
+
 cd ../../metrics
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -

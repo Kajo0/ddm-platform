@@ -4,3 +4,6 @@ apps:
     path: /apps/app-runner-java.jar
   algorithms:
     - /apps/aoptkm.jar
+
+spark:
+  master-host: spark-master

@@ -17,7 +17,11 @@ import weka.core.DenseInstance;
 import weka.core.Instances;
 import weka.core.Utils;
 
-public class SvmWeka implements LocalProcessor<LGModel, LGModel, Classifier>, GlobalProcessor<LGModel, LGModel> {
+public class SvmWeka implements LocalProcessor<LGModel, LGModel, Classifier>,
+        GlobalProcessor<LGModel, LGModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LGModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LGModel, LGModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LGModel, LGModel, WekaClassifier> {
 
     @Override
     public LGModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
@@ -26,7 +30,7 @@ public class SvmWeka implements LocalProcessor<LGModel, LGModel, Classifier>, Gl
 
     @SneakyThrows
     @Override
-    public Classifier updateLocal(LGModel lModel, LGModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
+    public WekaClassifier updateLocal(LGModel lModel, LGModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
         Collection<Data> training = dataProvider.training();
         List<String> labels = training.stream()
                 .map(Data::getLabel)

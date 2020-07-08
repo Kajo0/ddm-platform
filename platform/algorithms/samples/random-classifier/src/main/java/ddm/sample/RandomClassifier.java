@@ -5,8 +5,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
@@ -15,7 +18,13 @@ import pl.edu.pw.ddm.platform.interfaces.data.SampleData;
 import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.Classifier;
 
-public class RandomClassifier implements LocalProcessor<LModel, GModel, Classifier>, GlobalProcessor<LModel, GModel>, Classifier {
+public class RandomClassifier implements LocalProcessor<LModel, GModel, Classifier>,
+        GlobalProcessor<LModel, GModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LModel, GModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LModel, GModel, RandomClassifier>,
+        AlgorithmConfig,
+        Classifier {
 
     private Random rand = null;
     private Integer labelPercent = null;
@@ -33,7 +42,7 @@ public class RandomClassifier implements LocalProcessor<LModel, GModel, Classifi
     }
 
     @Override
-    public Classifier updateLocal(LModel localModel, GModel globalModel, DataProvider dataProvider, ParamProvider paramProvider) {
+    public RandomClassifier updateLocal(LModel localModel, GModel globalModel, DataProvider dataProvider, ParamProvider paramProvider) {
         this.labelPercent = (int) ((double) localModel.getLocalLabels().size() / globalModel.getAllLabels().size() * 100);
         this.globalModel = globalModel;
 
@@ -71,6 +80,14 @@ public class RandomClassifier implements LocalProcessor<LModel, GModel, Classifi
     @Override
     public String name() {
         return "Random-Classifier";
+    }
+
+    @Override
+    public DdmPipeline pipeline() {
+        return CentralDdmPipeline.builder()
+                .local(this.getClass())
+                .global(this.getClass())
+                .lastLocal(this.getClass());
     }
 
 }

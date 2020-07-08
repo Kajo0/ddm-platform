@@ -10,7 +10,9 @@ import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instance;
 
-public class LightweightLocalSiteProcessor implements LocalProcessor<LModel, GModel, Clustering> {
+public class LightweightLocalSiteProcessor implements LocalProcessor<LModel, GModel, Clustering>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LModel, GModel, LightweightClusterer> {
 
     @Override
     public LModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
@@ -30,7 +32,7 @@ public class LightweightLocalSiteProcessor implements LocalProcessor<LModel, GMo
     }
 
     @Override
-    public Clustering updateLocal(LModel lModel, GModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
+    public LightweightClusterer updateLocal(LModel lModel, GModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
         return new LightweightClusterer(gModel);
     }
 

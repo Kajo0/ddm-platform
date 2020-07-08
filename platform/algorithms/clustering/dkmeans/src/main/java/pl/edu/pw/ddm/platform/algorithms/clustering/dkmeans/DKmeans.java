@@ -4,8 +4,11 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
+import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
@@ -16,7 +19,13 @@ import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 import weka.clusterers.SimpleKMeans;
 
-public class DKmeans implements LocalProcessor<LModel, GModel, Clustering>, GlobalProcessor<LModel, GModel>, Clustering {
+public class DKmeans implements LocalProcessor<LModel, GModel, Clustering>,
+        GlobalProcessor<LModel, GModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LModel, GModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LModel, GModel, DKmeans>,
+        AlgorithmConfig,
+        Clustering {
 
     private GModel methodModel;
 
@@ -40,7 +49,7 @@ public class DKmeans implements LocalProcessor<LModel, GModel, Clustering>, Glob
     }
 
     @Override
-    public Clustering updateLocal(LModel lModel, GModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
+    public DKmeans updateLocal(LModel lModel, GModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
         methodModel = gModel;
         return this;
     }
@@ -81,6 +90,14 @@ public class DKmeans implements LocalProcessor<LModel, GModel, Clustering>, Glob
     @Override
     public String name() {
         return "DK-means";
+    }
+
+    @Override
+    public DdmPipeline pipeline() {
+        return CentralDdmPipeline.builder()
+                .local(this.getClass())
+                .global(this.getClass())
+                .lastLocal(this.getClass());
     }
 
 }

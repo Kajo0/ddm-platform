@@ -7,6 +7,9 @@ import java.util.Map;
 
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
 import pl.edu.pw.ddm.platform.interfaces.data.SampleData;
@@ -19,7 +22,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 
 @NoArgsConstructor
-public class WekaClassifier extends SMO implements Classifier {
+public class WekaClassifier extends SMO implements Classifier, AlgorithmConfig {
 
     private List<String> labels;
     private Map<Integer, String> labelMap = new HashMap<>();
@@ -57,4 +60,13 @@ public class WekaClassifier extends SMO implements Classifier {
     public String name() {
         return "WEKA SVM";
     }
+
+    @Override
+    public DdmPipeline pipeline() {
+        return CentralDdmPipeline.builder()
+                .local(SvmWeka.class)
+                .global(SvmWeka.class)
+                .lastLocal(SvmWeka.class);
+    }
+
 }

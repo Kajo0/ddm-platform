@@ -14,7 +14,8 @@ import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 
-public class LightweightAggregator implements GlobalProcessor<LModel, GModel> {
+public class LightweightAggregator implements GlobalProcessor<LModel, GModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LModel, GModel> {
 
     private final EuclideanDistance EUCLIDEAN_DISTANCE = new EuclideanDistance();
 

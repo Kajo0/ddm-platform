@@ -3,6 +3,9 @@ package pl.edu.pw.ddm.platform.algorithms.clustering.lct;
 import java.util.Comparator;
 
 import lombok.NoArgsConstructor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
@@ -11,7 +14,8 @@ import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 
 @NoArgsConstructor
-public class LightweightClusterer implements Clustering {
+public class LightweightClusterer implements Clustering,
+        AlgorithmConfig {
 
     private GModel model;
     private DistanceFunction distanceFunction;
@@ -37,6 +41,14 @@ public class LightweightClusterer implements Clustering {
     @Override
     public String name() {
         return "LCT";
+    }
+
+    @Override
+    public DdmPipeline pipeline() {
+        return CentralDdmPipeline.builder()
+                .local(LightweightLocalSiteProcessor.class)
+                .global(LightweightAggregator.class)
+                .lastLocal(LightweightLocalSiteProcessor.class);
     }
 
 }

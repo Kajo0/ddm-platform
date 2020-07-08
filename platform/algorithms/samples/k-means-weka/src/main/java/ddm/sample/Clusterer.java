@@ -6,6 +6,9 @@ import java.util.Collection;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
@@ -19,7 +22,8 @@ import weka.core.Instances;
 
 @NoArgsConstructor
 @AllArgsConstructor
-public class Clusterer implements Clustering {
+public class Clusterer implements Clustering,
+        AlgorithmConfig {
 
     private Instances centroids;
     private DistanceFunction wekaDistanceFunction;
@@ -98,6 +102,14 @@ public class Clusterer implements Clustering {
     @Override
     public String name() {
         return "WEKA K-means";
+    }
+
+    @Override
+    public DdmPipeline pipeline() {
+        return CentralDdmPipeline.builder()
+                .local(KmeansWeka.class)
+                .global(KmeansWeka.class)
+                .lastLocal(KmeansWeka.class);
     }
 
 }

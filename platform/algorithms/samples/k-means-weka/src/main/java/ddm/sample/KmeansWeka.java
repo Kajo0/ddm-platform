@@ -11,7 +11,11 @@ import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 
-public class KmeansWeka implements LocalProcessor<LGModel, LGModel, Clustering>, GlobalProcessor<LGModel, LGModel> {
+public class KmeansWeka implements LocalProcessor<LGModel, LGModel, Clustering>,
+        GlobalProcessor<LGModel, LGModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LGModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LGModel, LGModel>,
+        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LGModel, LGModel, Clusterer> {
 
     @Override
     public LGModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
@@ -20,7 +24,7 @@ public class KmeansWeka implements LocalProcessor<LGModel, LGModel, Clustering>,
 
     @SneakyThrows
     @Override
-    public Clustering updateLocal(LGModel lModel, LGModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
+    public Clusterer updateLocal(LGModel lModel, LGModel gModel, DataProvider dataProvider, ParamProvider paramProvider) {
         if ("true".equals(paramProvider.provide("preCalcCentroids"))) {
             SimpleKMeans kmeans = Clusterer.performNewClustering(dataProvider.training(), paramProvider);
             Instances centroids = kmeans.getClusterCentroids();

@@ -13,6 +13,7 @@ import lombok.SneakyThrows;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
+import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
@@ -152,12 +153,14 @@ public final class CentralRunner {
             case GLOBAL_UPDATE: {
                 statusPersister.updateGlobal();
                 globalModel = updateGlobal(processingStage);
+                // FIXME not necessary should be summarized as it is ack
                 summarizer.addGlobalModel(globalModel);
                 return;
             }
             case LOCAL_UPDATE: {
                 statusPersister.updateLocal();
                 localModels = updateLocal(processingStage);
+                // FIXME not necessary should be summarized as it is ack
                 summarizer.addLocalModels(localModels);
                 return;
             }
@@ -218,9 +221,18 @@ public final class CentralRunner {
         Iterator<LocalModel> models = localModels.stream()
                 .map(ModelWrapper::getLocalModel)
                 .iterator();
-        return new GlobalUpdateRunner(initParams, processingStage.processor(), processingStage.getStageIndex())
+        ModelWrapper model = new GlobalUpdateRunner(initParams, processingStage.processor(), processingStage.getStageIndex())
                 .call(models)
                 .next();
+
+        // resend mining method to local nodes
+        List<MiningMethod> methods = Collections.nCopies(nodeStubList.size(), model.getMiningMethod());
+        List<ModelWrapper> localModels = sc.parallelize(methods, nodeStubList.size())
+                .mapPartitions(new LocalFinalMethodCollector(initParams))
+                .collect();
+        verifyUniqueNodeExecutors(localModels);
+
+        return model;
     }
 
     private List<ModelWrapper> executeMethod() {

@@ -51,7 +51,7 @@ class GlobalUpdateRunner implements FlatMapFunction<Iterator<LocalModel>, ModelW
         MethodPersister.save(initParams.getExecutionPath(), method, initParams.getExecutionId());
 
         GlobalModel model = new StringGlobalModel("ackTime=" + System.currentTimeMillis());
-        ModelWrapper wrapper = ModelWrapper.global(model, InetAddress.getLocalHost().toString());
+        ModelWrapper wrapper = ModelWrapper.globalMethod(model, method, InetAddress.getLocalHost().toString());
         wrapper.getTimeStatistics().setStart(start);
         wrapper.getTimeStatistics().setEnd(end);
 

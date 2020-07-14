@@ -5,10 +5,10 @@ import static java.util.Optional.ofNullable;
 import java.io.Serializable;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
@@ -18,6 +18,7 @@ public class ModelWrapper implements Serializable {
 
     private final LocalModel localModel;
     private final GlobalModel globalModel;
+    private final MiningMethod miningMethod;
 
     @Getter
     private final Integer id;
@@ -29,11 +30,15 @@ public class ModelWrapper implements Serializable {
     private TimeStatistics timeStatistics = new TimeStatistics();
 
     public static ModelWrapper local(LocalModel model, String address, Integer id) {
-        return new ModelWrapper(model, null, id, address);
+        return new ModelWrapper(model, null, null, id, address);
     }
 
     public static ModelWrapper global(GlobalModel model, String address) {
-        return new ModelWrapper(null, model, null, address);
+        return new ModelWrapper(null, model, null, null, address);
+    }
+
+    public static ModelWrapper globalMethod(GlobalModel model, MiningMethod method, String address) {
+        return new ModelWrapper(null, model, method, null, address);
     }
 
     public LocalModel getLocalModel() {
@@ -42,6 +47,10 @@ public class ModelWrapper implements Serializable {
 
     public GlobalModel getGlobalModel() {
         return ofNullable(globalModel).orElseThrow(() -> new IllegalArgumentException("No global model"));
+    }
+
+    public MiningMethod getMiningMethod() {
+        return ofNullable(miningMethod).orElseThrow(() -> new IllegalArgumentException("No mining method"));
     }
 
     @Override
@@ -54,6 +63,7 @@ public class ModelWrapper implements Serializable {
         str.append("]: ");
         ofNullable(localModel).ifPresent(str::append);
         ofNullable(globalModel).ifPresent(str::append);
+        ofNullable(miningMethod).map(MiningMethod::name).ifPresent(str::append);
 
         return str.toString();
     }

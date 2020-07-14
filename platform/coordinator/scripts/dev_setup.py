@@ -221,7 +221,9 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
         'distanceFunctionName': distanceFuncName,
         # 'distanceFunctionId': '1156746230', # loaded equality
         'preCalcCentroids': 'true',
-        'b': '2'
+        'b': '2',
+        'meb_clusters': '2',
+        'kernel': 'linear'
     })
     executionId = requests.post(url,
                                 data={
@@ -385,10 +387,13 @@ def reload(oneNode=False):
         algorithmId = loadJar('./samples/aoptkm.jar')
         # algorithmId = loadJar('./samples/dkmeans.jar')
         # algorithmId = loadJar('./samples/lct.jar')
+        # algorithmId = loadJar('./samples/dmeb.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')
 
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
+    # trainDataId = loadData('./samples/iris_numeric.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
+    # testDataId = loadData('./samples/iris_numeric.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
 
     broadcastJar(instanceId, algorithmId)

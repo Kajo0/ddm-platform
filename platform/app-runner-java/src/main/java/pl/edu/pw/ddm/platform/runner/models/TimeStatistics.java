@@ -16,7 +16,11 @@ public class TimeStatistics implements Serializable {
     private long dataLoadingMillis;
 
     public Long duration() {
-        return Duration.between(start, end).toMillis();
+        if (start == null || end == null) {
+            return 0L;
+        } else {
+            return Duration.between(start, end).toMillis();
+        }
     }
 
     public Long withoutDataLoading() {

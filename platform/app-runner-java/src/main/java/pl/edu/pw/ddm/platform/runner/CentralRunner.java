@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -16,6 +17,7 @@ import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
+import pl.edu.pw.ddm.platform.runner.models.GlobalMethodModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.TimeStatistics;
 import pl.edu.pw.ddm.platform.runner.utils.CentralDdmSummarizer;
@@ -152,16 +154,14 @@ public final class CentralRunner {
             }
             case GLOBAL_UPDATE: {
                 statusPersister.updateGlobal();
+                // global model is method wrapped into model
                 globalModel = updateGlobal(processingStage);
-                // FIXME not necessary should be summarized as it is ack
                 summarizer.addGlobalModel(globalModel);
                 return;
             }
             case LOCAL_UPDATE: {
                 statusPersister.updateLocal();
                 localModels = updateLocal(processingStage);
-                // FIXME not necessary should be summarized as it is ack
-                summarizer.addLocalModels(localModels);
                 return;
             }
             default:
@@ -208,7 +208,10 @@ public final class CentralRunner {
 
     @SneakyThrows
     private List<ModelWrapper> updateLocal(DdmPipeline.ProcessingStage processingStage) {
-        List<GlobalModel> globals = Collections.nCopies(nodeStubList.size(), globalModel.getGlobalModel());
+        GlobalModel gmodel = Optional.ofNullable(globalModel)
+                .map(ModelWrapper::getGlobalModel)
+                .orElse(null);
+        List<GlobalModel> globals = Collections.nCopies(nodeStubList.size(), gmodel);
         List<ModelWrapper> localModels = sc.parallelize(globals, nodeStubList.size())
                 .mapPartitions(new LocalUpdateRunner(initParams, processingStage.processor(), processingStage.getStageIndex()))
                 .collect();
@@ -232,7 +235,7 @@ public final class CentralRunner {
                 .collect();
         verifyUniqueNodeExecutors(localModels);
 
-        return model;
+        return ModelWrapper.global(GlobalMethodModelWrapper.of(model.getMiningMethod()), null);
     }
 
     private List<ModelWrapper> executeMethod() {

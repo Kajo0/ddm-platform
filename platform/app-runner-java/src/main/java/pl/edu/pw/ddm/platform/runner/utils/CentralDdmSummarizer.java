@@ -95,7 +95,7 @@ public class CentralDdmSummarizer {
 
     public CentralDdmSummarizer printDispersionSummary() {
         System.out.println("====== Dispersion Summary:");
-        System.out.println("  Master address: " + masterAddr + " (" + globals.get(0).getAddress() + ")");
+        System.out.println("  Master address: " + masterAddr + " (" + (globals.isEmpty() ? "onlyLocal" : globals.get(0).getAddress()) + ")");
         System.out.println("  Available worker count: " + workerAddrs.size());
         System.out.println("    Used for local processing:");
         for (int i = 0; i < locals.size(); ++i) {

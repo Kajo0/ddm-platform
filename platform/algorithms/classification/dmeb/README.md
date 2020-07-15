@@ -1,3 +1,3 @@
 # Algorithm impl.
 
-Distributed K-means algorithm
+Distributed SVM classifier utilizing MEB Clustering

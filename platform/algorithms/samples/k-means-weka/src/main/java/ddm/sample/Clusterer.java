@@ -107,9 +107,7 @@ public class Clusterer implements Clustering,
     @Override
     public DdmPipeline pipeline() {
         return CentralDdmPipeline.builder()
-                .local(KmeansWeka.class)
-                .global(KmeansWeka.class)
-                .lastLocal(KmeansWeka.class);
+                .onlyLocal(KmeansWeka.class);
     }
 
 }

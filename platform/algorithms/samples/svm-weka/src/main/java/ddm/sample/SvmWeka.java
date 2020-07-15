@@ -6,27 +6,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.SneakyThrows;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
-import pl.edu.pw.ddm.platform.interfaces.mining.Classifier;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
 import weka.core.Utils;
 
-public class SvmWeka implements LocalProcessor<LGModel, LGModel, Classifier>,
-        GlobalProcessor<LGModel, LGModel>,
-        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LGModel>,
-        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LGModel, LGModel>,
-        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LGModel, LGModel, WekaClassifier> {
-
-    @Override
-    public LGModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
-        return new LGModel();
-    }
+public class SvmWeka implements LocalUpdater<LGModel, LGModel, WekaClassifier> {
 
     @SneakyThrows
     @Override
@@ -66,11 +55,6 @@ public class SvmWeka implements LocalProcessor<LGModel, LGModel, Classifier>,
         smo.buildClassifier(dataset);
 
         return smo;
-    }
-
-    @Override
-    public LGModel processGlobal(Collection<LGModel> localModels, ParamProvider paramProvider) {
-        return new LGModel();
     }
 
 }

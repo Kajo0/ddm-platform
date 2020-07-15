@@ -64,9 +64,7 @@ public class WekaClassifier extends SMO implements Classifier, AlgorithmConfig {
     @Override
     public DdmPipeline pipeline() {
         return CentralDdmPipeline.builder()
-                .local(SvmWeka.class)
-                .global(SvmWeka.class)
-                .lastLocal(SvmWeka.class);
+                .onlyLocal(SvmWeka.class);
     }
 
 }

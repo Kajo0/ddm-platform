@@ -1,26 +1,13 @@
 package ddm.sample;
 
-import java.util.Collection;
-
 import lombok.SneakyThrows;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
-import pl.edu.pw.ddm.platform.interfaces.algorithm.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
-import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 
-public class KmeansWeka implements LocalProcessor<LGModel, LGModel, Clustering>,
-        GlobalProcessor<LGModel, LGModel>,
-        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor<LGModel>,
-        pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor<LGModel, LGModel>,
-        pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater<LGModel, LGModel, Clusterer> {
-
-    @Override
-    public LGModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
-        return new LGModel();
-    }
+public class KmeansWeka implements LocalUpdater<LGModel, LGModel, Clusterer> {
 
     @SneakyThrows
     @Override
@@ -34,11 +21,5 @@ public class KmeansWeka implements LocalProcessor<LGModel, LGModel, Clustering>,
             return new Clusterer();
         }
     }
-
-    @Override
-    public LGModel processGlobal(Collection<LGModel> localModels, ParamProvider paramProvider) {
-        return new LGModel();
-    }
-
 
 }

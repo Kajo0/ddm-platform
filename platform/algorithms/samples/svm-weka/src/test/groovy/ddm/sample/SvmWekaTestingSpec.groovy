@@ -1,21 +1,20 @@
 package ddm.sample
 
-import pl.edu.pw.ddm.platform.testing.interfaces.impl.CentralRunner
-import pl.edu.pw.ddm.platform.testing.interfaces.impl.ExecutionConfig
+import pl.edu.pw.ddm.platform.testing.interfaces.impl.DdmExecutionConfig
+import pl.edu.pw.ddm.platform.testing.interfaces.impl.DdmPipelineRunner
 import spock.lang.Specification
 
 class SvmWekaTestingSpec extends Specification {
 
     def "should perform correct classification of training data"() {
         given:
-        def algorithm = new SvmWeka()
-        def classifier = new WekaClassifier()
+        def pipeline = new WekaClassifier()
+        def miningMethod = new WekaClassifier()
 
         and:
-        def config = ExecutionConfig.builder()
-                .localProcessor(algorithm)
-                .globalProcessor(algorithm)
-                .miningMethod(classifier)
+        def config = DdmExecutionConfig.builder()
+                .algorithmConfig(pipeline)
+                .miningMethod(miningMethod)
                 .dataPath([getClass().getResource('/data.train').path])
                 .testDataPath(getClass().getResource('/data.train').path)
                 .separator(',')
@@ -26,7 +25,7 @@ class SvmWekaTestingSpec extends Specification {
                 .distanceFunction(null)
                 .executionParams(['options': '-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K "weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.50625"'])
                 .build()
-        def cr = new CentralRunner(config)
+        def cr = new DdmPipelineRunner(config)
 
         when:
         def results = cr.run()

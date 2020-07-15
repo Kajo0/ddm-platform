@@ -32,7 +32,6 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
         AlgorithmConfig,
         Classifier {
 
-    //    private List<LabeledObservation> representativeList;
     private SVMModel globalSVM;
 
     @Override
@@ -76,7 +75,6 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                 .collect(Collectors.toList());
         return new MEBBaseMethodChosenRepresentatives(observations);
     }
-
 
     @Override
     public MEBBaseMethodDeClustered repeatLocal(MEBBaseMethodChosenRepresentatives gModel, MEBBaseMethodLocalRepresentatives lModel, DataProvider dataProvider, ParamProvider paramProvider) {

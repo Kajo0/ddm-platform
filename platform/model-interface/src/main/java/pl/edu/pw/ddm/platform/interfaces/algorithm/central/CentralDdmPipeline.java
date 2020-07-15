@@ -43,8 +43,8 @@ public class CentralDdmPipeline implements DdmPipeline {
             return SATE_GLOBAL;
         }
 
-        public CentralDdmPipeline onlyLocal(@NonNull Class<? extends LocalProcessor<? extends LocalModel>> localProcessorClass) {
-            addStage(localProcessorClass, Stage.LOCAL_UPDATE);
+        public CentralDdmPipeline onlyLocal(@NonNull Class<? extends LocalUpdater<? extends LocalModel, ? extends GlobalModel, ? extends MiningMethod>> localUpdaterClass) {
+            addStage(localUpdaterClass, Stage.LOCAL_UPDATE);
             return CentralDdmPipeline.this;
         }
     }
@@ -69,8 +69,8 @@ public class CentralDdmPipeline implements DdmPipeline {
             return STATE_LOCAL;
         }
 
-        public CentralDdmPipeline lastGlobal(@NonNull Class<? extends GlobalProcessor<? extends LocalModel, ? extends GlobalModel>> globalProcessorClass) {
-            addStage(globalProcessorClass, Stage.GLOBAL_UPDATE);
+        public CentralDdmPipeline lastGlobal(@NonNull Class<? extends GlobalUpdater<? extends LocalModel, ? extends MiningMethod>> globalUpdaterClass) {
+            addStage(globalUpdaterClass, Stage.GLOBAL_UPDATE);
             return CentralDdmPipeline.this;
         }
     }

@@ -61,7 +61,7 @@ class LocalInstanceCreator implements InstanceCreator {
         var uiPort = findOpenPort().toString();
         var masterPort = findOpenPort().toString();
         var agentPort = findOpenPort().toString();
-        var masterName = "platform-spark-master-" + instanceId;
+        var masterName = "platform-master-" + instanceId;
         var hc = new HostConfig()
                 .withPortBindings(PortBinding.parse(uiPort + ":" + sparkMasterUiPort), PortBinding.parse(masterPort + ":" + sparkMasterPort), PortBinding.parse(agentPort + ":" + nodeAgentPort))
                 .withNetworkMode(networkName);
@@ -136,7 +136,7 @@ class LocalInstanceCreator implements InstanceCreator {
                 hcw.withDiskQuota(diskInGb.longValue() * GB_BYTE_MULTIPLIER);
             }
 
-            var containerName = "platform-spark-worker-" + i + "-" + instanceId;
+            var containerName = "platform-worker-" + i + "-" + instanceId;
             log.debug("Creating worker '{}'.", containerName);
             var container = client.createContainerCmd("ddm-platform-worker")
                     .withName(containerName)

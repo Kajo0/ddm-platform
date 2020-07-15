@@ -223,7 +223,8 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
         'preCalcCentroids': 'true',
         'b': '2',
         'meb_clusters': '2',
-        'kernel': 'linear'
+        'kernel': 'linear',
+        'knn_k': '3'
     })
     executionId = requests.post(url,
                                 data={
@@ -388,6 +389,7 @@ def reload(oneNode=False):
         # algorithmId = loadJar('./samples/dkmeans.jar')
         # algorithmId = loadJar('./samples/lct.jar')
         # algorithmId = loadJar('./samples/dmeb.jar')
+        # algorithmId = loadJar('./samples/dmeb-2.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')
 
     trainDataId = loadData('./samples/iris.data', 4, ',', None)

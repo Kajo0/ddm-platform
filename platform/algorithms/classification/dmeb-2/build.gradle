@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+group 'pl.edu.pw.ddm.platform.algorithm.classification.dmeb2'
+version '0.0.1-SNAPSHOT'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+dependencies {
+    implementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
+    implementation 'pl.edu.pw.ddm.platform:distance-functions:0.0.1-SNAPSHOT'
+
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
+    implementation 'nz.ac.waikato.cms.weka:weka-stable:3.8.4'
+
+    testImplementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
+    testImplementation 'pl.edu.pw.ddm.platform.testing:interfaces-impl:0.0.1-SNAPSHOT'
+    testImplementation 'pl.edu.pw.ddm.platform:metrics:0.0.1-SNAPSHOT'
+
+    testImplementation platform('org.spockframework:spock-bom:2.0-M1-groovy-2.5')
+    testImplementation 'org.spockframework:spock-core'
+    testRuntime 'net.bytebuddy:byte-buddy:1.9.3'
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        showStandardStreams = true
+    }
+}
+

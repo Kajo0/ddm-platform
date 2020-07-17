@@ -19,8 +19,10 @@ api = {
         'distance-function-load': '/coordinator/command/data/distance-function/load/file',
         'info': '/coordinator/command/data/info',
         'distance-functions-info': '/coordinator/command/data/info/distance-functions',
+        'partitioning-strategies-info': '/coordinator/command/data/info/partitioning-strategies',
         'load': '/coordinator/command/data/load/file',
         'loadUri': '/coordinator/command/data/load/uri',
+        'partitioning-strategy-load': '/coordinator/command/data/partitioning-strategy/load/file',
         'scatter': '/coordinator/command/data/scatter/{instanceId}/{dataId}',
     },
     'execution': {
@@ -108,9 +110,27 @@ def loadDistanceFunction(path):
         return distanceFunctionId
 
 
+def loadPartitioningStrategy(path):
+    print("loadPartitioningStrategy path='{}'".format(path))
+    url = baseUrl + api['data']['partitioning-strategy-load']
+    with open(path, 'rb') as file:
+        partitioningStrategyId = requests.post(url, files={'partitioningStrategyFile':
+                                                               (file.name, file, 'application/x-java-archive')}).text
+        print('  partitioningStrategyId: ' + partitioningStrategyId)
+        return partitioningStrategyId
+
+
 def functionsInfo():
     print('functionsInfo')
     url = baseUrl + api['data']['distance-functions-info']
+    response = requests.get(url).text
+    formatted = json.loads(response)
+    pprint.pprint(formatted)
+
+
+def strategiesInfo():
+    print('strategiesInfo')
+    url = baseUrl + api['data']['partitioning-strategies-info']
     response = requests.get(url).text
     formatted = json.loads(response)
     pprint.pprint(formatted)
@@ -132,12 +152,15 @@ def loadData(path, labelIndex, separator=',', idIndex=None):
         return dataId
 
 
-def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, typeCode='train'):
-    print("scatterData instanceId='{}' dataId='{}' strategy='{}' strategyParams='{}' typeCode='{}'".format(instanceId,
-                                                                                                           dataId,
-                                                                                                           strategy,
-                                                                                                           strategyParams,
-                                                                                                           typeCode))
+def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, distanceFunction=None, typeCode='train'):
+    print(
+        "scatterData instanceId='{}' dataId='{}' strategy='{}' strategyParams='{}' distanceFunction='{}' typeCode='{}'".format(
+            instanceId,
+            dataId,
+            strategy,
+            strategyParams,
+            distanceFunction,
+            typeCode))
     url = baseUrl + api['data']['scatter'].format(**{
         'instanceId': instanceId,
         'dataId': dataId
@@ -146,6 +169,7 @@ def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, typ
                              data={
                                  'strategy': strategy,
                                  'strategyParams': strategyParams,
+                                 'distanceFunction': distanceFunction,
                                  'typeCode': typeCode
                              }
                              ).text
@@ -324,7 +348,8 @@ def resultsStats(executionId):
     pprint.pprint(formatted)
 
 
-def saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None, executionId=None):
+def saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None,
+             partitioningStrategyId=None, executionId=None):
     config = configparser.RawConfigParser()
     config['onenode' if oneNode else 'last'] = {
         'instance_id': instanceId,
@@ -332,6 +357,7 @@ def saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distance
         'train_data_id': trainDataId,
         'test_data_id': testDataId,
         'distance_function_id': distanceFunctionId,
+        'partitioning_strategy_id': partitioningStrategyId,
         'execution_id': executionId
     }
     try:
@@ -358,7 +384,8 @@ def setupDefault(workers=2, cpu=2, memory=2, oneNode=False):
 
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
-    distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
+    distanceFunctionId = loadDistanceFunction('./samples/equality-distance.jar')
+    partitioningStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar')
     instanceId = createInstance(workers, cpu, memory, 10)  # cpu, memory, disk
 
     print('Wait for setup', end='', flush=True)
@@ -368,12 +395,12 @@ def setupDefault(workers=2, cpu=2, memory=2, oneNode=False):
     print('')
 
     broadcastJar(instanceId, algorithmId)
-    scatterData(instanceId, trainDataId, 'uniform', None, 'train')
-    scatterData(instanceId, testDataId, 'dummy', None, 'test')
+    scatterData(instanceId, trainDataId, 'uniform', None, None, 'train')
+    scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
     instanceConfigUpdate(instanceId)
 
-    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
+    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, partitioningStrategyId)
 
 
 def reload(oneNode=False):
@@ -396,20 +423,22 @@ def reload(oneNode=False):
     # trainDataId = loadData('./samples/iris_numeric.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     # testDataId = loadData('./samples/iris_numeric.test', 4, ',', None)
-    distanceFunctionId = loadDistanceFunction('./samples/equality.jar')
+    distanceFunctionId = loadDistanceFunction('./samples/equality-distance.jar')
+    partitioningStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar')
 
     broadcastJar(instanceId, algorithmId)
     if oneNode:
-        scatterData(instanceId, trainDataId, 'uniform', None, 'train')
+        scatterData(instanceId, trainDataId, 'uniform', None, None, 'train')
     else:
-        scatterData(instanceId, trainDataId, 'uniform', None, 'train')
-        # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', 'train')
+        scatterData(instanceId, trainDataId, 'uniform', None, None, 'train')
+        # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', None, 'train')
+        # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train')
 
-    scatterData(instanceId, testDataId, 'dummy', None, 'test')
+    scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
     instanceConfigUpdate(instanceId)
 
-    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
+    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, partitioningStrategyId)
 
 
 def instStatus(oneNode=False):
@@ -432,12 +461,14 @@ def execute(oneNode=False):
     trainDataId = last.get('train_data_id')
     testDataId = last.get('test_data_id')
     distanceFunctionId = last.get('distance_function_id')
+    partitioningStrategyId = last.get('partitioning_strategy_id')
 
     executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId)
     # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, 'euclidean')
     # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
 
-    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, executionId)
+    saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId, partitioningStrategyId,
+             executionId)
 
 
 def status(oneNode=False):
@@ -491,7 +522,7 @@ def clear():
 
 if len(sys.argv) < 2:
     print(
-        '  Provide command! [setup, inststatus, confupdate, clear, reload, execute, status, logs, lastlog, results, validate, stats, info [data, alg, func, exec, inst]]')
+        '  Provide command! [setup, inststatus, confupdate, clear, reload, execute, status, logs, lastlog, results, validate, stats, info [data, alg, func, strgy, exec, inst]]')
     sys.exit(1)
 
 command = sys.argv[1]
@@ -528,7 +559,7 @@ elif command == 'validate':
     validate(oneNode)
 elif command == 'info':
     if len(sys.argv) < 3:
-        print('  Provide info arg [data, func, alg, exec, inst]')
+        print('  Provide info arg [data, func, stgry, alg, exec, inst]')
         sys.exit(1)
 
     arg = sys.argv[2]
@@ -536,6 +567,8 @@ elif command == 'info':
         dataInfo()
     elif arg == 'func':
         functionsInfo()
+    elif arg == 'strgy':
+        strategiesInfo()
     elif arg == 'alg':
         algorithmInfo()
     elif arg == 'exec':

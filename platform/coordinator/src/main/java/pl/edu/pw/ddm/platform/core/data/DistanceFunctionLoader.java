@@ -5,6 +5,7 @@ import java.util.Map;
 
 import lombok.Value;
 import org.springframework.web.multipart.MultipartFile;
+import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 
 interface DistanceFunctionLoader {
 
@@ -13,6 +14,8 @@ interface DistanceFunctionLoader {
     File load(String distanceFunctionId);
 
     DistanceFunctionDesc getDistanceFunctionDesc(String distanceFunctionId);
+
+    DistanceFunction getDistanceFunctionImpl(String distanceFunctionNameOrId);
 
     Map<String, DistanceFunctionDesc> allDistanceFunctionInfo();
 

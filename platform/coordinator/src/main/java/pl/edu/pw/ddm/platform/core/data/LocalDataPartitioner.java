@@ -19,9 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import pl.edu.pw.ddm.platform.core.data.strategy.PartitionerStrategy;
 import pl.edu.pw.ddm.platform.core.instance.InstanceAgentAddressFactory;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
+import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
+import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
+import pl.edu.pw.ddm.platform.strategies.PartitionerStrategies;
+import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
 
 @Slf4j
 @Service
@@ -30,18 +33,27 @@ class LocalDataPartitioner implements DataPartitioner {
     // TODO map of current scattered data
 
     private final RestTemplate restTemplate;
+    private final DistanceFunctionLoader distanceFunctionLoader;
+    private final PartitionerStrategyLoader partitionerStrategyLoader;
 
     @SneakyThrows
     @Override
-    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String params) {
-        log.info("Scattering train data '{}' with strategy '{}' into nodes '{}'.", dataDesc, strategy, addresses);
+    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String distanceFunctionId, String params) {
+        log.info("Scattering train data '{}' with strategy '{}' and distance func '{}' into nodes '{}'.", dataDesc, strategy, distanceFunctionId, addresses);
 
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)
                 .collect(Collectors.toList());
 
+        var fileCreator = new TempFileCreator();
+        var strategyParams = PartitionerStrategy.StrategyParameters.builder()
+                .partitions(workers.size())
+                .customParams(params)
+                .distanceFunction(loadDistanceFunction(distanceFunctionId))
+                .seed(null) // TODO make it use
+                .build();
         List<Path> tempFiles = deductStrategy(strategy)
-                .partition(DataDescMapper.INSTANCE.map(dataDesc), workers.size(), dataDesc.getNumberOfSamples(), params);
+                .partition(DataDescMapper.INSTANCE.mapStrategy(dataDesc), strategyParams, fileCreator);
 
         sendDataToNodes(workers, dataDesc, tempFiles, "train");
 
@@ -54,14 +66,22 @@ class LocalDataPartitioner implements DataPartitioner {
 
     @SneakyThrows
     @Override
-    public String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc) {
+    public String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String distanceFunctionId) {
         log.info("Scattering test data '{}' equally into nodes '{}'.", dataDesc, addresses);
 
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)
                 .collect(Collectors.toList());
-        List<Path> tempFiles = PartitionerStrategy.STRATEGIES.get(PartitionerStrategy.Strategies.UNIFORM.getCode())
-                .partition(DataDescMapper.INSTANCE.map(dataDesc), workers.size(), dataDesc.getNumberOfSamples(), null);
+
+        var fileCreator = new TempFileCreator();
+        var strategyParams = PartitionerStrategy.StrategyParameters.builder()
+                .partitions(workers.size())
+                .distanceFunction(loadDistanceFunction(distanceFunctionId))
+                .customParams(null)
+                .seed(null)
+                .build();
+        List<Path> tempFiles = new UniformPartitionerStrategy()
+                .partition(DataDescMapper.INSTANCE.mapStrategy(dataDesc), strategyParams, fileCreator);
 
         sendDataToNodes(workers, dataDesc, tempFiles, "test");
 
@@ -74,12 +94,23 @@ class LocalDataPartitioner implements DataPartitioner {
 
     private PartitionerStrategy deductStrategy(String strategy) {
         if (strategy == null) {
-            log.info("Null strategy chosen so returning default one: '{}'.", PartitionerStrategy.Strategies.DEFAULT.getCode());
-            return PartitionerStrategy.STRATEGIES.get(PartitionerStrategy.Strategies.DEFAULT.getCode());
+            log.info("Null strategy chosen so returning default one: '{}'.", PartitionerStrategies.UNIFORM);
+            return new UniformPartitionerStrategy();
         }
-        PartitionerStrategy partitioner = PartitionerStrategy.STRATEGIES.get(strategy);
-        Preconditions.checkNotNull(partitioner, "Unknown strategy '%s' provided.", strategy);
+
+        // TODO add more checks
+        PartitionerStrategy partitioner = partitionerStrategyLoader.getStrategyImpl(strategy);
+        Preconditions.checkNotNull(partitioner, "Unknown strategy id '%s' provided.", strategy);
         return partitioner;
+    }
+
+    private DistanceFunction loadDistanceFunction(String distanceFunctionId) {
+        if (distanceFunctionId == null) {
+            log.debug("No distance function provided.");
+            return null;
+        } else {
+            return distanceFunctionLoader.getDistanceFunctionImpl(distanceFunctionId);
+        }
     }
 
     private void sendDataToNodes(List<InstanceAddrDto> workers, DataLoader.DataDesc dataDesc, List<Path> tempFiles, String typeCode) {

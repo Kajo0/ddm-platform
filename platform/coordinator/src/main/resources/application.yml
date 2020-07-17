@@ -13,6 +13,7 @@ paths:
   root: /coordinator
   algorithms: ${paths.root}/algorithms
   distance-functions: ${paths.root}/distance_functions
+  partitioner-strategies: ${paths.root}/partitioner_strategies
   datasets: ${paths.root}/datasets
   logs:
     path: ${paths.root}/logs

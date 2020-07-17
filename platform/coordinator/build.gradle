@@ -7,6 +7,7 @@ plugins {
 
 group = 'pl.edu.pw.ddm.platform'
 version = '0.0.1-SNAPSHOT'
+
 sourceCompatibility = JavaVersion.VERSION_12
 
 configurations {
@@ -53,6 +54,7 @@ dependencies {
     implementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
     implementation 'pl.edu.pw.ddm.platform:distance-functions:0.0.1-SNAPSHOT'
     implementation 'pl.edu.pw.ddm.platform:metrics:0.0.1-SNAPSHOT'
+    implementation 'pl.edu.pw.ddm.platform:strategies:0.0.1-SNAPSHOT'
     implementation 'org.reflections:reflections:0.9.12'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {

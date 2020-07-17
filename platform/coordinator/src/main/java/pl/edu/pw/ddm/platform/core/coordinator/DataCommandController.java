@@ -1,5 +1,7 @@
 package pl.edu.pw.ddm.platform.core.coordinator;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,18 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.pw.ddm.platform.core.data.DataFacade;
 import pl.edu.pw.ddm.platform.core.data.DistanceFunctionFacade;
+import pl.edu.pw.ddm.platform.core.data.PartitioningStrategyFacade;
 
 @RestController
 @RequestMapping("coordinator/command/data")
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class DataCommandController {
 
     private final DataFacade dataFacade;
     private final DistanceFunctionFacade distanceFunctionFacade;
-
-    DataCommandController(DataFacade dataFacade, DistanceFunctionFacade distanceFunctionFacade) {
-        this.dataFacade = dataFacade;
-        this.distanceFunctionFacade = distanceFunctionFacade;
-    }
+    private final PartitioningStrategyFacade partitioningStrategyFacade;
 
     // TODO add lazy loading used for scatter
 
@@ -68,12 +68,13 @@ class DataCommandController {
     String scatterData(@PathVariable String instanceId,
                        @PathVariable String dataId,
                        @RequestParam("strategy") String strategy,
+                       @RequestParam(value = "distanceFunction", required = false) String distanceFunction,
                        @RequestParam(value = "strategyParams", required = false) String strategyParams,
                        @RequestParam("typeCode") String typeCode) {
-        // TODO advance parametrization eg distance function
         var req = DataFacade.ScatterRequest.builder()
                 .instanceId(instanceId)
                 .strategy(strategy)
+                .distanceFunction(distanceFunction)
                 .strategyParams(strategyParams)
                 .dataId(dataId)
                 .typeCode(typeCode)
@@ -91,6 +92,12 @@ class DataCommandController {
         return distanceFunctionFacade.broadcast(req);
     }
 
+    @PostMapping("partitioning-strategy/load/file")
+    String loadPartitioningFile(@RequestParam("partitioningStrategyFile") MultipartFile partitioningStrategyFile) {
+        var req = PartitioningStrategyFacade.LoadRequest.of(partitioningStrategyFile);
+        return partitioningStrategyFacade.load(req);
+    }
+
     @GetMapping(value = "info", produces = MediaType.APPLICATION_JSON_VALUE)
     String loadedDataInfo() {
         return dataFacade.info();
@@ -99,6 +106,11 @@ class DataCommandController {
     @GetMapping(value = "info/distance-functions", produces = MediaType.APPLICATION_JSON_VALUE)
     String loadedDistanceFunctions() {
         return distanceFunctionFacade.info();
+    }
+
+    @GetMapping(value = "info/partitioning-strategies", produces = MediaType.APPLICATION_JSON_VALUE)
+    String loadedPartitioningStrategies() {
+        return partitioningStrategyFacade.info();
     }
 
 }

@@ -47,9 +47,9 @@ public class DataFacade {
 
         switch (DataLoader.TypeCode.fromCode(request.typeCode)) {
             case TRAIN:
-                return dataPartitioner.scatterTrain(addr, data, request.strategy, request.strategyParams);
+                return dataPartitioner.scatterTrain(addr, data, request.strategy, request.distanceFunction, request.strategyParams);
             case TEST:
-                return dataPartitioner.scatterTestEqually(addr, data);
+                return dataPartitioner.scatterTestEqually(addr, data, request.distanceFunction);
 
             default:
                 throw new IllegalStateException("should not be not accessed");
@@ -107,6 +107,8 @@ public class DataFacade {
         @NonNull
         private final String strategy;
 
+        // name or id
+        private final String distanceFunction;
         private final String strategyParams;
 
         @NonNull

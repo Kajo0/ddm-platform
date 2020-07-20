@@ -66,11 +66,11 @@ public class NodeDataProvider implements DataProvider {
     }
 
     private void loadTraining() {
-        trainingSet = loadCsvData(dataPath);
+        trainingSet = dataPath == null ? Collections.emptyList() : loadCsvData(dataPath);
     }
 
     private void loadTest() {
-        testSet = loadCsvData(testDataPath);
+        testSet = testDataPath == null ? Collections.emptyList() : loadCsvData(testDataPath);
     }
 
     private void loadAll() {

@@ -132,6 +132,9 @@ class LocalResultsCollector implements ResultsCollector {
         }
 
         byte[] body = response.getBody();
+        if (body == null) {
+            body = new byte[0];
+        }
         log.debug("Collect results response length: '{}'.", body.length);
 
         return NodeResultsPair.of(addressDto.getId(), body);

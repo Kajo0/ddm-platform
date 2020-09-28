@@ -136,6 +136,8 @@ public class AppRunner {
                 .setConf("spark.blockManager.port", sparkBlockManagerPort)
                 .setConf("spark.shuffle.io.connectionTimeout", "1s")
                 .setConf("spark.shuffle.io.maxRetries", "1")
+                .setConf("spark.network.timeout", "10000000")
+                .setConf("spark.executor.heartbeatInterval", "10000000")
                 .setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(params.cpuCount))
                 .setConf(SparkLauncher.EXECUTOR_MEMORY, params.memoryInGb + "g");
 

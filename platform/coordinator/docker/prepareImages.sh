@@ -1,11 +1,6 @@
 #!/bin/bash
 
-function checkError() {
-  if [ $? -eq 1 ]; then
-    echo "ERROR"
-    exit 1
-  fi
-}
+source ../../common-func.sh
 
 set -x
 
@@ -17,7 +12,7 @@ cd ../../model-interface
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -
 
-cd ../../algorithms/distance-functions
+cd ../../distance-functions
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -
 

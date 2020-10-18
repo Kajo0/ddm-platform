@@ -56,7 +56,7 @@ public class RandomClassifier implements LocalProcessor<LModel, GModel, Classifi
                 .map(LModel::getLocalLabels)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
-        System.out.println("Algorithm 2. stage global process- all labels: " + allLabels);
+        System.out.println("Algorithm 2. stage global process - all labels: " + allLabels);
         return new GModel(allLabels);
     }
 

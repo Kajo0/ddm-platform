@@ -10,7 +10,7 @@ spring:
       max-request-size: 1000MB
 
 paths:
-  root: /coordinator
+  root: /tmp/coordinator
   algorithms: ${paths.root}/algorithms
   distance-functions: ${paths.root}/distance_functions
   partitioner-strategies: ${paths.root}/partitioner_strategies

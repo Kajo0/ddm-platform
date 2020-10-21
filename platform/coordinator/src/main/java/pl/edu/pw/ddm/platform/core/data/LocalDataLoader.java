@@ -12,8 +12,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
 import lombok.NonNull;
@@ -38,13 +36,13 @@ class LocalDataLoader implements DataLoader {
 
     @SneakyThrows
     @Override
-    public String save(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
+    public String save(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings) {
         var id = IdGenerator.generate(uri);
         String name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
         // TODO improve without copy
         File file = File.createTempFile(name, "tmp");
         FileUtils.copyURLToFile(new URL(uri), file);
-        DataDesc data = saveAndPrepareDataDesc(id, FileUtils.readFileToByteArray(file), name, separator, idIndex, labelIndex, deductType);
+        DataDesc data = saveAndPrepareDataDesc(id, FileUtils.readFileToByteArray(file), name, separator, idIndex, labelIndex, deductType, vectorizeStrings);
 
         if (dataMap.put(id, data) != null) {
             log.warn("Loaded probably the same data as before with id '{}'.", id);
@@ -55,9 +53,9 @@ class LocalDataLoader implements DataLoader {
 
     @SneakyThrows
     @Override
-    public String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType) {
+    public String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings) {
         var id = IdGenerator.generate(file.getOriginalFilename() + file.getSize());
-        DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), separator, idIndex, labelIndex, deductType);
+        DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), separator, idIndex, labelIndex, deductType, vectorizeStrings);
 
         if (dataMap.put(id, data) != null) {
             log.warn("Loaded probably the same data as before with id '{}'.", id);
@@ -95,29 +93,21 @@ class LocalDataLoader implements DataLoader {
         return dataMap;
     }
 
-    private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, String separator, Integer idIndex, Integer labelIndex, boolean deductType) throws IOException {
+    private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings) throws IOException {
         // TODO check type inside file
         String type = FilenameUtils.getExtension(name);
         Path dataPath = Paths.get(datasetsPath, id + "." + type);
         Files.write(dataPath, bytes);
 
-        if (idIndex == null) {
-            indexData(dataPath, separator);
+        boolean addIndex = idIndex == null;
+        new LocalDatasetProcessor(addIndex, vectorizeStrings, dataPath, separator, idIndex, labelIndex).process();
+        if (addIndex) {
             idIndex = 0;
             ++labelIndex;
         }
 
-        return new DataDescriber(dataPath, id, name, separator, idIndex, labelIndex, deductType)
+        return new DataDescriber(dataPath, id, name, separator, idIndex, labelIndex, deductType, !deductType) // TODO FIXME force all numeric
                 .describe();
-    }
-
-    private void indexData(Path dataPath, String separator) throws IOException {
-        int[] i = new int[]{0};
-        String lines = Files.lines(dataPath)
-                .filter(Predicate.not(String::isBlank))
-                .map(l -> (i[0]++) + separator + l)
-                .collect(Collectors.joining(System.lineSeparator()));
-        Files.writeString(dataPath, lines);
     }
 
     @PostConstruct

@@ -30,14 +30,17 @@ class DataCommandController {
     String loadDataFromUri(@RequestParam String dataUri,
                            @RequestParam String separator,
                            @RequestParam(required = false) Integer idIndex,
-                           @RequestParam Integer labelIndex) {
+                           @RequestParam Integer labelIndex,
+                           @RequestParam(required = false, defaultValue = "false") Boolean vectorizeStrings,
+                           @RequestParam(required = false, defaultValue = "true") boolean deductType) {
         // TODO advance parametrization
         var req = DataFacade.LoadRequest.builder()
                 .uri(dataUri)
                 .separator(separator)
                 .idIndex(idIndex)
                 .labelIndex(labelIndex)
-                .deductType(true)
+                .deductType(deductType)
+                .vectorizeStrings(vectorizeStrings)
                 .build();
         return dataFacade.load(req);
     }
@@ -46,14 +49,17 @@ class DataCommandController {
     String loadDataFile(@RequestParam("dataFile") MultipartFile dataFile,
                         @RequestParam String separator,
                         @RequestParam(required = false) Integer idIndex,
-                        @RequestParam Integer labelIndex) {
+                        @RequestParam Integer labelIndex,
+                        @RequestParam(required = false, defaultValue = "false") Boolean vectorizeStrings,
+                        @RequestParam(required = false, defaultValue = "true") boolean deductType) {
         // TODO advance parametrization eg attr types
         var req = DataFacade.LoadRequest.builder()
                 .file(dataFile)
                 .separator(separator)
                 .idIndex(idIndex)
                 .labelIndex(labelIndex)
-                .deductType(true)
+                .deductType(deductType)
+                .vectorizeStrings(vectorizeStrings)
                 .build();
         return dataFacade.load(req);
     }

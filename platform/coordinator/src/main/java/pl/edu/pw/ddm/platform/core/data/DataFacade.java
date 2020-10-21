@@ -28,9 +28,9 @@ public class DataFacade {
 
     public String load(@NonNull LoadRequest request) {
         if (request.uri != null) {
-            return dataLoader.save(request.uri, request.separator, request.idIndex, request.labelIndex, request.deductType);
+            return dataLoader.save(request.uri, request.separator, request.idIndex, request.labelIndex, request.deductType, request.vectorizeStrings);
         } else if (request.file != null) {
-            return dataLoader.save(request.file, request.separator, request.idIndex, request.labelIndex, request.deductType);
+            return dataLoader.save(request.file, request.separator, request.idIndex, request.labelIndex, request.deductType, request.vectorizeStrings);
         } else {
             throw new IllegalStateException("No URI or file provided to load.");
         }
@@ -93,6 +93,8 @@ public class DataFacade {
 
         @Builder.Default
         private final boolean deductType = true;
+
+        private final boolean vectorizeStrings;
     }
 
     @Builder

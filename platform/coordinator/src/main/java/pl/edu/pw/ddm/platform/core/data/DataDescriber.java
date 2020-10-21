@@ -28,6 +28,7 @@ class DataDescriber {
     private final Integer idIndex;
     private final Integer labelIndex;
     private final boolean deductType;
+    private final boolean allNumeric;
 
     DataDesc describe() throws IOException {
         var lines = countSamples();
@@ -36,10 +37,10 @@ class DataDescriber {
                 .length();
         var attributesCount = countAttributes();
         var location = new DataDesc.DataLocation(List.of(path.toString()), List.of(size), List.of(lines));
-        var types = deductAttributesTypes(attributesCount);
+        var types = deductAllTypes();
 
-        return new DataDesc(id, name, type, size, lines, separator, idIndex, labelIndex, attributesCount, types, location);
-
+        return new DataDesc(id, name, type, size, lines, separator, idIndex, labelIndex, attributesCount, types,
+                location);
     }
 
     private long countSamples() throws IOException {
@@ -55,7 +56,8 @@ class DataDescriber {
                 .findFirst()
                 .map(l -> l.split(separator))
                 .map(c -> c.length)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot count attributes by splitting first line using separator: " + separator));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Cannot count attributes by splitting first line using separator: " + separator));
 
         if (idIndex != null) {
             --count;
@@ -67,7 +69,7 @@ class DataDescriber {
         return count;
     }
 
-    private String[] deductAttributesTypes(int attributesCount) throws IOException {
+    private String[] deductAllTypes() throws IOException {
         if (deductType) {
             log.debug("Deducting type for data '{}'.", path.getFileName());
             return Files.lines(path)
@@ -75,9 +77,25 @@ class DataDescriber {
                     .map(l -> l.split(separator))
                     .map(this::deductLine)
                     .reduce(this::reduce)
-                    .orElseThrow(() -> new IllegalArgumentException("Cannot infer attribute types from data file: " + path));
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Cannot infer attribute types from data file: " + path));
+        }
+
+        int columns = Files.lines(path)
+                .limit(1)
+                .map(l -> l.split(separator))
+                .map(a -> a.length)
+                .findFirst()
+                .orElse(0);
+
+        if (allNumeric) {
+            String[] result = new String[columns];
+            for (int i = 0; i < columns; ++i) {
+                result[i] = "numeric";
+            }
+            return result;
         } else {
-            return new String[attributesCount];
+            return new String[columns];
         }
     }
 
@@ -100,11 +118,15 @@ class DataDescriber {
 
     private String deductAttr(String attr) {
         // TODO maybe constant with missing value -> '?' => numeric_with_missing etc
-        if (Ints.tryParse(attr) != null || Doubles.tryParse(attr) != null) {
+        if (isNumeric(attr)) {
             return "numeric";
         } else {
             return "nominal";
         }
+    }
+
+    static boolean isNumeric(String value) {
+        return Ints.tryParse(value) != null || Doubles.tryParse(value) != null;
     }
 
 }

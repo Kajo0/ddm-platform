@@ -38,8 +38,8 @@ class LocalDataPartitioner implements DataPartitioner {
 
     @SneakyThrows
     @Override
-    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String distanceFunctionId, String params) {
-        log.info("Scattering train data '{}' with strategy '{}' and distance func '{}' into nodes '{}'.", dataDesc, strategy, distanceFunctionId, addresses);
+    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String distanceFunctionId, String params, Long seed) {
+        log.info("Scattering train data '{}' with strategy '{}' and distance func '{}' into nodes '{}' with seed '{}'.", dataDesc, strategy, distanceFunctionId, addresses, seed);
 
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)
@@ -50,15 +50,15 @@ class LocalDataPartitioner implements DataPartitioner {
                 .partitions(workers.size())
                 .customParams(params)
                 .distanceFunction(loadDistanceFunction(distanceFunctionId))
-                .seed(null) // TODO make it use
+                .seed(seed)
                 .build();
         List<Path> tempFiles = deductStrategy(strategy)
                 .partition(DataDescMapper.INSTANCE.mapStrategy(dataDesc), strategyParams, fileCreator);
 
         sendDataToNodes(workers, dataDesc, tempFiles, "train");
-
+        fileCreator.cleanup();
         for (Path tempFile : tempFiles) {
-            Files.delete(tempFile);
+            Files.deleteIfExists(tempFile);
         }
 
         return "ok_process-id";
@@ -84,9 +84,9 @@ class LocalDataPartitioner implements DataPartitioner {
                 .partition(DataDescMapper.INSTANCE.mapStrategy(dataDesc), strategyParams, fileCreator);
 
         sendDataToNodes(workers, dataDesc, tempFiles, "test");
-
+        fileCreator.cleanup();
         for (Path tempFile : tempFiles) {
-            Files.delete(tempFile);
+            Files.deleteIfExists(tempFile);
         }
 
         return "ok_process-id";

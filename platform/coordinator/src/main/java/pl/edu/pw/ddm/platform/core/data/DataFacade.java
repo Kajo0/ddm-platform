@@ -72,7 +72,7 @@ public class DataFacade {
         switch (DataLoader.TypeCode.fromCode(request.typeCode)) {
             case TRAIN:
                 return dataPartitioner.scatterTrain(addr, data, request.strategy, request.distanceFunction,
-                        request.strategyParams);
+                        request.strategyParams, request.seed);
             case TEST:
                 return dataPartitioner.scatterTestEqually(addr, data, request.distanceFunction);
 
@@ -152,6 +152,8 @@ public class DataFacade {
 
         @NonNull
         private final String typeCode;
+
+        private final Long seed;
     }
 
     @Value(staticConstructor = "of")

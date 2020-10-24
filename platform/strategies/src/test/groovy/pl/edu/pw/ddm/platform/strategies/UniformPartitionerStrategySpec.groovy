@@ -28,9 +28,6 @@ class UniformPartitionerStrategySpec extends Specification {
 
     def "should prepare uniform data distribution"() {
         setup:
-        Collections.r = new Random(10);
-
-        and:
         def partitioner = new UniformPartitionerStrategy()
         def dataDesc = new PartitionerStrategy.DataDesc(
                 numberOfSamples: 9,
@@ -38,6 +35,7 @@ class UniformPartitionerStrategySpec extends Specification {
         )
         def params = PartitionerStrategy.StrategyParameters.builder()
                 .partitions(3)
+                .seed(10)
                 .build()
 
         when:

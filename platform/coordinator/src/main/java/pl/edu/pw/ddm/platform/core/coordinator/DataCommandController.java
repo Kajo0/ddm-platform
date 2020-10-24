@@ -81,10 +81,11 @@ class DataCommandController {
     @PostMapping("scatter/{instanceId}/{dataId}")
     String scatterData(@PathVariable String instanceId,
                        @PathVariable String dataId,
-                       @RequestParam("strategy") String strategy,
-                       @RequestParam(value = "distanceFunction", required = false) String distanceFunction,
-                       @RequestParam(value = "strategyParams", required = false) String strategyParams,
-                       @RequestParam("typeCode") String typeCode) {
+                       @RequestParam String strategy,
+                       @RequestParam(required = false) String distanceFunction,
+                       @RequestParam(required = false) String strategyParams,
+                       @RequestParam String typeCode,
+                       @RequestParam(required = false) Long seed) {
         var req = DataFacade.ScatterRequest.builder()
                 .instanceId(instanceId)
                 .strategy(strategy)
@@ -92,6 +93,7 @@ class DataCommandController {
                 .strategyParams(strategyParams)
                 .dataId(dataId)
                 .typeCode(typeCode)
+                .seed(seed)
                 .build();
         return dataFacade.scatter(req);
     }

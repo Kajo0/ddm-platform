@@ -7,6 +7,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Iterables;
@@ -38,7 +39,11 @@ public class UniformPartitionerStrategy implements PartitionerStrategy {
                 shuffleIndices.add(i);
             }
         }
-        Collections.shuffle(shuffleIndices);
+        Random rand = new Random();
+        if (strategyParameters.getSeed() != null) {
+            rand = new Random(strategyParameters.getSeed());
+        }
+        Collections.shuffle(shuffleIndices, rand);
 
         AtomicInteger i = new AtomicInteger(0);
         // TODO handle already partitioned files

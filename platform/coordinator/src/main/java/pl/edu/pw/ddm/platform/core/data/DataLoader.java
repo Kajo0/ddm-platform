@@ -11,15 +11,28 @@ import org.springframework.web.multipart.MultipartFile;
 
 interface DataLoader {
 
-    String save(String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings);
+    String save(String uri, String separator, Integer idIndex, Integer labelIndex, DataOptions dataOptions);
 
-    String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings);
+    List<String> saveExtractTrain(String uri, String separator, Integer idIndex, Integer labelIndex, DataOptions dataOptions);
+
+    String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, DataOptions dataOptions);
+
+    List<String> saveExtractTrain(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, DataOptions dataOptions);
 
     File load(String dataId);
 
     DataDesc getDataDesc(String datasetId);
 
     Map<String, DataDesc> allDataInfo();
+
+    @Value
+    class DataOptions {
+
+        private boolean deductType;
+        private boolean vectorizeStrings;
+        private Integer extractTrainPercentage;
+        private Long seed;
+    }
 
     @Value
     class DataDesc {

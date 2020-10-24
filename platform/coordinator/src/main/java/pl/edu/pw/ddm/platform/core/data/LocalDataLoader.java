@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,32 +37,116 @@ class LocalDataLoader implements DataLoader {
 
     @SneakyThrows
     @Override
-    public String save(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings) {
+    public String save(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex,
+            DataOptions dataOptions) {
         var id = IdGenerator.generate(uri);
-        String name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
-        // TODO improve without copy
-        File file = File.createTempFile(name, "tmp");
-        FileUtils.copyURLToFile(new URL(uri), file);
-        DataDesc data = saveAndPrepareDataDesc(id, FileUtils.readFileToByteArray(file), name, separator, idIndex, labelIndex, deductType, vectorizeStrings);
+        var name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
 
-        if (dataMap.put(id, data) != null) {
-            log.warn("Loaded probably the same data as before with id '{}'.", id);
-        }
+        // TODO improve without copy
+        var fileCreator = new TempFileCreator();
+        var file = fileCreator.create(name)
+                .toFile();
+        FileUtils.copyURLToFile(new URL(uri), file);
+        var data = saveAndPrepareDataDesc(id, FileUtils.readFileToByteArray(file), name, separator, idIndex, labelIndex,
+                dataOptions);
+
+        updateDataMap(id, data);
+        fileCreator.cleanup();
 
         return id;
     }
 
+    // TODO prepare dto for response
     @SneakyThrows
     @Override
-    public String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings) {
-        var id = IdGenerator.generate(file.getOriginalFilename() + file.getSize());
-        DataDesc data = saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), separator, idIndex, labelIndex, deductType, vectorizeStrings);
+    public List<String> saveExtractTrain(@NonNull String uri, String separator, Integer idIndex, Integer labelIndex,
+            DataOptions dataOptions) {
+        var trainId = IdGenerator.generate(uri + TypeCode.TRAIN.name());
+        var testId = IdGenerator.generate(uri + TypeCode.TEST.name());
+        var name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
 
-        if (dataMap.put(id, data) != null) {
-            log.warn("Loaded probably the same data as before with id '{}'.", id);
-        }
+        // TODO improve without copy
+        var fileCreator = new TempFileCreator();
+        var path = fileCreator.create(name);
+        FileUtils.copyURLToFile(new URL(uri), path.toFile());
+
+        var extractor = new LocalDatasetTrainExtractor(path, separator, labelIndex, dataOptions);
+        extractor.extract();
+        var trainFile = extractor.getTrainFile()
+                .toFile();
+        var testFile = extractor.getTestFile()
+                .toFile();
+
+        var now = System.currentTimeMillis();
+        var trainName = name + TypeCode.TRAIN.name() + now;
+        var testName = name + TypeCode.TEST.name() + now;
+        var trainData =
+                saveAndPrepareDataDesc(trainId, FileUtils.readFileToByteArray(trainFile), trainName, separator, idIndex,
+                        labelIndex, dataOptions);
+        var testData =
+                saveAndPrepareDataDesc(testId, FileUtils.readFileToByteArray(testFile), testName, separator, idIndex,
+                        labelIndex, dataOptions);
+
+        // TODO FIXME not necessarily cause of seed
+        updateDataMap(trainId, trainData);
+        updateDataMap(testId, testData);
+        extractor.cleanup();
+        fileCreator.cleanup();
+
+        return List.of(trainId, testId);
+    }
+
+    @SneakyThrows
+    @Override
+    public String save(MultipartFile file, String separator, Integer idIndex, Integer labelIndex,
+            DataOptions dataOptions) {
+        var id = IdGenerator.generate(file.getOriginalFilename() + file.getSize());
+        DataDesc data =
+                saveAndPrepareDataDesc(id, file.getBytes(), file.getOriginalFilename(), separator, idIndex, labelIndex,
+                        dataOptions);
+        updateDataMap(id, data);
 
         return id;
+    }
+
+    // TODO prepare dto for response
+    @SneakyThrows
+    @Override
+    public List<String> saveExtractTrain(MultipartFile file, String separator, Integer idIndex, Integer labelIndex,
+            DataOptions dataOptions) {
+        var uri = file.getOriginalFilename();
+        var name = uri.substring(FilenameUtils.indexOfLastSeparator(uri) + 1);
+        var trainId = IdGenerator.generate(name + TypeCode.TRAIN.name());
+        var testId = IdGenerator.generate(name + TypeCode.TEST.name());
+
+        // TODO improve without copy
+        var fileCreator = new TempFileCreator();
+        var path = fileCreator.create(name);
+        FileUtils.copyToFile(file.getInputStream(), path.toFile());
+
+        var extractor = new LocalDatasetTrainExtractor(path, separator, labelIndex, dataOptions);
+        extractor.extract();
+        var trainFile = extractor.getTrainFile()
+                .toFile();
+        var testFile = extractor.getTestFile()
+                .toFile();
+
+        var now = System.currentTimeMillis();
+        var trainName = name + TypeCode.TRAIN.name() + now;
+        var testName = name + TypeCode.TEST.name() + now;
+        var trainData =
+                saveAndPrepareDataDesc(trainId, FileUtils.readFileToByteArray(trainFile), trainName, separator, idIndex,
+                        labelIndex, dataOptions);
+        var testData =
+                saveAndPrepareDataDesc(testId, FileUtils.readFileToByteArray(testFile), testName, separator, idIndex,
+                        labelIndex, dataOptions);
+
+        // TODO FIXME not necessarily cause of seed
+        updateDataMap(trainId, trainData);
+        updateDataMap(testId, testData);
+        fileCreator.cleanup();
+
+        return List.of(trainId, testId);
     }
 
     @SneakyThrows
@@ -93,21 +178,30 @@ class LocalDataLoader implements DataLoader {
         return dataMap;
     }
 
-    private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, String separator, Integer idIndex, Integer labelIndex, boolean deductType, boolean vectorizeStrings) throws IOException {
+    private DataDesc saveAndPrepareDataDesc(String id, byte[] bytes, String name, String separator, Integer idIndex,
+            Integer labelIndex, DataOptions dataOptions) throws IOException {
         // TODO check type inside file
         String type = FilenameUtils.getExtension(name);
         Path dataPath = Paths.get(datasetsPath, id + "." + type);
         Files.write(dataPath, bytes);
 
         boolean addIndex = idIndex == null;
-        new LocalDatasetProcessor(addIndex, vectorizeStrings, dataPath, separator, idIndex, labelIndex).process();
+        new LocalDatasetProcessor(addIndex, dataOptions.isVectorizeStrings(), dataPath, separator, idIndex,
+                labelIndex).process();
         if (addIndex) {
             idIndex = 0;
             ++labelIndex;
         }
 
-        return new DataDescriber(dataPath, id, name, separator, idIndex, labelIndex, deductType, !deductType) // TODO FIXME force all numeric
+        return new DataDescriber(dataPath, id, name, separator, idIndex, labelIndex, dataOptions.isDeductType(),
+                !dataOptions.isDeductType()) // TODO FIXME force all numeric
                 .describe();
+    }
+
+    private void updateDataMap(String dataId, DataDesc dataDesc) {
+        if (dataMap.put(dataId, dataDesc) != null) {
+            log.warn("Loaded probably the same data as before with id '{}'.", dataId);
+        }
     }
 
     @PostConstruct
@@ -119,7 +213,8 @@ class LocalDataLoader implements DataLoader {
     @PreDestroy
     void destroy() {
         // TODO disable for persistent config
-        log.info("PreDestroy " + this.getClass().getSimpleName());
+        log.info("PreDestroy " + this.getClass()
+                .getSimpleName());
         dataMap.values()
                 .stream()
                 .map(DataDesc::getLocation)

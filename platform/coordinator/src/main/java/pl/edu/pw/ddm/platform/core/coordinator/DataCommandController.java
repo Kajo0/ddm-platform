@@ -32,7 +32,9 @@ class DataCommandController {
                            @RequestParam(required = false) Integer idIndex,
                            @RequestParam Integer labelIndex,
                            @RequestParam(required = false, defaultValue = "false") Boolean vectorizeStrings,
-                           @RequestParam(required = false, defaultValue = "true") boolean deductType) {
+                           @RequestParam(required = false, defaultValue = "true") boolean deductType,
+                           @RequestParam(required = false) Integer extractTrainPercentage,
+                           @RequestParam(required = false) Long seed) {
         // TODO advance parametrization
         var req = DataFacade.LoadRequest.builder()
                 .uri(dataUri)
@@ -41,8 +43,10 @@ class DataCommandController {
                 .labelIndex(labelIndex)
                 .deductType(deductType)
                 .vectorizeStrings(vectorizeStrings)
+                .extractTrainPercentage(extractTrainPercentage)
+                .seed(seed)
                 .build();
-        return dataFacade.load(req);
+        return invokeLoadRequest(extractTrainPercentage, req);
     }
 
     @PostMapping("load/file")
@@ -51,7 +55,9 @@ class DataCommandController {
                         @RequestParam(required = false) Integer idIndex,
                         @RequestParam Integer labelIndex,
                         @RequestParam(required = false, defaultValue = "false") Boolean vectorizeStrings,
-                        @RequestParam(required = false, defaultValue = "true") boolean deductType) {
+                        @RequestParam(required = false, defaultValue = "true") boolean deductType,
+                        @RequestParam(required = false) Integer extractTrainPercentage,
+                        @RequestParam(required = false) Long seed) {
         // TODO advance parametrization eg attr types
         var req = DataFacade.LoadRequest.builder()
                 .file(dataFile)
@@ -60,8 +66,10 @@ class DataCommandController {
                 .labelIndex(labelIndex)
                 .deductType(deductType)
                 .vectorizeStrings(vectorizeStrings)
+                .extractTrainPercentage(extractTrainPercentage)
+                .seed(seed)
                 .build();
-        return dataFacade.load(req);
+        return invokeLoadRequest(extractTrainPercentage, req);
     }
 
     @PostMapping("distance-function/load/file")
@@ -117,6 +125,16 @@ class DataCommandController {
     @GetMapping(value = "info/partitioning-strategies", produces = MediaType.APPLICATION_JSON_VALUE)
     String loadedPartitioningStrategies() {
         return partitioningStrategyFacade.info();
+    }
+
+    private String invokeLoadRequest(Integer extractTrainPercentage, DataFacade.LoadRequest req) {
+        if (extractTrainPercentage != null) {
+            // FIXME improve or extract separated endpoint
+            var ids = dataFacade.loadExtractTrain(req);
+            return ids.getTrainDataId() + "," + ids.getTestDataId();
+        } else {
+            return dataFacade.load(req);
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package pl.edu.pw.ddm.platform.core.data;
 
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,11 +27,34 @@ public class DataFacade {
         this.dataPartitioner = dataPartitioner;
     }
 
-    public String load(@NonNull LoadRequest request) {
+    public LoadExtractTrainResponse loadExtractTrain(@NonNull LoadRequest request) {
+        var dataOptions =
+                new DataLoader.DataOptions(request.deductType, request.vectorizeStrings, request.extractTrainPercentage,
+                        request.seed);
+
+        List<String> ids;
         if (request.uri != null) {
-            return dataLoader.save(request.uri, request.separator, request.idIndex, request.labelIndex, request.deductType, request.vectorizeStrings);
+            ids = dataLoader.saveExtractTrain(request.uri, request.separator, request.idIndex, request.labelIndex,
+                    dataOptions);
         } else if (request.file != null) {
-            return dataLoader.save(request.file, request.separator, request.idIndex, request.labelIndex, request.deductType, request.vectorizeStrings);
+            ids = dataLoader.saveExtractTrain(request.file, request.separator, request.idIndex, request.labelIndex,
+                    dataOptions);
+        } else {
+            throw new IllegalStateException("No URI or file provided to load.");
+        }
+
+        return LoadExtractTrainResponse.of(ids.get(0), ids.get(1));
+    }
+
+    public String load(@NonNull LoadRequest request) {
+        var dataOptions =
+                new DataLoader.DataOptions(request.deductType, request.vectorizeStrings, request.extractTrainPercentage,
+                        request.seed);
+
+        if (request.uri != null) {
+            return dataLoader.save(request.uri, request.separator, request.idIndex, request.labelIndex, dataOptions);
+        } else if (request.file != null) {
+            return dataLoader.save(request.file, request.separator, request.idIndex, request.labelIndex, dataOptions);
         } else {
             throw new IllegalStateException("No URI or file provided to load.");
         }
@@ -47,7 +71,8 @@ public class DataFacade {
 
         switch (DataLoader.TypeCode.fromCode(request.typeCode)) {
             case TRAIN:
-                return dataPartitioner.scatterTrain(addr, data, request.strategy, request.distanceFunction, request.strategyParams);
+                return dataPartitioner.scatterTrain(addr, data, request.strategy, request.distanceFunction,
+                        request.strategyParams);
             case TEST:
                 return dataPartitioner.scatterTestEqually(addr, data, request.distanceFunction);
 
@@ -95,6 +120,18 @@ public class DataFacade {
         private final boolean deductType = true;
 
         private final boolean vectorizeStrings;
+        private final Integer extractTrainPercentage;
+        private final Long seed;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class LoadExtractTrainResponse {
+
+        @NonNull
+        private final String trainDataId;
+
+        @NonNull
+        private final String testDataId;
     }
 
     @Builder

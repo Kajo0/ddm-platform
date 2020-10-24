@@ -162,6 +162,7 @@ public final class CentralRunner {
             case LOCAL_UPDATE: {
                 statusPersister.updateLocal();
                 localModels = updateLocal(processingStage);
+                summarizer.addLocalModels(localModels);
                 return;
             }
             default:

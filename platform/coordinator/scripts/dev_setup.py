@@ -136,8 +136,14 @@ def strategiesInfo():
     pprint.pprint(formatted)
 
 
-def loadData(path, labelIndex, separator=',', idIndex=None):
-    print("loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}'".format(path, idIndex, labelIndex, separator))
+def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=False, percentage=None):
+    print("loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}' vectorizeStrings='{}' percentage='{}'".format(
+        path,
+        idIndex,
+        labelIndex,
+        separator,
+        vectorizeStrings,
+        percentage))
     url = baseUrl + api['data']['load']
     with open(path, 'rb') as file:
         dataId = requests.post(url,
@@ -145,7 +151,10 @@ def loadData(path, labelIndex, separator=',', idIndex=None):
                                data={
                                    'idIndex': idIndex,
                                    'labelIndex': labelIndex,
-                                   'separator': separator
+                                   'separator': separator,
+                                   'deductType': not vectorizeStrings,
+                                   'vectorizeStrings': vectorizeStrings,
+                                   'extractTrainPercentage': percentage
                                }
                                ).text
         print('  dataId: ' + dataId)
@@ -419,10 +428,19 @@ def reload(oneNode=False):
         # algorithmId = loadJar('./samples/dmeb-2.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')
 
-    trainDataId = loadData('./samples/iris.data', 4, ',', None)
-    # trainDataId = loadData('./samples/iris_numeric.data', 4, ',', None)
-    testDataId = loadData('./samples/iris.test', 4, ',', None)
-    # testDataId = loadData('./samples/iris_numeric.test', 4, ',', None)
+    vectorizeStrings = False
+    # vectorizeStrings = True
+    trainPercentage = None
+    # trainPercentage = 10
+    if not trainPercentage:
+        trainDataId = loadData('./samples/iris.data', 4, ',', None, vectorizeStrings, trainPercentage)
+        # trainDataId = loadData('./samples/iris_numeric.data', 4, ',', None, vectorizeStrings, trainPercentage)
+        testDataId = loadData('./samples/iris.test', 4, ',', None, vectorizeStrings, trainPercentage)
+        # testDataId = loadData('./samples/iris_numeric.test', 4, ',', None, vectorizeStrings, trainPercentage)
+    else:
+        ids = loadData('./samples/iris.data', 4, ',', None, vectorizeStrings, trainPercentage)
+        trainDataId, testDataId = ids.split(',')
+
     distanceFunctionId = loadDistanceFunction('./samples/equality-distance.jar')
     partitioningStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar')
 

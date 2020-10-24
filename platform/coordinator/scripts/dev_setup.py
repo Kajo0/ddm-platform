@@ -161,15 +161,17 @@ def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=Fal
         return dataId
 
 
-def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, distanceFunction=None, typeCode='train'):
+def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, distanceFunction=None, typeCode='train',
+                seed=None):
     print(
-        "scatterData instanceId='{}' dataId='{}' strategy='{}' strategyParams='{}' distanceFunction='{}' typeCode='{}'".format(
+        "scatterData instanceId='{}' dataId='{}' strategy='{}' strategyParams='{}' distanceFunction='{}' typeCode='{}' seed='{}'".format(
             instanceId,
             dataId,
             strategy,
             strategyParams,
             distanceFunction,
-            typeCode))
+            typeCode,
+            seed))
     url = baseUrl + api['data']['scatter'].format(**{
         'instanceId': instanceId,
         'dataId': dataId
@@ -179,7 +181,8 @@ def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, dis
                                  'strategy': strategy,
                                  'strategyParams': strategyParams,
                                  'distanceFunction': distanceFunction,
-                                 'typeCode': typeCode
+                                 'typeCode': typeCode,
+                                 'seed': seed
                              }
                              ).text
     print('  response: ' + response)
@@ -445,12 +448,14 @@ def reload(oneNode=False):
     partitioningStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar')
 
     broadcastJar(instanceId, algorithmId)
+    seed = None
+    # seed = 8008135
     if oneNode:
-        scatterData(instanceId, trainDataId, 'uniform', None, None, 'train')
+        scatterData(instanceId, trainDataId, 'uniform', None, None, 'train', seed)
     else:
-        scatterData(instanceId, trainDataId, 'uniform', None, None, 'train')
-        # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', None, 'train')
-        # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train')
+        scatterData(instanceId, trainDataId, 'uniform', None, None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train', seed)
 
     scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)

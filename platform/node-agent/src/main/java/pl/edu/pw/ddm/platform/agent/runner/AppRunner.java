@@ -138,6 +138,7 @@ public class AppRunner {
                 .setConf("spark.shuffle.io.maxRetries", "1")
                 .setConf("spark.network.timeout", "10000000")
                 .setConf("spark.executor.heartbeatInterval", "10000000")
+                .setConf("spark.rpc.message.maxSize", "512")
                 .setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(params.cpuCount))
                 .setConf(SparkLauncher.EXECUTOR_MEMORY, params.memoryInGb + "g");
 

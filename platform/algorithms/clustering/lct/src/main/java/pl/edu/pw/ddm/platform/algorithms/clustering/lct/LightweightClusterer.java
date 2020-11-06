@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.algorithms.clustering.lct;
 import java.util.Comparator;
 
 import lombok.NoArgsConstructor;
+import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
@@ -27,6 +28,11 @@ public class LightweightClusterer implements Clustering,
     @Override
     public void cluster(SampleProvider sampleProvider, ParamProvider paramProvider, ResultCollector resultCollector) {
         distanceFunction = paramProvider.distanceFunction();
+        if (distanceFunction == null) {
+            System.out.println("No distance function provided - using Euclidean as default.");
+            distanceFunction = new EuclideanDistance();
+        }
+
         sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(), findClosest(sample)));
     }
 

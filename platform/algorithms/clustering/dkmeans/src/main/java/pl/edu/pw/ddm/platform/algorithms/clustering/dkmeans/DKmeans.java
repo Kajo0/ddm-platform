@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
+import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.GlobalProcessor;
@@ -75,7 +76,14 @@ public class DKmeans implements LocalProcessor<LModel, GModel, Clustering>,
 
     @Override
     public void cluster(SampleProvider sampleProvider, ParamProvider paramProvider, ResultCollector resultCollector) {
-        DistanceFunction distanceFunction = paramProvider.distanceFunction();
+        DistanceFunction distanceFunction;
+        if (paramProvider.distanceFunction() != null) {
+            distanceFunction = paramProvider.distanceFunction();
+        } else {
+            System.out.println("No distance function provided - using Euclidean as default.");
+            distanceFunction = new EuclideanDistance();
+        }
+
         sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(), findClosest(distanceFunction, sample)));
     }
 

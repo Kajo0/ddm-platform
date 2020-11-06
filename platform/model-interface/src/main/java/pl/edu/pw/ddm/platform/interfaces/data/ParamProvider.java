@@ -1,5 +1,7 @@
 package pl.edu.pw.ddm.platform.interfaces.data;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ParamProvider {
@@ -21,5 +23,11 @@ public interface ParamProvider {
     }
 
     DistanceFunction distanceFunction();
+
+    default Map<String, String> allParams() {
+        Map<String, String> map = new HashMap<>(1);
+        map.put("not", "implemented");
+        return map;
+    }
 
 }

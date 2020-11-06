@@ -1,5 +1,6 @@
 package pl.edu.pw.ddm.platform.runner.data;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,6 +31,17 @@ public class NodeParamProvider implements ParamProvider {
     @Override
     public DistanceFunction distanceFunction() {
         return distanceFunction;
+    }
+
+    @Override
+    public Map<String, String> allParams() {
+        Map<String, String> map = new HashMap<>(executionParams);
+
+        Optional.ofNullable(distanceFunction)
+                .map(DistanceFunction::name)
+                .ifPresent(df -> map.put("_distanceFunction", df));
+
+        return map;
     }
 
 }

@@ -32,6 +32,8 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
 
     @Override
     public ThirdMethodLocalSVMWithRepresentatives processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
+        printParams(paramProvider);
+
         List<LabeledObservation> labeledObservations = toLabeledObservation(dataProvider.training());
         String kernel = paramProvider.provide("kernel");
         SVMModel svmModel = new WekaSVMClassification(kernel).train(labeledObservations);
@@ -90,6 +92,15 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
         return CentralDdmPipeline.builder()
                 .local(DMeb2.class)
                 .lastGlobal(DMeb2.class);
+    }
+
+    private void printParams(ParamProvider paramProvider) {
+        System.out.println("---------------------------------");
+        System.out.println("-     PARAMS                    -");
+        System.out.println("---------------------------------");
+        paramProvider.allParams()
+                .forEach((k, v) -> System.out.println("  " + k + "=" + v));
+        System.out.println("---------------------------------");
     }
 
 }

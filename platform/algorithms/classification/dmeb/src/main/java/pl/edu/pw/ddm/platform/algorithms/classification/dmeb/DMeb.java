@@ -36,6 +36,8 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
 
     @Override
     public MEBBaseMethodLocalRepresentatives processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
+        printParams(paramProvider);
+
         List<LabeledObservation> labeledObservations = toLabeledObservation(dataProvider.training());
         // FIXME unused partitionId?
         int partitionId = 0;
@@ -124,6 +126,15 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                 .global(DMeb.class)
                 .repeatLocal(DMeb.class)
                 .lastGlobal(DMeb.class);
+    }
+
+    private void printParams(ParamProvider paramProvider) {
+        System.out.println("---------------------------------");
+        System.out.println("-     PARAMS                    -");
+        System.out.println("---------------------------------");
+        paramProvider.allParams()
+                .forEach((k, v) -> System.out.println("  " + k + "=" + v));
+        System.out.println("---------------------------------");
     }
 
 }

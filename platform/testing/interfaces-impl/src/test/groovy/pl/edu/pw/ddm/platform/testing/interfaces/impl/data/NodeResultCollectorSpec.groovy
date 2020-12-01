@@ -23,7 +23,7 @@ class NodeResultCollectorSpec extends Specification {
 
         when:
         collector.collect('1', 1)
-        collector.collect('2', 2.1)
+        collector.collect('2', 21345)
         collector.collect('sth', 'else')
 
         then:

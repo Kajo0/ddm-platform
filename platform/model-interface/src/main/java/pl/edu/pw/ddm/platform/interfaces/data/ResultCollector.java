@@ -4,6 +4,8 @@ public interface ResultCollector {
 
     void collect(String id, String result);
 
-    void collect(String id, double result);
+    default void collect(String id, int result) {
+        collect(id, String.valueOf(result));
+    }
 
 }

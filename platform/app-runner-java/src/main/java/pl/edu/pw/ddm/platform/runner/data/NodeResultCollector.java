@@ -32,11 +32,6 @@ public class NodeResultCollector implements ResultCollector {
         results.add(data);
     }
 
-    @Override
-    public void collect(String id, double result) {
-        collect(id, String.valueOf(result));
-    }
-
     @SneakyThrows
     public void saveResults() {
         Path path = Paths.get(executionPath, executionId, RESULTS);

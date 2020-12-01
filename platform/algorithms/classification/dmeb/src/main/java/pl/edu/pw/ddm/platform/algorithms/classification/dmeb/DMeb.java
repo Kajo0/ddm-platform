@@ -57,7 +57,7 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
 
     private List<LabeledObservation> toLabeledObservation(Collection<Data> training) {
         return training.stream()
-                .map(d -> new LabeledObservation(Integer.parseInt(d.getId()), d.getNumericAttributes(), Integer.parseInt(d.getLabel()))) // FIXME int label/index
+                .map(d -> new LabeledObservation(Integer.parseInt(d.getId()), d.getNumericAttributes(), (int) Double.parseDouble(d.getLabel()))) // FIXME int label/index
                 .collect(Collectors.toList());
     }
 

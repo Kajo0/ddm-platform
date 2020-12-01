@@ -5,10 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.primitives.Doubles;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
@@ -56,7 +58,12 @@ class LocalDatasetProcessor {
                 String label = labelMapping.get(attributes[i]);
                 if (label == null) {
                     if (DataDescriber.isNumeric(attributes[i])) {
-                        label = attributes[i];
+                        // TOOD think about this ints conversion if correct
+                        label = Optional.of(attributes[i])
+                                .map(Doubles::tryParse)
+                                .map(Double::intValue)
+                                .map(String::valueOf)
+                                .orElse(attributes[i]);
                     } else {
                         label = String.valueOf(labelMapping.size());
                     }

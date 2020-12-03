@@ -41,6 +41,7 @@ interface ExecutionStarter {
         private final InstanceAddrDto masterAddr;
         private final ExecutionStatus status;
         private final String appId;
+        private final String executionParams;
 
         @Builder.Default
         @JsonDeserialize(using = LocalDateTimeDeserializer.class)

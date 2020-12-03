@@ -34,11 +34,12 @@ class InMemoryExecutionStarter implements ExecutionStarter {
         // TODO broadcast algorithm if not present there
         // TODO broadcast distance function if not present there
 
+        String jsonParams = toJsonParams(executionParams);
         String url = InstanceAgentAddressFactory.startExecution(masterAddr, instanceId, algorithmId, trainDataId);
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("distanceFunctionName", distanceFunctionName);
         body.add("distanceFunctionPackageName", distanceFunctionName);
-        body.add("executionParams", toJsonParams(executionParams));
+        body.add("executionParams", jsonParams);
         body.add("cpuCores", String.valueOf(cpuCores));
         body.add("memoryInGb", String.valueOf(memoryInGb));
         if (distanceFunctionId != null) {
@@ -62,6 +63,7 @@ class InMemoryExecutionStarter implements ExecutionStarter {
                 .masterAddr(masterAddr)
                 .status(ExecutionDesc.ExecutionStatus.INITIALIZING)
                 .started(LocalDateTime.now())
+                .executionParams(jsonParams)
                 .build();
         executionMap.put(executionId, desc);
 

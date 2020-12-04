@@ -52,6 +52,9 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                     }
                 })
                 .collect(Collectors.toList());
+
+        System.out.println("  [[FUTURE LOG]] processLocal: representativeList=" + representativeList.size()
+                + ", labeledObservations=" + labeledObservations.size());
         return new MEBBaseMethodLocalRepresentatives(representativeList, mebModel);
     }
 
@@ -75,6 +78,9 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                         .filter(cluster -> svmModel.getSVs().isEmpty() || cluster.containsAny(svmModel.getSVs()))
                         .flatMap(cluster -> cluster.getClusterElementList().stream()))
                 .collect(Collectors.toList());
+
+        System.out.println("  [[FUTURE LOG]] processGlobal: observations=" + observations.size()
+                + ", svs=" + svmModel.getSVs().size());
         return new MEBBaseMethodChosenRepresentatives(observations);
     }
 
@@ -96,6 +102,8 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                 .flatMap(cluster -> cluster.getClusterElementList().stream())
                 .collect(Collectors.toList());
 //        this.representativeList = observations;
+
+        System.out.println("  [[FUTURE LOG]] repeatLocal: observations=" + observations.size());
         return new MEBBaseMethodDeClustered(observations);
     }
 
@@ -106,6 +114,9 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                 .collect(Collectors.toList());
         String kernel = paramProvider.provide("kernel");
         globalSVM = new WekaSVMClassification(kernel).train(trainingSet);
+
+        System.out.println("  [[FUTURE LOG]] updateGlobal: svs=" + globalSVM.getSVs().size()
+                + ", trainingSet=" + trainingSet.size());
         return this;
     }
 

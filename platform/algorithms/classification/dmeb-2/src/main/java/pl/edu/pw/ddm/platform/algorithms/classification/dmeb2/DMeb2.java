@@ -48,6 +48,9 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
                         cluster.getCentroid().getFeatures(),
                         cluster.getClusterElementList().get(0).getTarget())))
                 .collect(toList());
+
+        System.out.println("  [[FUTURE LOG]] processLocal: representativeList=" + representativeList.size()
+                + ", labeledObservations=" + labeledObservations.size());
         return new ThirdMethodLocalSVMWithRepresentatives(svmModel, representativeList);
     }
 
@@ -84,6 +87,8 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
             knnModelMap.put(entry.getKey(), new LinearNNSearch(WekaUtils.convertToInstances(entry.getValue(), labels)));
         }
 
+        System.out.println("  [[FUTURE LOG]] updateGlobal: svs=" + svmModel.getSVs().size()
+                + ", localModelArray=" + localModelArray.length + ", knnModelMap=" + knnModelMap.size());
         return new ThirdMethodGlobalClassificationModel(svmModel, localModelArray, knnModelMap);
     }
 

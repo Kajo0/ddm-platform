@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
@@ -28,6 +29,9 @@ public class ModelWrapper implements Serializable {
 
     @Getter
     private TimeStatistics timeStatistics = new TimeStatistics();
+
+    @Getter
+    private DatasetStatistics datasetStatistics = new DatasetStatistics();
 
     public static ModelWrapper local(LocalModel model, String address, Integer id) {
         return new ModelWrapper(model, null, null, id, address);

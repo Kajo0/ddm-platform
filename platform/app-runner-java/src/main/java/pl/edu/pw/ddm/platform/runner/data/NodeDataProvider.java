@@ -11,8 +11,10 @@ import java.util.LinkedList;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Iterables;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.commons.collections.CollectionUtils;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 
@@ -71,6 +73,27 @@ public class NodeDataProvider implements DataProvider {
             loadAll();
         }
         return allSet;
+    }
+
+    public Integer trainingSize() {
+        if (trainingSet != null) {
+            return trainingSet.size();
+        } else if (allSet != null) {
+            return allSet.size();
+        } else {
+            // to avoid loading
+            return null;
+        }
+    }
+
+    public Data trainingSample() {
+        if (CollectionUtils.isNotEmpty(trainingSet)) {
+            return Iterables.getFirst(trainingSet, null);
+        } else if (CollectionUtils.isNotEmpty(allSet)) {
+            return Iterables.getFirst(allSet, null);
+        } else {
+            return null;
+        }
     }
 
     @SneakyThrows

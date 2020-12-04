@@ -10,6 +10,7 @@ public class ExecutionStatsDto {
 
     private TimeStatsDto time;
     private TransferStatsDto transfer;
+    private DataStatsDto data;
 
     @Data
     public static class TimeStatsDto {
@@ -57,6 +58,13 @@ public class ExecutionStatsDto {
         private List<Integer> globalsBytes;
         private int localBytes;
         private int globalBytes;
+    }
+
+    @Data
+    public static class DataStatsDto {
+
+        private List<Map<String, Integer>> trainingsBytes;
+        private int trainingBytes;
     }
 
 }

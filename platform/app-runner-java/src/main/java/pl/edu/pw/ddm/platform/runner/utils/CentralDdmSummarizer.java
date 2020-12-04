@@ -70,7 +70,15 @@ public class CentralDdmSummarizer {
                                 lm -> TransferSizeUtil.sizeOf(lm.getLocalModel())
                         ))).forEach(transfer::localsByte);
 
-        stats = Stats.of(time.build(), transfer.build());
+        ExecutionStatisticsPersister.DataStats.DataStatsBuilder data = ExecutionStatisticsPersister.DataStats.builder();
+        locals.stream()
+                .map(localModels -> localModels.stream()
+                        .collect(Collectors.toMap(
+                                ModelWrapper::getAddress,
+                                lm -> lm.getDatasetStatistics().trainingDataSize())
+                        )).forEach(data::trainingsByte);
+
+        stats = Stats.of(time.build(), transfer.build(), data.build());
         return stats;
     }
 
@@ -159,6 +167,22 @@ public class CentralDdmSummarizer {
         for (int i = 0; i < transfer.getGlobalsBytes().size(); ++i) {
             System.out.println("  [" + i + "] global stage");
             System.out.println(transfer.getGlobalsBytes().get(i));
+        }
+
+        return this;
+    }
+
+    public CentralDdmSummarizer printAvgDataSizeSummary() {
+        ExecutionStatisticsPersister.DataStats data = prepareStats().getData();
+
+        System.out.println("====== Training Data avg size Summary:");
+        System.out.println("  Local models (bytes):");
+        for (int i = 0; i < data.getTrainingsBytes().size(); ++i) {
+            System.out.println("  [" + i + "] local stage");
+            data.getTrainingsBytes()
+                    .get(i)
+                    .values()
+                    .forEach(System.out::println);
         }
 
         return this;

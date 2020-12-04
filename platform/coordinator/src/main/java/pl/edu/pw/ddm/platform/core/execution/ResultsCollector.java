@@ -20,6 +20,7 @@ interface ResultsCollector {
 
         private TimeStats time;
         private TransferStats transfer;
+        private DataStats data;
 
         @Data
         static class TimeStats {
@@ -66,6 +67,13 @@ interface ResultsCollector {
             private List<Integer> globalsBytes;
             private int localBytes;
             private int globalBytes;
+        }
+
+        @Data
+        static class DataStats {
+
+            private List<Map<String, Integer>> trainingsBytes;
+            private int trainingBytes;
         }
     }
 

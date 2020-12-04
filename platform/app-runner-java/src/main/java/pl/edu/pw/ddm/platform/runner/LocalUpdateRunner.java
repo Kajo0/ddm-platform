@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.runner;
 import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.Iterator;
+import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,7 @@ import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
+import pl.edu.pw.ddm.platform.runner.utils.TransferSizeUtil;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
@@ -56,6 +58,13 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         wrapper.getTimeStatistics().setStart(start);
         wrapper.getTimeStatistics().setEnd(end);
         wrapper.getTimeStatistics().setDataLoadingMillis(dataProvider.getLoadingMillis());
+
+        // TODO FIXME not always required when localProcess is present
+        wrapper.getDatasetStatistics().setTrainingSamplesAmount(dataProvider.trainingSize());
+        Optional.of(dataProvider)
+                .map(NodeDataProvider::trainingSample)
+                .map(TransferSizeUtil::sizeOf)
+                .ifPresent(wrapper.getDatasetStatistics()::setAvgSampleSize);
 
         return new SingletonIterator(wrapper);
     }

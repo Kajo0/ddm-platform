@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +36,7 @@ public class ExecutionStatisticsPersister {
 
         TimeStats time;
         TransferStats transfer;
+        DataStats data;
     }
 
     @Data
@@ -216,6 +218,25 @@ public class ExecutionStatisticsPersister {
         @JsonProperty("globalBytes")
         int getGlobalBytes() {
             return globalsBytes.stream()
+                    .reduce(0, Integer::sum);
+        }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    static class DataStats {
+
+        @Singular
+        private List<Map<String, Integer>> trainingsBytes;
+
+        @JsonProperty("trainingBytes")
+        int getTrainingBytes() {
+            return trainingsBytes.stream()
+                    .map(Map::values)
+                    .flatMap(Collection::stream)
+                    .filter(Objects::nonNull)
                     .reduce(0, Integer::sum);
         }
     }

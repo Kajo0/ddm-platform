@@ -6,10 +6,13 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import lombok.NoArgsConstructor;
+import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabeledObservation;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.SVMModel;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.WekaUtils;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
@@ -38,7 +41,36 @@ public class ThirdMethodGlobalClassificationModel implements Classifier {
     @Override
     public void classify(SampleProvider sampleProvider, ParamProvider paramProvider, ResultCollector resultCollector) {
         int knnParam = paramProvider.provideNumeric("knn_k", 3d).intValue();
-        sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(), String.valueOf(classify(sample.getNumericAttributes(), knnParam))));
+        if (DMeb2.useLocalClassifier(paramProvider)) {
+            List<SVMModel> localClassifier = Collections.singletonList(findLocalClassifier());
+            sampleProvider.forEachRemaining(sample -> resultCollector.collect(
+                    sample.getId(),
+                    majorityVoting(
+                            sample.getNumericAttributes(),
+                            localClassifier)));
+        } else {
+            sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(), String.valueOf(classify(sample.getNumericAttributes(), knnParam))));
+        }
+    }
+
+    private SVMModel findLocalClassifier() {
+        LabeledObservation localhostHash = ThirdMethodLocalSVMWithRepresentatives.dummyObservation();
+        if (ThirdMethodLocalSVMWithRepresentatives.CANNOT_LOCALHOST == localhostHash.getIndex()) {
+            System.err.println("  [[FUTURE LOG]] Cannot InetAddress.getLocalHost()");
+            throw new RuntimeException("Cannot InetAddress.getLocalHost(): CANNOT_LOCALHOST");
+        }
+
+        System.out.println("  [[FUTURE LOG]] Searching for classifier with dummy ID: " + localhostHash.getIndex());
+        SVMModel model = Stream.of(secondLevelClassifiers)
+                .filter(cl -> cl.getRepresentativeList()
+                        .stream()
+                        .filter(o -> ThirdMethodLocalSVMWithRepresentatives.DUMMY_TARGET == o.getTarget())
+                        .anyMatch(o -> localhostHash.getIndex() == o.getIndex()))
+                .findFirst()
+                .map(ThirdMethodLocalSVMWithRepresentatives::getSvmModel)
+                .orElseThrow(() -> new RuntimeException("Cannot find local classifier with hash ID " + localhostHash.getIndex()));
+        System.out.println("  [[FUTURE LOG]] Found and using classifier with dummy ID: " + localhostHash.getIndex());
+        return model;
     }
 
     private int classify(double[] features, int knnParam) {

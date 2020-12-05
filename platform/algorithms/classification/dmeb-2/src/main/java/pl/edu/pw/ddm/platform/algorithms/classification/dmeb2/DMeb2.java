@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,13 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
 
         System.out.println("  [[FUTURE LOG]] processLocal: representativeList=" + representativeList.size()
                 + ", labeledObservations=" + labeledObservations.size());
-        return new ThirdMethodLocalSVMWithRepresentatives(svmModel, representativeList);
+
+        if (useLocalClassifier(paramProvider)) {
+            LabeledObservation dummyObservation = ThirdMethodLocalSVMWithRepresentatives.dummyObservation();
+            return new ThirdMethodLocalSVMWithRepresentatives(svmModel, Collections.singletonList(dummyObservation));
+        } else {
+            return new ThirdMethodLocalSVMWithRepresentatives(svmModel, representativeList);
+        }
     }
 
     private List<LabeledObservation> toLabeledObservation(Collection<Data> training) {
@@ -62,6 +69,10 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
 
     @Override
     public ThirdMethodGlobalClassificationModel updateGlobal(Collection<ThirdMethodLocalSVMWithRepresentatives> localModels, ParamProvider paramProvider) {
+        if (useLocalClassifier(paramProvider)) {
+            return new ThirdMethodGlobalClassificationModel(null, localModels.toArray(new ThirdMethodLocalSVMWithRepresentatives[]{}), new HashMap<>());
+        }
+
         List<LabeledObservation> trainingSet = localModels.stream()
                 .flatMap(localModel -> localModel.getRepresentativeList().stream())
                 .collect(toList());
@@ -97,6 +108,10 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
         return CentralDdmPipeline.builder()
                 .local(DMeb2.class)
                 .lastGlobal(DMeb2.class);
+    }
+
+    static boolean useLocalClassifier(ParamProvider paramProvider) {
+        return Boolean.TRUE.toString().equals(paramProvider.provide("use_local_classifier", Boolean.FALSE.toString()));
     }
 
     private void printParams(ParamProvider paramProvider) {

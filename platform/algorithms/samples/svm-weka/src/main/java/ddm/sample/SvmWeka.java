@@ -50,11 +50,26 @@ public class SvmWeka implements LocalUpdater<LGModel, LGModel, WekaClassifier> {
 
         WekaClassifier smo = new WekaClassifier(labels);
         // default linear poly kernel with some parameters
-        String[] options = Utils.splitOptions(paramProvider.provide("options", "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -E 1.0 -C 250007\""));
+        String[] options = Utils.splitOptions(fetchOptions(paramProvider));
         smo.setOptions(options);
         smo.buildClassifier(dataset);
 
         return smo;
+    }
+
+    private String fetchOptions(ParamProvider paramProvider) {
+        String kernel = paramProvider.provide("kernel");
+        String kernelOptions = "";
+
+        if (kernel == null || "linear".equals(kernel)) {
+            kernelOptions = "-K \"weka.classifiers.functions.supportVector.PolyKernel -E 1.0 -C 250007\"";
+        } else if ("rbf".equals(kernel)) {
+            kernelOptions = "-K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.50625\"";
+        } else {
+            throw new IllegalArgumentException("Unsupported kernel value: " + kernel);
+        }
+
+        return paramProvider.provide("options", "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 " + kernelOptions);
     }
 
 }

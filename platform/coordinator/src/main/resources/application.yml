@@ -23,6 +23,7 @@ paths:
     archive-path: ${paths.root}/archive_results
     node-filename-suffix: -results.txt
     stats-filename: stats.json
+    validation-filename: validation.json
     execution-desc-filename: description.properties
 
 communiaction:

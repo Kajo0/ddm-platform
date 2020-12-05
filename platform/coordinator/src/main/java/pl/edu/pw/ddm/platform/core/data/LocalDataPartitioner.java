@@ -66,7 +66,7 @@ class LocalDataPartitioner implements DataPartitioner {
 
     @SneakyThrows
     @Override
-    public String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String distanceFunctionId) {
+    public String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String distanceFunctionId, Long seed) {
         log.info("Scattering test data '{}' equally into nodes '{}'.", dataDesc, addresses);
 
         List<InstanceAddrDto> workers = addresses.stream()
@@ -78,7 +78,7 @@ class LocalDataPartitioner implements DataPartitioner {
                 .partitions(workers.size())
                 .distanceFunction(loadDistanceFunction(distanceFunctionId))
                 .customParams(null)
-                .seed(null)
+                .seed(seed)
                 .build();
         List<Path> tempFiles = new UniformPartitionerStrategy()
                 .partition(DataDescMapper.INSTANCE.mapStrategy(dataDesc), strategyParams, fileCreator);

@@ -76,7 +76,7 @@ public class DataFacade {
                         request.strategyParams, request.seed);
                 break;
             case TEST:
-                result = dataPartitioner.scatterTestEqually(addr, data, request.distanceFunction);
+                result = dataPartitioner.scatterTestEqually(addr, data, request.distanceFunction, request.seed);
                 break;
 
             default:

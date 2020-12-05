@@ -8,6 +8,6 @@ interface DataPartitioner {
 
     String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String distanceFunction, String params, Long seed);
 
-    String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String distanceFunction);
+    String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String distanceFunction, Long seed);
 
 }

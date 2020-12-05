@@ -3,7 +3,7 @@ package pl.edu.pw.ddm.platform.core.algorithm;
 import java.io.File;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -19,7 +19,7 @@ import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 
 @Slf4j
 @Service
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class DefaultAlgorithmBroadcaster implements AlgorithmBroadcaster {
 
     private final AlgorithmLoader algorithmLoader;
@@ -29,6 +29,7 @@ class DefaultAlgorithmBroadcaster implements AlgorithmBroadcaster {
     public String broadcast(InstanceAddrDto masterAddr, AlgorithmLoader.AlgorithmDesc algorithmDesc) {
         log.info("Broadcasting algorithm with id '{}' and size '{}' into master node '{}'.", algorithmDesc.getId(),
                 algorithmDesc.getSizeInBytes(), masterAddr);
+        // TODO if algorithm scattered then do not send again
 
         File algFile = algorithmLoader.load(algorithmDesc.getId());
 

@@ -69,16 +69,31 @@ public class DataFacade {
             throw new IllegalArgumentException("No data with id: " + request.dataId);
         }
 
+        String result;
         switch (DataLoader.TypeCode.fromCode(request.typeCode)) {
             case TRAIN:
-                return dataPartitioner.scatterTrain(addr, data, request.strategy, request.distanceFunction,
+                result = dataPartitioner.scatterTrain(addr, data, request.strategy, request.distanceFunction,
                         request.strategyParams, request.seed);
+                break;
             case TEST:
-                return dataPartitioner.scatterTestEqually(addr, data, request.distanceFunction);
+                result = dataPartitioner.scatterTestEqually(addr, data, request.distanceFunction);
+                break;
 
             default:
                 throw new IllegalStateException("should not be not accessed");
         }
+
+        var scatterReq = InstanceFacade.DataScatteredRequest.builder()
+                .instanceId(request.instanceId)
+                .dataId(data.getId())
+                .strategyName(request.strategy)
+                .strategyParams(request.strategyParams)
+                .distanceFunction(request.distanceFunction)
+                .seed(request.seed)
+                .build();
+        instanceFacade.updateDataScatter(scatterReq);
+
+        return result;
     }
 
     public DataDescDto description(@NonNull DescriptionRequest request) {

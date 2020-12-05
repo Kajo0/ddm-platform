@@ -1,5 +1,8 @@
 package pl.edu.pw.ddm.platform.core.instance;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,6 +56,33 @@ class InstanceConfig {
         return !StringUtils.equals(previous, ip);
     }
 
+    boolean updateAlgorithm(String id, String algorithmId) {
+        var scatter = instanceMap.get(id)
+                .info
+                .algorithmScatter;
+        if (scatter.contains(algorithmId)) {
+            return false;
+        } else {
+            return scatter.add(algorithmId);
+        }
+    }
+
+    public void clearAlgorithm(String algorithmId) {
+        instanceMap.values()
+                .stream()
+                .map(InstanceData::getInfo)
+                .map(InstanceInfo::getAlgorithmScatter)
+                .forEach(as -> as.remove(algorithmId));
+    }
+
+    boolean updateData(String id, String dataId, String strategyName, String strategyParams, String distanceFunction, Long seed) {
+        var scatter = InstanceInfo.ScatteringInfo.of(strategyName, strategyParams, distanceFunction, seed);
+        return instanceMap.get(id)
+                .info
+                .dataScatter
+                .put(dataId, scatter) != null;
+    }
+
     private InstanceNode node(String id, String nodeId) {
         return instanceMap.get(id)
                 .nodes
@@ -66,6 +96,7 @@ class InstanceConfig {
         private InstanceType type;
         private String networkName;
         private Map<String, InstanceNode> nodes;
+        private InstanceInfo info;
 
         @Override
         public String toString() {
@@ -96,6 +127,32 @@ class InstanceConfig {
         private Integer cpu;
         private Integer memory;
         private Integer disk;
+
+        @Override
+        public String toString() {
+            try {
+                return new ObjectMapper().writeValueAsString(this);
+            } catch (JsonProcessingException e) {
+                return super.toString();
+            }
+        }
+    }
+
+    @Getter
+    static class InstanceInfo {
+
+        private Map<String, ScatteringInfo> dataScatter = new HashMap<>();
+        private List<String> algorithmScatter = new ArrayList<>();
+
+        @Getter
+        @Value(staticConstructor = "of")
+        static class ScatteringInfo {
+
+            private String strategyName;
+            private String strategyParams;
+            private String distanceFunction;
+            private Long seed;
+        }
 
         @Override
         public String toString() {

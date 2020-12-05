@@ -52,7 +52,13 @@ class ManualInstanceSetupValidator {
                         null)
                 ).collect(Collectors.toMap(InstanceConfig.InstanceNode::getId, n -> n));
 
-        return new InstanceConfig.InstanceData(IdGenerator.instanceId(), InstanceConfig.InstanceType.MANUAL_SETUP, null, nodes);
+        return new InstanceConfig.InstanceData(
+                IdGenerator.instanceId(),
+                InstanceConfig.InstanceType.MANUAL_SETUP,
+                null,
+                nodes,
+                new InstanceConfig.InstanceInfo()
+        );
     }
 
     private void verifyNode(InstanceFacade.SetupRequest.ManualSetupNode node) {

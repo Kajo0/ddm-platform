@@ -30,7 +30,6 @@ import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
 @Service
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalDataPartitioner implements DataPartitioner {
-    // TODO map of current scattered data
 
     private final RestTemplate restTemplate;
     private final DistanceFunctionLoader distanceFunctionLoader;
@@ -40,6 +39,7 @@ class LocalDataPartitioner implements DataPartitioner {
     @Override
     public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String distanceFunctionId, String params, Long seed) {
         log.info("Scattering train data '{}' with strategy '{}' and distance func '{}' into nodes '{}' with seed '{}'.", dataDesc, strategy, distanceFunctionId, addresses, seed);
+        // TODO if data with same params already scattered - do not send again but think about naming that use only id without params
 
         List<InstanceAddrDto> workers = addresses.stream()
                 .filter(InstanceAddrDto::isWorker)

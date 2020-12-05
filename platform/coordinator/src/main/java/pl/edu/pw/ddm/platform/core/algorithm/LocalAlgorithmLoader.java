@@ -12,19 +12,24 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 import pl.edu.pw.ddm.platform.core.util.IdGenerator;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 class LocalAlgorithmLoader implements AlgorithmLoader {
 
     @Value("${paths.algorithms}")
     private String algorithmsPath;
+
+    private final InstanceFacade instanceFacade;
 
     private final Map<String, AlgorithmDesc> algorithmMap = new HashMap<>();
 
@@ -55,6 +60,8 @@ class LocalAlgorithmLoader implements AlgorithmLoader {
 
             if (algorithmMap.putIfAbsent(id, alg) != null) {
                 log.warn("Loaded the same jar '{}' file as before with id '{}'.", name, id);
+                // TODO broadcast delete old algorithm
+                instanceFacade.algorithmUpdate(id);
             }
             return id;
         } catch (Exception e) {

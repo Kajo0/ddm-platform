@@ -41,7 +41,12 @@ public class AlgorithmFacade {
             throw new IllegalArgumentException("No algorithm with id: " + request.algorithmId);
         }
 
-        return algorithmBroadcaster.broadcast(addr, alg);
+        var result = algorithmBroadcaster.broadcast(addr, alg);
+
+        var scatterReq = InstanceFacade.AlgorithmScatteredRequest.of(request.instanceId, alg.getId());
+        instanceFacade.updateAlgorithmScatter(scatterReq);
+
+        return result;
     }
 
     public AlgorithmDescDto description(@NonNull DescriptionRequest request) {

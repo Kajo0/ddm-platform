@@ -177,7 +177,7 @@ class LocalResultsCollector implements ResultsCollector {
 
     private void saveDescription(ExecutionStarter.ExecutionDesc desc) throws IOException {
         // TODO refactor a bit and save as .json
-        // TODO save cpu & memory info -> instance config
+        // TODO save cpu & memory info -> instance config - EDIT: already present with workers and master cpu&memory info in description
         var objMapper = new ObjectMapper();
         Properties prop = new Properties();
         prop.setProperty("workers", String.valueOf(instanceFacade.addresses(InstanceFacade.AddressRequest.of(desc.getInstanceId())).size() - 1));
@@ -185,7 +185,11 @@ class LocalResultsCollector implements ResultsCollector {
         prop.setProperty("trainData", objMapper.writeValueAsString(dataFacade.description(DataFacade.DescriptionRequest.of(desc.getTrainDataId()))));
         prop.setProperty("testData", objMapper.writeValueAsString(Optional.ofNullable(desc.getTestDataId()).map(id -> dataFacade.description(DataFacade.DescriptionRequest.of(id))).orElse(null)));
         prop.setProperty("execution", objMapper.writeValueAsString(desc));
+        prop.setProperty("trainDataScatterInfo", objMapper.writeValueAsString(instanceFacade.dataScatter(InstanceFacade.DataScatterRequest.of(desc.getInstanceId(), desc.getTrainDataId()))));
         prop.setProperty("saveTimestamp", LocalDateTime.now().toString());
+        if (desc.getTestDataId() != null) {
+            prop.setProperty("testDataScatterInfo", objMapper.writeValueAsString(instanceFacade.dataScatter(InstanceFacade.DataScatterRequest.of(desc.getInstanceId(), desc.getTestDataId()))));
+        }
 
         Path path = Paths.get(resultsPath, desc.getId(), executionDescFilename);
         prop.store(Files.newOutputStream(path), null);

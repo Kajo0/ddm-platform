@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -113,6 +114,61 @@ public class InstanceFacade {
                 .allMatch(node -> setupUpdater.updateSetup(instance, node));
     }
 
+    public boolean updateAlgorithmScatter(@NonNull InstanceFacade.AlgorithmScatteredRequest request) {
+        var instance = instanceConfig.get(request.instanceId);
+        Preconditions.checkNotNull(instance, "No instance with id '%s'.", request.instanceId);
+
+        var inserted = instanceConfig.updateAlgorithm(request.instanceId, request.algorithmId);
+        if (inserted) {
+            log.info("Algorithm '{}' scatter info inserted for instance '{}'.", request.instanceId,
+                    request.algorithmId);
+        } else {
+            log.info("Algorithm '{}' scatter info already present for instance '{}'.", request.instanceId,
+                    request.algorithmId);
+        }
+        return inserted;
+    }
+
+    public void algorithmUpdate(String algorithmId) {
+        log.info("Clearing algorithm '{}' from config.", algorithmId);
+        instanceConfig.clearAlgorithm(algorithmId);
+    }
+
+    public boolean updateDataScatter(@NonNull DataScatteredRequest request) {
+        var instance = instanceConfig.get(request.instanceId);
+        Preconditions.checkNotNull(instance, "No instance with id '%s'.", request.instanceId);
+
+        var updated = instanceConfig.updateData(
+                request.instanceId,
+                request.dataId,
+                request.strategyName,
+                request.strategyParams,
+                request.distanceFunction,
+                request.seed
+        );
+        if (updated) {
+            log.info("Data '{}' scatter info already present for instance '{}'.", request.instanceId,
+                    request.dataId);
+        } else {
+            log.info("Data '{}' scatter info inserted for instance '{}'.", request.instanceId,
+                    request.dataId);
+        }
+        return updated;
+    }
+
+    // TODO think about structured response
+    public String dataScatter(@NonNull DataScatterRequest request) {
+        var info = instanceConfig.get(request.instanceId)
+                .getInfo()
+                .getDataScatter()
+                .get(request.dataId);
+        try {
+            return new ObjectMapper().writeValueAsString(info);
+        } catch (JsonProcessingException e) {
+            return String.valueOf(info);
+        }
+    }
+
     // TODO remove debug
     public String info() {
         try {
@@ -204,6 +260,41 @@ public class InstanceFacade {
 
         @NonNull
         private final String instanceId;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class AlgorithmScatteredRequest {
+
+        @NonNull
+        private final String instanceId;
+
+        @NonNull
+        private final String algorithmId;
+    }
+
+    @Builder
+    public static class DataScatteredRequest {
+
+        @NonNull
+        private final String instanceId;
+
+        @NonNull
+        private final String dataId;
+
+        private final String strategyName;
+        private final String strategyParams;
+        private final String distanceFunction;
+        private final Long seed;
+    }
+
+    @Value(staticConstructor = "of")
+    public static class DataScatterRequest {
+
+        @NonNull
+        private final String instanceId;
+
+        @NonNull
+        private final String dataId;
     }
 
 }

@@ -167,7 +167,13 @@ class LocalInstanceCreator implements InstanceCreator {
             );
         }
 
-        var data = new InstanceConfig.InstanceData(instanceId, InstanceConfig.InstanceType.LOCAL_DOCKER, networkName, nodes);
+        var data = new InstanceConfig.InstanceData(
+                instanceId,
+                InstanceConfig.InstanceType.LOCAL_DOCKER,
+                networkName,
+                nodes,
+                new InstanceConfig.InstanceInfo()
+        );
         instanceConfig.add(data);
         return instanceId;
     }

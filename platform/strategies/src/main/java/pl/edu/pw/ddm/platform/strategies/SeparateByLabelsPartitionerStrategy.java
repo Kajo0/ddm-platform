@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import lombok.extern.slf4j.Slf4j;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionFileCreator;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
+import pl.edu.pw.ddm.platform.strategies.utils.Utils;
 
 @Slf4j
 public class SeparateByLabelsPartitionerStrategy implements PartitionerStrategy {
@@ -57,7 +57,7 @@ public class SeparateByLabelsPartitionerStrategy implements PartitionerStrategy 
     }
 
     private Map<String, Integer> mapLabelToWorker(DataDesc dataDesc, int workers, String params) throws IOException {
-        Map<String, Long> labelCount = countLabels(dataDesc);
+        Map<String, Long> labelCount = Utils.countLabels(dataDesc);
         log.info("Mapping {} labels to {} workers with params '{}'.", labelCount.size(), workers, params);
 
         Map<String, Integer> mapping = new HashMap<>(labelCount.size());
@@ -84,17 +84,6 @@ public class SeparateByLabelsPartitionerStrategy implements PartitionerStrategy 
         }
 
         return mapping;
-    }
-
-    // TODO optimize
-    private Map<String, Long> countLabels(DataDesc dataDesc) throws IOException {
-        // TODO handle already partitioned
-        Path path = Path.of(Iterables.getOnlyElement(dataDesc.getFilesLocations()));
-
-        return Files.readAllLines(path)
-                .stream()
-                .map(l -> l.split(dataDesc.getSeparator()))
-                .collect(Collectors.groupingBy(d -> d[dataDesc.getLabelIndex()], Collectors.counting()));
     }
 
     private Map<Integer, String[]> evaluateParams(String params, int workers, Set<String> labels) {

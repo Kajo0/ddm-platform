@@ -23,6 +23,7 @@ import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.PartitionerStrategies;
 import pl.edu.pw.ddm.platform.strategies.SeparateByLabelsPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
+import pl.edu.pw.ddm.platform.strategies.mostof.MostOfOnePlusSomePartitionerStrategy;
 
 @Slf4j
 @Service
@@ -90,11 +91,14 @@ class LocalPartitionerStrategyLoader implements PartitionerStrategyLoader {
     public PartitionerStrategy getStrategyImpl(String strategyNameOrId) {
         if (isPredefined(strategyNameOrId)) {
             log.info("Getting predefined strategy: '{}'.", strategyNameOrId);
+            // TODO make it more generic by creating instance instead of manual creation
             switch (strategyNameOrId) {
                 case PartitionerStrategies.UNIFORM:
                     return new UniformPartitionerStrategy();
                 case PartitionerStrategies.SEPARATE_LABELS:
                     return new SeparateByLabelsPartitionerStrategy();
+                case PartitionerStrategies.MOST_OF_ONE_PLUS_SOME:
+                    return new MostOfOnePlusSomePartitionerStrategy();
                 default:
                     throw new IllegalStateException("No implementation for predefined strategy: " + strategyNameOrId);
             }

@@ -33,6 +33,7 @@ dependencies {
 
     testImplementation 'pl.edu.pw.ddm.platform.testing:interfaces-impl:0.0.1-SNAPSHOT'
     testImplementation 'org.slf4j:slf4j-api:1.7.30'
+    testImplementation 'org.slf4j:slf4j-simple:1.7.30'
 
     testImplementation platform('org.spockframework:spock-bom:2.0-M1-groovy-2.5')
     testImplementation 'org.spockframework:spock-core'

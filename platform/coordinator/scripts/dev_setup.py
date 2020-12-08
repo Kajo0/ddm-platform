@@ -261,6 +261,7 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
         'meb_clusters': '2',
         'kernel': 'linear',
         'knn_k': '3'
+        'use_local_classifier': 'false'
     })
     executionId = requests.post(url,
                                 data={
@@ -456,6 +457,7 @@ def reload(oneNode=False):
         scatterData(instanceId, trainDataId, 'uniform', None, None, 'train', seed)
         # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', None, 'train', seed)
         # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train', seed)
+        # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', None, 'train', seed)
 
     scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)

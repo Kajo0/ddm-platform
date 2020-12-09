@@ -34,6 +34,7 @@ public class ExecutionFacade {
 
         String distanceFunctionId = request.executionParams.get("distanceFunctionId");
         String distanceFunctionName = request.executionParams.get("distanceFunctionName");
+        // TODO choose both by name or id, check if such name is loaded -> nameOrId
         if (distanceFunctionId != null) {
             var req = DistanceFunctionFacade.DescriptionRequest.of(distanceFunctionId);
             DistanceFunctionDescDto desc = distanceFunctionFacade.description(req);
@@ -44,7 +45,7 @@ public class ExecutionFacade {
         } else {
             throw new IllegalArgumentException("Unknown distance (id=" + distanceFunctionId + ", name=" + distanceFunctionName + ")");
         }
-        // TODO add precondition to avoid both distance function id and name which does not matche id
+        // TODO add precondition to avoid both distance function id and name which does not match id
 
         // TODO handle when cpu/memory not equal for all
         return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.trainDataId, request.testDataId, distanceFunctionId, distanceFunctionName, masterAddr.getCpu(), masterAddr.getMemory(), request.executionParams);

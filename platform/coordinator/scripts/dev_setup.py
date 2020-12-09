@@ -51,42 +51,52 @@ api = {
 }
 
 
-def loadJar(path):
-    print("loadJar path='{}'".format(path))
+def loadJar(path, debug=True):
+    if debug:
+        print("loadJar path='{}'".format(path))
     url = baseUrl + api['algorithm']['load']
     with open(path, 'rb') as file:
         algorithmId = requests.post(url,
                                     files={'file': (file.name, file, 'application/x-java-archive')}
                                     ).text
-        print('  algorithmId: ' + algorithmId)
+        if debug:
+            print('  algorithmId: ' + algorithmId)
         return algorithmId
 
 
-def algorithmInfo():
-    print('algorithmInfo')
+def algorithmInfo(debug=True):
+    if debug:
+        print('algorithmInfo')
     url = baseUrl + api['algorithm']['info']
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
-def broadcastJar(instanceId, algorithmId):
-    print("broadcastJar instanceId='{}' algorithmId='{}'".format(instanceId, algorithmId))
+def broadcastJar(instanceId, algorithmId, debug=True):
+    if debug:
+        print("broadcastJar instanceId='{}' algorithmId='{}'".format(instanceId, algorithmId))
     url = baseUrl + api['algorithm']['broadcast'].format(**{
         'instanceId': instanceId,
         'algorithmId': algorithmId
     })
     response = requests.get(url).text
-    print('  response: ' + response)
+    if debug:
+        print('  response: ' + response)
     return response
 
 
-def dataInfo():
-    print('dataInfo')
+def dataInfo(debug=True):
+    if debug:
+        print('dataInfo')
     url = baseUrl + api['data']['info']
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
 def broadcastDistanceFunction(instanceId, distanceFunctionId):
@@ -162,16 +172,17 @@ def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=Fal
 
 
 def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, distanceFunction=None, typeCode='train',
-                seed=None):
-    print(
-        "scatterData instanceId='{}' dataId='{}' strategy='{}' strategyParams='{}' distanceFunction='{}' typeCode='{}' seed='{}'".format(
-            instanceId,
-            dataId,
-            strategy,
-            strategyParams,
-            distanceFunction,
-            typeCode,
-            seed))
+                seed=None, debug=True):
+    if debug:
+        print(
+            "scatterData instanceId='{}' dataId='{}' strategy='{}' strategyParams='{}' distanceFunction='{}' typeCode='{}' seed='{}'".format(
+                instanceId,
+                dataId,
+                strategy,
+                strategyParams,
+                distanceFunction,
+                typeCode,
+                seed))
     url = baseUrl + api['data']['scatter'].format(**{
         'instanceId': instanceId,
         'dataId': dataId
@@ -185,7 +196,8 @@ def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, dis
                                  'seed': seed
                              }
                              ).text
-    print('  response: ' + response)
+    if debug:
+        print('  response: ' + response)
     return response
 
 
@@ -218,7 +230,8 @@ def fetchLogs(executionId, nodeId, count):
 
 
 def collectResults(executionId, debug=True):
-    print("collectResults executionId='{}'".format(executionId))
+    if debug:
+        print("collectResults executionId='{}'".format(executionId))
 
     # TODO check if results are collected instead of always collecting
     status = executionStatus(executionId, False)
@@ -236,45 +249,53 @@ def collectResults(executionId, debug=True):
     return response
 
 
-def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distanceFuncName='none'):
-    print(
-        "startExecution instanceId='{}' algorithmId='{}' trainDataId='{}' testDataId='{}' distanceFuncName='{}'".format(
-            instanceId,
-            algorithmId,
-            trainDataId,
-            testDataId,
-            distanceFuncName))
+def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distanceFuncName='none', params=None, debug=True):
+    if debug:
+        print(
+            "startExecution instanceId='{}' algorithmId='{}' trainDataId='{}' testDataId='{}' distanceFuncName='{}' params='{}'".format(
+                instanceId,
+                algorithmId,
+                trainDataId,
+                testDataId,
+                distanceFuncName,
+                params))
     url = baseUrl + api['execution']['start'].format(**{
         'instanceId': instanceId,
         'algorithmId': algorithmId,
         'trainDataId': trainDataId
     })
-    jsonParams = json.dumps({
-        'seed': str(int(round(time.time()))),
-        'groups': '3',
-        'iterations': '20',
-        'epsilon': '0.002',
-        'distanceFunctionName': distanceFuncName,
-        # 'distanceFunctionId': '1156746230', # loaded equality
-        'preCalcCentroids': 'true',
-        'b': '2',
-        'meb_clusters': '50',
-        'kernel': 'linear', #rbf #linear
-        'knn_k': '3',
-        'use_local_classifier': 'false'
-    })
+
+    if not params:
+        params = {
+            'seed': str(int(round(time.time()))),
+            'groups': '3',
+            'iterations': '20',
+            'epsilon': '0.002',
+            'distanceFunctionName': distanceFuncName,
+            # 'distanceFunctionId': '1156746230', # loaded equality
+            'preCalcCentroids': 'true',
+            'b': '2',
+            'meb_clusters': '50',
+            'kernel': 'linear', #rbf #linear
+            'knn_k': '3',
+            'use_local_classifier': 'false'
+        }
+    jsonParams = json.dumps(params)
+
     executionId = requests.post(url,
                                 data={
                                     'testDataId': testDataId,
                                     'executionParams': jsonParams
                                 }
                                 ).text
-    print('  executionId: ' + executionId)
+    if debug:
+        print('  executionId: ' + executionId)
     return executionId
 
 
 def executionStatus(executionId, debug=True):
-    print("executionStatus executionId='{}'".format(executionId))
+    if debug:
+        print("executionStatus executionId='{}'".format(executionId))
     url = baseUrl + api['execution']['status'].format(**{'executionId': executionId})
     response = requests.get(url).text
     formatted = json.loads(response)
@@ -283,8 +304,9 @@ def executionStatus(executionId, debug=True):
     return formatted
 
 
-def createInstance(workers, cpu=2, memory=2, disk=10):
-    print("createInstance workers='{}' cpu='{}' memory='{}' disk='{}'".format(workers, cpu, memory, disk))
+def createInstance(workers, cpu=2, memory=2, disk=10, debug=True):
+    if debug:
+        print("createInstance workers='{}' cpu='{}' memory='{}' disk='{}'".format(workers, cpu, memory, disk))
     url = baseUrl + api['instance']['create'].format(**{'workers': workers})
     instanceId = requests.post(url,
                                data={
@@ -293,7 +315,8 @@ def createInstance(workers, cpu=2, memory=2, disk=10):
                                    'disk': disk
                                }
                                ).text
-    print('  instanceId: ' + instanceId)
+    if debug:
+        print('  instanceId: ' + instanceId)
     return instanceId
 
 
@@ -327,16 +350,19 @@ def instanceInfo(debug=True):
     return formatted
 
 
-def destroyAll():
-    print('destroyAll')
+def destroyAll(debug=True):
+    if debug:
+        print('destroyAll')
     url = baseUrl + api['instance']['destroyAll']
     response = requests.get(url).text
-    print('  response: ' + response)
+    if debug:
+        print('  response: ' + response)
     return response
 
 
-def validateResults(executionId, metrics):
-    print("validateResults executionId='{}' metrics='{}'".format(executionId, metrics))
+def validateResults(executionId, metrics, debug=True):
+    if debug:
+        print("validateResults executionId='{}' metrics='{}'".format(executionId, metrics))
 
     if isinstance(collectResults(executionId, False), ValueError):
         return
@@ -345,12 +371,14 @@ def validateResults(executionId, metrics):
     response = requests.post(url,
                              data={'metrics': metrics}
                              ).text
-    print('  response: ' + response)
-    return response
+    if debug:
+        print('  response: ' + response)
+    return json.loads(response)
 
 
-def resultsStats(executionId):
-    print("resultsStats executionId='{}' ".format(executionId))
+def resultsStats(executionId, debug=True):
+    if debug:
+        print("resultsStats executionId='{}' ".format(executionId))
 
     if isinstance(collectResults(executionId, False), ValueError):
         return
@@ -358,7 +386,9 @@ def resultsStats(executionId):
     url = baseUrl + api['results']['stats'].format(**{'executionId': executionId})
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
 def saveLast(oneNode, instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId=None,
@@ -545,6 +575,183 @@ def clear():
     destroyAll()
 
 
+def checkExist(resourceType, id):
+    try:
+        if resourceType == 'data':
+            return dataInfo(False)[id]
+        elif resourceType == 'alg':
+            return algorithmInfo(False)[id]
+        else:
+            raise ValueError('Unknown resource type ' + resourceType)
+    except KeyError:
+        raise ValueError('Not found ' + resourceType + ' with id: ' + id)
+
+
+def schedule():
+    #   '1334849234' '1333828439' = FULL       -> iris_numeric.data, iris_numeric.test
+    #   '1187478398' '238800836'  = 30% train  -> Skin_NonSkin.txt
+    #   '519015334'  '405676659'  = FULL       -> poker-hand-training-true.data, poker-hand-testing.data
+    #   '2026464871' '1043020749' = FULL       -> creditcard.csv
+    #   '1959356483' '1791383717' = FULL       -> shuttle.trn, shuttle.tst
+    #   '1338339913' '1401394455' = FULL       -> adult.data, adult.test
+    #       trainId   testId
+    irisNumeric = (loadData('./samples/iris_numeric.data', 4, ',', None, False, None, False),
+                   loadData('./samples/iris_numeric.test', 4, ',', None, False, None, False))
+    data = [irisNumeric]
+    #       workers cpus memory
+    instances = [(1, 2, 2),
+                 (2, 2, 4),
+                 (4, 2, 3),
+                 (8, 2, 2)]
+    #               strategy seed custom-params multiNode
+    strategies = [('uniform', 11, None, False),
+                  ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.99;additionalClassesNumber=0;additionalClassesPercent=0', True),
+                  ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', True)]
+    #   '1859600396' = 'WEKA SVM',
+    #   '539897355'  = 'D-MEB'
+    #   '1826773956' = 'D-MEB-2'
+    wekaSvm = loadJar('./samples/svm-weka.jar', False)
+    dmeb = loadJar('./samples/dmeb.jar', False)
+    dmeb2 = loadJar('./samples/dmeb-2.jar', False)
+    #              algorithmId    params distanceFunctionName distanceFunctionId multiNode
+    executions = [(wekaSvm, {'kernel': 'linear'}, 'euclidean', None, False),
+                  (wekaSvm, {'kernel': 'rbf'}, 'euclidean', None, False),
+                  (dmeb, {'kernel': 'linear', 'meb_clusters': '50'}, 'euclidean', None, True),
+                  (dmeb, {'kernel': 'rbf', 'meb_clusters': '50'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True)]
+
+    # check data
+    for d in data:
+        checkExist('data', d[0])
+        checkExist('data', d[1])
+    # check algorithms
+    for execution in executions:
+        checkExist('alg', execution[0])
+    # strategy may be included - not loaded
+
+    debug = False
+
+    for d in data:
+        print(' data:', d)
+        trainDataId = d[0]
+        testDataId = d[1]
+
+        for instance in instances:
+            oneNode = instance[0] == 1
+            print('  instance:', instance, 'onenode:', oneNode)
+            workers = instance[0]
+            cpu = instance[1]
+            memory = instance[2]
+            disk = 10 # not really used for dockers
+
+            print('  Clearing previous', end='', flush=True)
+            destroyAll(debug)
+            instanceId = createInstance(workers, cpu, memory, disk, debug)
+
+            print(' and wait for setup', end='', flush=True)
+            while instanceStatus(instanceId, False) != 200:
+                print('.', end='', flush=True)
+                time.sleep(2)
+            print('')
+            instanceConfigUpdate(instanceId, debug)
+
+            for strategy in strategies:
+                print('   strategy:', strategy)
+                strategyName = strategy[0]
+                strategySeed = strategy[1]
+                strategyParams = strategy[2]
+                multiNode = strategy[3]
+
+                if oneNode and multiNode:
+                    print('   partitioning strategy requires multiple nodes, so ommit')
+                    continue
+
+                scatterData(instanceId, trainDataId, strategyName, strategyParams, None, 'train', strategySeed, debug)
+                if testDataId:
+                    scatterData(instanceId, testDataId, 'dummy', None, None, 'test', strategySeed, debug)
+
+                for execution in executions:
+                    print('    execution:', execution)
+                    algorithmId = execution[0]
+                    executionParams = execution[1]
+                    distanceFunctionName = execution[2]
+                    distanceFunctionId = execution[3]
+                    multiNode = execution[4]
+
+                    if oneNode and multiNode:
+                        print('    distributed algorithm requires multiple nodes, so ommit')
+                        continue
+                    elif not oneNode and not multiNode:
+                        print('    local algorithm requires one node, so ommit')
+                        continue
+
+                    broadcastJar(instanceId, algorithmId, debug)
+                    executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionName, executionParams, debug)
+
+                    print('    Wait for finish of: ' + executionId + ' ', end='', flush=True)
+                    status = 'UNKNOWN'
+                    while status != 'FINISHED' and status != 'ERROR':
+                        time.sleep(30)
+                        try:
+                            status = executionStatus(executionId, False)['status']
+                        except KeyError:
+                            status = 'UNKNOWN'
+                        print('.', end='', flush=True)
+                    print('')
+
+                    metrics = validateResults(executionId, 'accuracy,recall,precision,f-measure,ARI', debug)
+                    print('     METRICS:', metrics)
+                    stats = resultsStats(executionId, debug)
+
+                    headers = []
+                    headers.append('data')
+                    headers.append('nodes')
+                    headers.append('strategy')
+                    headers.append('strategyParams')
+                    headers.append('algorithm')
+                    headers.append('algorithmParams')
+                    headers.append('kernel')
+                    headers.append('use-local')
+                    headers.append('ARI')
+                    headers.append('f-measure')
+                    headers.append('accuracy')
+                    headers.append('recall')
+                    headers.append('precision')
+                    headers.append('ddmTotalProcessing')
+                    headers.append('localBytes')
+                    headers.append('globalBytes')
+                    headers.append('trainingBytes')
+                    print('         CSV_READY_HEADER', ';'.join(headers))
+                    values = []
+                    values.append(checkExist('data', trainDataId)['originalName'])
+                    values.append(workers)
+                    values.append(strategyName)
+                    values.append(str(strategyParams).replace(';', '|'))
+                    values.append(checkExist('alg', algorithmId)['algorithmName'])
+                    values.append(str(executionParams).replace(';', '|'))
+                    values.append(executionParams.get('kernel', ''))
+                    values.append(executionParams.get('use_local_classifier', ''))
+                    values.append(metrics.get('ARI', ''))
+                    values.append(metrics.get('f-measure', ''))
+                    values.append(metrics.get('accuracy', ''))
+                    values.append(metrics.get('recall', ''))
+                    values.append(metrics.get('precision', ''))
+                    values.append(stats['time']['ddmTotalProcessing'])
+                    values.append(stats['transfer']['localBytes'])
+                    values.append(stats['transfer']['globalBytes'])
+                    values.append(stats['data']['trainingBytes'])
+                    values = list(map(str, values))
+                    print('         CSV_READY_VALUES', ';'.join(values))
+    print('  Clearing instances')
+    destroyAll(debug)
+
+    print('')
+    print('SCHEDULE FINISHED')
+
+
 if len(sys.argv) < 2:
     print(
         '  Provide command! [setup, inststatus, confupdate, clear, reload, execute, status, logs, lastlog, results, validate, stats, info [data, alg, func, strgy, exec, inst]]')
@@ -582,9 +789,11 @@ elif command == 'stats':
     stats(oneNode)
 elif command == 'validate':
     validate(oneNode)
+elif command == 'schedule':
+    schedule()
 elif command == 'info':
     if len(sys.argv) < 3:
-        print('  Provide info arg [data, func, stgry, alg, exec, inst]')
+        print('  Provide info arg [data, func, strgy, alg, exec, inst]')
         sys.exit(1)
 
     arg = sys.argv[2]

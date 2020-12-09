@@ -55,4 +55,33 @@ class MostOfOnePlusSomePartitionerStrategySpec extends Specification {
         Files.readAllLines(partitions[3]).stream().count() == 10
     }
 
+    def "should prepare separate label for every partitions when labels == workers"() {
+        setup:
+        def partitioner = new MostOfOnePlusSomePartitionerStrategy()
+        def dataDesc = new PartitionerStrategy.DataDesc(
+                numberOfSamples: Files.lines(tempFileCreator.files.first()).count(),
+                separator: ',',
+                labelIndex: 1,
+                filesLocations: [sourceFile.toString()]
+        )
+        def params = PartitionerStrategy.StrategyParameters.builder()
+                .partitions(4)
+                .seed(10)
+                .customParams('fillEmptyButPercent=0.99;additionalClassesNumber=0;additionalClassesPercent=0')
+                .build()
+
+        when:
+        def partitions = partitioner.partition(dataDesc, params, tempFileCreator)
+
+        then:
+        Files.readAllLines(partitions[0]).stream().count() == 10
+        Files.readAllLines(partitions[0]).stream().filter { it.endsWith('A') }.count() == 10
+        Files.readAllLines(partitions[1]).stream().count() == 10
+        Files.readAllLines(partitions[1]).stream().filter { it.endsWith('B') }.count() == 10
+        Files.readAllLines(partitions[2]).stream().count() == 10
+        Files.readAllLines(partitions[2]).stream().filter { it.endsWith('C') }.count() == 10
+        Files.readAllLines(partitions[3]).stream().count() == 10
+        Files.readAllLines(partitions[3]).stream().filter { it.endsWith('D') }.count() == 10
+    }
+
 }

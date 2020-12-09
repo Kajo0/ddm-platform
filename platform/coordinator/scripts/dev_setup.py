@@ -258,9 +258,9 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
         # 'distanceFunctionId': '1156746230', # loaded equality
         'preCalcCentroids': 'true',
         'b': '2',
-        'meb_clusters': '2',
-        'kernel': 'linear',
-        'knn_k': '3'
+        'meb_clusters': '50',
+        'kernel': 'linear', #rbf #linear
+        'knn_k': '3',
         'use_local_classifier': 'false'
     })
     executionId = requests.post(url,
@@ -437,10 +437,10 @@ def reload(oneNode=False):
     trainPercentage = None
     # trainPercentage = 10
     if not trainPercentage:
-        trainDataId = loadData('./samples/iris.data', 4, ',', None, vectorizeStrings, trainPercentage)
-        # trainDataId = loadData('./samples/iris_numeric.data', 4, ',', None, vectorizeStrings, trainPercentage)
-        testDataId = loadData('./samples/iris.test', 4, ',', None, vectorizeStrings, trainPercentage)
-        # testDataId = loadData('./samples/iris_numeric.test', 4, ',', None, vectorizeStrings, trainPercentage)
+        # trainDataId = loadData('./samples/iris.data', 4, ',', None, vectorizeStrings, trainPercentage)
+        trainDataId = loadData('./samples/iris_numeric.data', 4, ',', None, vectorizeStrings, trainPercentage)
+        # testDataId = loadData('./samples/iris.test', 4, ',', None, vectorizeStrings, trainPercentage)
+        testDataId = loadData('./samples/iris_numeric.test', 4, ',', None, vectorizeStrings, trainPercentage)
     else:
         ids = loadData('./samples/iris.data', 4, ',', None, vectorizeStrings, trainPercentage)
         trainDataId, testDataId = ids.split(',')

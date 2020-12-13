@@ -24,19 +24,4 @@ public class MEBCluster implements Serializable {
     public void setClusterElementList(List<LabeledObservation> clusterElementList) {
         this.clusterElementList = clusterElementList;
     }
-
-    public boolean containsAny(List<LabeledObservation> representativeList) {
-        for (LabeledObservation observation : representativeList) {
-            double[] features = Arrays.copyOfRange(observation.getFeatures(), 0, observation.getFeatures().length);
-            if (Arrays.equals(features, centroid.getFeatures())) {
-                return true;
-            }
-            for (LabeledObservation ce : clusterElementList) {
-                if (Arrays.equals(features, ce.getFeatures())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 }

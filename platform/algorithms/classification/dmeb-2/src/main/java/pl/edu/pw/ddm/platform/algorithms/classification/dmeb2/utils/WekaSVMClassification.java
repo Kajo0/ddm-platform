@@ -26,6 +26,8 @@ public class WekaSVMClassification implements Serializable {
         if (Utils.moreThanOneClass(trainSet)) {
             return doTrain(trainSet);
         } else {
+            int target = trainSet.get(0)
+                    .getTarget();
             return new SVMModel() {
                 @Override
                 public int classify(double[] features) {
@@ -34,7 +36,7 @@ public class WekaSVMClassification implements Serializable {
 //					 if (trainSet.isEmpty()) {
 //						return 0;
 //					}
-                    return trainSet.get(0).getTarget();
+                    return target;
                 }
 
                 @Override
@@ -49,10 +51,11 @@ public class WekaSVMClassification implements Serializable {
         List<String> labels = WekaUtils.convertToLabels(trainSet);
         Instances dataset = WekaUtils.convertToInstances(trainSet, labels);
         ExposingSVSMO model = classifier(dataset);
+        Instances headers = dataset.stringFreeStructure();
         return new SVMModel() {
             @Override
             public int classify(double[] features) {
-                return WekaUtils.classifyWeka(features, dataset, labels, model);
+                return WekaUtils.classifyWeka(features, headers, labels, model);
             }
 
             @Override
@@ -65,9 +68,9 @@ public class WekaSVMClassification implements Serializable {
     public ExposingSVSMO classifier(Instances dataset) {
         ExposingSVSMO model = new ExposingSVSMO();
         try {
-            // FIXME KJ from parameter provider
             String[] options = weka.core.Utils.splitOptions(kernelOptions);
             model.setOptions(options);
+            model.setChecksTurnedOff(true);
             model.buildClassifier(dataset);
         } catch (Exception e) {
             throw new RuntimeException(e);

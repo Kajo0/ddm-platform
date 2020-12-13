@@ -11,7 +11,7 @@ import spock.lang.Specification
 
 class DMebTestingSpec extends Specification {
 
-    def "should perform correct clustering of iris training data"() {
+    def "should perform correct classification of iris training data"() {
         given:
         def pipeline = new DMeb()
         def miningMethod = new DMeb()
@@ -75,7 +75,7 @@ class DMebTestingSpec extends Specification {
         println("F-measure: $fm")
     }
 
-    def "should perform correct clustering of R15 training data"() {
+    def "should perform correct classification of R15 training data"() {
         given:
         def pipeline = new DMeb()
         def miningMethod = new DMeb()

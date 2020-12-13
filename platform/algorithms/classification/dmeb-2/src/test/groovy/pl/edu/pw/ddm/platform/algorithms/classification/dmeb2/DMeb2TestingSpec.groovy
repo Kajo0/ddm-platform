@@ -11,7 +11,7 @@ import spock.lang.Specification
 
 class DMeb2TestingSpec extends Specification {
 
-    def "should perform correct clustering of iris training data"() {
+    def "should perform correct classification of iris training data"() {
         given:
         def pipeline = new DMeb2()
         def miningMethod = new ThirdMethodGlobalClassificationModel(null, null, null)
@@ -76,7 +76,7 @@ class DMeb2TestingSpec extends Specification {
         println("F-measure: $fm")
     }
 
-    def "should perform correct clustering of R15 training data"() {
+    def "should perform correct classifications of R15 training data"() {
         given:
         def pipeline = new DMeb2()
         def miningMethod = new ThirdMethodGlobalClassificationModel(null, null, null)

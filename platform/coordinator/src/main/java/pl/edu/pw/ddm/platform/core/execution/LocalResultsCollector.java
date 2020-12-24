@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -155,8 +155,12 @@ class LocalResultsCollector implements ResultsCollector {
     private void saveResults(List<NodeResultsPair> files, String executionId) throws IOException {
         Path path = Paths.get(resultsPath, executionId);
         if (Files.exists(path)) {
-            log.warn("Removing previous results path '{}'.", path);
-            FileUtils.deleteDirectory(path.toFile());
+            log.warn("Removing previous results files with suffix '{}' from path '{}'.", resultsSuffix, path);
+            Arrays.stream(path.toFile()
+                    .listFiles())
+                    .filter(file -> file.getName()
+                            .endsWith(resultsSuffix))
+                    .forEach(File::delete);
         }
         Files.createDirectories(path);
 
@@ -169,6 +173,7 @@ class LocalResultsCollector implements ResultsCollector {
 
     private void saveStats(ExecutionStats stats, String executionId) throws IOException {
         Path path = Paths.get(resultsPath, executionId, statsFilename);
+        Files.deleteIfExists(path);
         log.info("Saving file '{}' with execution results stats.", path);
         String json = new ObjectMapper().writerWithDefaultPrettyPrinter()
                 .writeValueAsString(stats);
@@ -192,6 +197,7 @@ class LocalResultsCollector implements ResultsCollector {
         }
 
         Path path = Paths.get(resultsPath, desc.getId(), executionDescFilename);
+        Files.deleteIfExists(path);
         prop.store(Files.newOutputStream(path), null);
     }
 

@@ -99,61 +99,75 @@ def dataInfo(debug=True):
     return formatted
 
 
-def broadcastDistanceFunction(instanceId, distanceFunctionId):
-    print("broadcastDistanceFunction instanceId='{}' distanceFunctionId='{}'".format(instanceId, distanceFunctionId))
+def broadcastDistanceFunction(instanceId, distanceFunctionId, debug=True):
+    if debug:
+        print("broadcastDistanceFunction instanceId='{}' distanceFunctionId='{}'".format(instanceId, distanceFunctionId))
     url = baseUrl + api['data']['distance-function-broadcast'].format(**{
         'instanceId': instanceId,
         'distanceFunctionId': distanceFunctionId
     })
     response = requests.get(url).text
-    print('  response: ' + response)
+    if debug:
+        print('  response: ' + response)
     return response
 
 
-def loadDistanceFunction(path):
-    print("loadDistanceFunction path='{}'".format(path))
+def loadDistanceFunction(path, debug=True):
+    if debug:
+        print("loadDistanceFunction path='{}'".format(path))
     url = baseUrl + api['data']['distance-function-load']
     with open(path, 'rb') as file:
         distanceFunctionId = requests.post(url, files={'distanceFunctionFile':
                                                            (file.name, file, 'application/x-java-archive')}).text
-        print('  distanceFunctionId: ' + distanceFunctionId)
+        if debug:
+            print('  distanceFunctionId: ' + distanceFunctionId)
         return distanceFunctionId
 
 
-def loadPartitioningStrategy(path):
-    print("loadPartitioningStrategy path='{}'".format(path))
+def loadPartitioningStrategy(path, debug=True):
+    if debug:
+        print("loadPartitioningStrategy path='{}'".format(path))
     url = baseUrl + api['data']['partitioning-strategy-load']
     with open(path, 'rb') as file:
         partitioningStrategyId = requests.post(url, files={'partitioningStrategyFile':
                                                                (file.name, file, 'application/x-java-archive')}).text
-        print('  partitioningStrategyId: ' + partitioningStrategyId)
+        if debug:
+            print('  partitioningStrategyId: ' + partitioningStrategyId)
         return partitioningStrategyId
 
 
-def functionsInfo():
-    print('functionsInfo')
+def functionsInfo(debug=True):
+    if debug:
+        print('functionsInfo')
     url = baseUrl + api['data']['distance-functions-info']
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
-def strategiesInfo():
-    print('strategiesInfo')
+def strategiesInfo(debug=True):
+    if debug:
+        print('strategiesInfo')
     url = baseUrl + api['data']['partitioning-strategies-info']
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
-def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=False, percentage=None):
-    print("loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}' vectorizeStrings='{}' percentage='{}'".format(
-        path,
-        idIndex,
-        labelIndex,
-        separator,
-        vectorizeStrings,
-        percentage))
+def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=False, percentage=None, debug=True):
+    if debug:
+        print(
+            "loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}' vectorizeStrings='{}' percentage='{}'".format(
+                path,
+                idIndex,
+                labelIndex,
+                separator,
+                vectorizeStrings,
+                percentage))
     url = baseUrl + api['data']['load']
     with open(path, 'rb') as file:
         dataId = requests.post(url,
@@ -167,7 +181,8 @@ def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=Fal
                                    'extractTrainPercentage': percentage
                                }
                                ).text
-        print('  dataId: ' + dataId)
+        if debug:
+            print('  dataId: ' + dataId)
         return dataId
 
 
@@ -201,31 +216,38 @@ def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, dis
     return response
 
 
-def executionInfo():
-    print('executionInfo')
+def executionInfo(debug=True):
+    if debug:
+        print('executionInfo')
     url = baseUrl + api['execution']['info']
     response = requests.get(url).text
     formatted = json.loads(response)
-    pprint.pprint(formatted)
+    if debug:
+        pprint.pprint(formatted)
+    return formatted
 
 
-def collectLogs(executionId):
-    print("collectLogs executionId='{}'".format(executionId))
+def collectLogs(executionId, debug=True):
+    if debug:
+        print("collectLogs executionId='{}'".format(executionId))
     url = baseUrl + api['execution']['collectLogs'].format(**{'executionId': executionId})
     response = requests.get(url).text
-    print('  response: ' + response)
+    if debug:
+        print('  response: ' + response)
     return response
 
 
-def fetchLogs(executionId, nodeId, count):
-    print("fetchLogs executionId='{}' nodeId='{}' count='{}'".format(executionId, nodeId, count))
+def fetchLogs(executionId, nodeId, count, debug=True):
+    if debug:
+        print("fetchLogs executionId='{}' nodeId='{}' count='{}'".format(executionId, nodeId, count))
     url = baseUrl + api['execution']['fetchLogs'].format(**{
         'executionId': executionId,
         'nodeId': nodeId,
         'count': count
     })
     response = requests.get(url).text
-    print('  response size: ' + str(len(response)))
+    if debug:
+        print('  response size: ' + str(len(response)))
     return response
 
 
@@ -341,7 +363,8 @@ def instanceConfigUpdate(instanceId, debug=True):
 
 
 def instanceInfo(debug=True):
-    print('instanceInfo')
+    if debug:
+        print('instanceInfo')
     url = baseUrl + api['instance']['info']
     response = requests.get(url).text
     formatted = json.loads(response)

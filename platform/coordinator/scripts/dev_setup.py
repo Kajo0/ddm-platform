@@ -620,6 +620,9 @@ def schedule():
     #       trainId   testId
     irisNumeric = (loadData('./samples/iris_numeric.data', 4, ',', None, False, None, False),
                    loadData('./samples/iris_numeric.test', 4, ',', None, False, None, False))
+    # SkinNonSkin = tuple(loadData('/home/kajo/Downloads/2020-12-03-svm-data/Skin_NonSkin.txt', 3, '	', None, False, 30, False).split(','))
+    # adult = (loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.data', 14, ',', None, True, None, False),
+    #          loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.test', 14, ',', None, True, None, False))
     data = [irisNumeric]
     #       workers cpus memory
     instances = [(1, 2, 2),
@@ -640,11 +643,17 @@ def schedule():
     executions = [(wekaSvm, {'kernel': 'linear'}, 'euclidean', None, False),
                   (wekaSvm, {'kernel': 'rbf'}, 'euclidean', None, False),
                   (dmeb, {'kernel': 'linear', 'meb_clusters': '50'}, 'euclidean', None, True),
+                  (dmeb, {'kernel': 'linear', 'meb_clusters': '-1'}, 'euclidean', None, True),
                   (dmeb, {'kernel': 'rbf', 'meb_clusters': '50'}, 'euclidean', None, True),
+                  (dmeb, {'kernel': 'rbf', 'meb_clusters': '-1'}, 'euclidean', None, True),
                   (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
                   (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
                   (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True)]
+                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
+                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True)]
 
     # check data
     for d in data:
@@ -737,6 +746,7 @@ def schedule():
                     headers.append('algorithm')
                     headers.append('algorithmParams')
                     headers.append('kernel')
+                    headers.append('mebClusters')
                     headers.append('use-local')
                     headers.append('ARI')
                     headers.append('f-measure')
@@ -756,6 +766,7 @@ def schedule():
                     values.append(checkExist('alg', algorithmId)['algorithmName'])
                     values.append(str(executionParams).replace(';', '|'))
                     values.append(executionParams.get('kernel', ''))
+                    values.append(executionParams.get('meb_clusters', ''))
                     values.append(executionParams.get('use_local_classifier', ''))
                     values.append(metrics.get('ARI', ''))
                     values.append(metrics.get('f-measure', ''))

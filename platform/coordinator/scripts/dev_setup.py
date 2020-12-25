@@ -624,36 +624,42 @@ def schedule():
     # adult = (loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.data', 14, ',', None, True, None, False),
     #          loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.test', 14, ',', None, True, None, False))
     data = [irisNumeric]
-    #       workers cpus memory
-    instances = [(1, 2, 2),
-                 (2, 2, 4),
-                 (4, 2, 3),
-                 (8, 2, 2)]
-    #               strategy seed custom-params multiNode
-    strategies = [('uniform', 11, None, False),
-                  ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.99;additionalClassesNumber=0;additionalClassesPercent=0', True),
-                  ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', True)]
+    # workers cpus memory
+    instances = [
+        (1, 2, 2),
+        (2, 2, 4),
+        (4, 2, 3),
+        (8, 2, 2)
+    ]
+    #     strategy seed custom-params multiNode
+    strategies = [
+        ('uniform', 11, None, False),
+        ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.99;additionalClassesNumber=0;additionalClassesPercent=0', True),
+        ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', True)
+    ]
     #   '1859600396' = 'WEKA SVM',
     #   '539897355'  = 'D-MEB'
     #   '1826773956' = 'D-MEB-2'
     wekaSvm = loadJar('./samples/svm-weka.jar', False)
     dmeb = loadJar('./samples/dmeb.jar', False)
     dmeb2 = loadJar('./samples/dmeb-2.jar', False)
-    #              algorithmId    params distanceFunctionName distanceFunctionId multiNode
-    executions = [(wekaSvm, {'kernel': 'linear'}, 'euclidean', None, False),
-                  (wekaSvm, {'kernel': 'rbf'}, 'euclidean', None, False),
-                  (dmeb, {'kernel': 'linear', 'meb_clusters': '50'}, 'euclidean', None, True),
-                  (dmeb, {'kernel': 'linear', 'meb_clusters': '-1'}, 'euclidean', None, True),
-                  (dmeb, {'kernel': 'rbf', 'meb_clusters': '50'}, 'euclidean', None, True),
-                  (dmeb, {'kernel': 'rbf', 'meb_clusters': '-1'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
-                  (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True)]
+    # algorithmId    params distanceFunctionName distanceFunctionId multiNode
+    executions = [
+        (wekaSvm, {'kernel': 'linear'}, 'euclidean', None, False),
+        (wekaSvm, {'kernel': 'rbf'}, 'euclidean', None, False),
+        (dmeb, {'kernel': 'linear', 'meb_clusters': '50'}, 'euclidean', None, True),
+        (dmeb, {'kernel': 'linear', 'meb_clusters': '-1'}, 'euclidean', None, True),
+        (dmeb, {'kernel': 'rbf', 'meb_clusters': '50'}, 'euclidean', None, True),
+        (dmeb, {'kernel': 'rbf', 'meb_clusters': '-1'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
+        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True)
+    ]
 
     # check data
     for d in data:

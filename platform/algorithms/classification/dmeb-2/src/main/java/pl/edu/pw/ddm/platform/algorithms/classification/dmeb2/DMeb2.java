@@ -42,6 +42,10 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
         // FIXME unused partitionId?
         int partitionId = 0;
         Double mebClusters = paramProvider.provideNumeric("meb_clusters", 32d);
+        if (mebClusters <= 0) {
+            mebClusters = Math.max(2, Math.ceil(Math.pow(Math.log(dataProvider.training().size()), 2)));
+            System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
+        }
         MEBModel mebModel = new MEBClustering(mebClusters.intValue()).perform(labeledObservations, partitionId);
 
         List<LabeledObservation> representativeList = mebModel.getClusterList().stream()

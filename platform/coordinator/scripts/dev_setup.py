@@ -731,7 +731,7 @@ def schedule():
 
                     print('    Wait for finish of: ' + executionId + ' ', end='', flush=True)
                     status = 'UNKNOWN'
-                    while status != 'FINISHED' and status != 'ERROR':
+                    while status != 'FINISHED' and status != 'FAILED' and status != 'STOPPED':
                         time.sleep(30)
                         try:
                             status = executionStatus(executionId, False)['status']

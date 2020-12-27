@@ -731,14 +731,21 @@ def schedule():
 
                     print('    Wait for finish of: ' + executionId + ' ', end='', flush=True)
                     status = 'UNKNOWN'
+                    message = None
                     while status != 'FINISHED' and status != 'FAILED' and status != 'STOPPED':
                         time.sleep(30)
                         try:
-                            status = executionStatus(executionId, False)['status']
+                            execStatus = executionStatus(executionId, False)
+                            status = execStatus['status']
+                            message = execStatus['message']
                         except KeyError:
                             status = 'UNKNOWN'
                         print('.', end='', flush=True)
                     print('')
+
+                    if status != 'FINISHED':
+                        print('        FAILED: ' + message)
+                        continue
 
                     metrics = validateResults(executionId, 'accuracy,recall,precision,f-measure,ARI', debug)
                     print('     METRICS:', metrics)

@@ -24,4 +24,13 @@ public class MEBCluster implements Serializable {
     public void setClusterElementList(List<LabeledObservation> clusterElementList) {
         this.clusterElementList = clusterElementList;
     }
+
+    public LabeledObservation squashToCentroid() {
+        LabeledObservation any = clusterElementList.get(0);
+        clusterElementList.clear();
+        LabeledObservation squashed = new LabeledObservation(-1, centroid.getFeatures(), any.getTarget());
+        clusterElementList.add(squashed);
+        return squashed;
+    }
+
 }

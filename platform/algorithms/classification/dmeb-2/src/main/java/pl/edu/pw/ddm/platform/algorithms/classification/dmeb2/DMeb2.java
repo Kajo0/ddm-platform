@@ -15,6 +15,7 @@ import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabeledObser
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.MEBClustering;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.MEBModel;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.SVMModel;
+import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.Utils;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.WekaSVMClassification;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.WekaUtils;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
@@ -49,10 +50,14 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
         MEBModel mebModel = new MEBClustering(mebClusters.intValue()).perform(labeledObservations, partitionId);
 
         List<LabeledObservation> representativeList = mebModel.getClusterList().stream()
-                .flatMap(cluster -> Stream.of(new LabeledObservation(-1,
-                        cluster.getCentroid().getFeatures(),
-                        cluster.getClusterElementList().get(0).getTarget())))
-                .collect(toList());
+                .flatMap(cluster -> {
+                    if (Utils.moreThanOneClass(cluster.getClusterElementList())) {
+                        return cluster.getClusterElementList().stream();
+                    } else {
+                        return Stream.of(cluster.squashToCentroid());
+                    }
+                })
+                .collect(Collectors.toList());
 
         System.out.println("  [[FUTURE LOG]] processLocal: representativeList=" + representativeList.size()
                 + ", labeledObservations=" + labeledObservations.size());

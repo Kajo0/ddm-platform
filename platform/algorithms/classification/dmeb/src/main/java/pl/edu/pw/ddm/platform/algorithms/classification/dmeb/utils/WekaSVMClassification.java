@@ -16,7 +16,8 @@ public class WekaSVMClassification implements Serializable {
         } else if ("rbf".equals(kernel)) {
             kernelOptions = "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.50625\"";
         } else if ("linear".equals(kernel)) {
-            kernelOptions = "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -E 1.0 -C 250007\"";
+            double exp = 1 + Double.MIN_VALUE; // to keep support vectors
+            kernelOptions = "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -E " + exp + " -C 250007\"";
         } else {
             throw new IllegalArgumentException("Unsupported kernel value: " + kernel);
         }

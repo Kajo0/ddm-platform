@@ -626,7 +626,7 @@ def schedule():
     data = [irisNumeric]
     # workers cpus memory
     instances = [
-        (1, 2, 2),
+        (1, 2, 8),
         (2, 2, 4),
         (4, 2, 3),
         (8, 2, 2)

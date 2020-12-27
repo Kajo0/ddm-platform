@@ -52,7 +52,7 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                     if (Utils.moreThanOneClass(cluster.getClusterElementList())) {
                         return cluster.getClusterElementList().stream();
                     } else {
-                        return Stream.of(new LabeledObservation(-1, cluster.getCentroid().getFeatures(), cluster.getClusterElementList().get(0).getTarget()));
+                        return Stream.of(cluster.squashToCentroid());
                     }
                 })
                 .collect(Collectors.toList());

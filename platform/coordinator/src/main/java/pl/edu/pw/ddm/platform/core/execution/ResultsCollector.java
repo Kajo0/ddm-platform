@@ -26,6 +26,8 @@ interface ResultsCollector {
         static class TimeStats {
 
             private long ddmTotalProcessing;
+            private long ddmTotalTrainingProcessing;
+            private long ddmTotalValidationProcessing;
             private List<ProcessingWrapper> localsProcessings;
             private List<Long> globalProcessings;
             private Map<String, LocalStats> localsExecutions;

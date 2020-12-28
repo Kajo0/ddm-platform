@@ -16,6 +16,8 @@ public class ExecutionStatsDto {
     public static class TimeStatsDto {
 
         private long ddmTotalProcessing;
+        private long ddmTotalTrainingProcessing;
+        private long ddmTotalValidationProcessing;
 
         private List<ProcessingWrapper> localsProcessings;
         private List<Long> globalProcessings;

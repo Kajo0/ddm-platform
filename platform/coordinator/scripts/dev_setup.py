@@ -766,7 +766,7 @@ def schedule():
                     headers.append('accuracy')
                     headers.append('recall')
                     headers.append('precision')
-                    headers.append('ddmTotalProcessing')
+                    headers.append('ddmTotalTrainingProcessing')
                     headers.append('localBytes')
                     headers.append('globalBytes')
                     headers.append('trainingBytes')

@@ -108,15 +108,23 @@ public final class CentralRunner {
         statusPersister.started();
 
         TimeStatistics stats = new TimeStatistics();
-        stats.setStart(LocalDateTime.now());
-        summarizer = new CentralDdmSummarizer(args.getMasterNode(), args.getWorkerNodes(), stats);
+        TimeStatistics trainingStats = new TimeStatistics();
+        TimeStatistics validationStats = new TimeStatistics();
+        summarizer = new CentralDdmSummarizer(args.getMasterNode(), args.getWorkerNodes(), stats, trainingStats, validationStats);
 
+        stats.setStart(LocalDateTime.now());
+        trainingStats.setStart(LocalDateTime.now());
         args.pipeline()
                 .getStages()
                 .forEach(this::processStage);
+        trainingStats.setEnd(LocalDateTime.now());
 
         statusPersister.validate();
+
+        validationStats.setStart(LocalDateTime.now());
         List<ModelWrapper> acks = executeMethod();
+        validationStats.setEnd(LocalDateTime.now());
+
         summarizer.setExecutionAcks(acks);
         stats.setEnd(LocalDateTime.now());
 

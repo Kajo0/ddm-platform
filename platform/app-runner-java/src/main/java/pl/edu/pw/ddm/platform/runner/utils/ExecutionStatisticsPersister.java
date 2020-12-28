@@ -46,6 +46,8 @@ public class ExecutionStatisticsPersister {
     static class TimeStats {
 
         private long ddmTotalProcessing;
+        private long ddmTotalTrainingProcessing;
+        private long ddmTotalValidationProcessing;
 
         @Singular
         private List<ProcessingWrapper> localsProcessings;

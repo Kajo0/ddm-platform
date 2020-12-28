@@ -19,6 +19,8 @@ public class CentralDdmSummarizer {
     private final String masterAddr;
     private final List<String> workerAddrs;
     private final TimeStatistics globalStats;
+    private final TimeStatistics trainingStats;
+    private final TimeStatistics validationStats;
 
     private final List<List<ModelWrapper>> locals = new LinkedList<>();
     private final List<ModelWrapper> globals = new LinkedList<>();
@@ -43,6 +45,8 @@ public class CentralDdmSummarizer {
 
         ExecutionStatisticsPersister.TimeStats.TimeStatsBuilder time = ExecutionStatisticsPersister.TimeStats.builder();
         time.ddmTotalProcessing(globalStats.duration());
+        time.ddmTotalTrainingProcessing(trainingStats.duration());
+        time.ddmTotalValidationProcessing(validationStats.duration());
         globals.forEach(globalModel -> time.globalProcessing(globalModel.getTimeStatistics().duration()));
         locals.stream()
                 .map(localModels -> localModels.stream()

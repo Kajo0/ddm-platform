@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.algorithms.classification.dmeb2;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabeledObservation;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.SVMModel;
@@ -27,6 +28,12 @@ public class ThirdMethodLocalSVMWithRepresentatives implements LocalModel {
 
     public List<LabeledObservation> getRepresentativeList() {
         return representativeList;
+    }
+
+    public void clearRepresentativesButDummy() {
+        representativeList = representativeList.stream()
+                .filter(lo -> lo.getTarget() == DUMMY_TARGET)
+                .collect(Collectors.toList());
     }
 
     public static LabeledObservation dummyObservation() {

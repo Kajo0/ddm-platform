@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.algorithms.classification.dmeb2;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,6 +107,9 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
         for (Map.Entry<Integer, List<LabeledObservation>> entry : classToLocalModel.entrySet()) {
             knnModelMap.put(entry.getKey(), new LinearNNSearch(WekaUtils.convertToInstances(entry.getValue(), labels)));
         }
+
+        Arrays.stream(localModelArray)
+                .forEach(ThirdMethodLocalSVMWithRepresentatives::clearRepresentativesButDummy);
 
         System.out.println("  [[FUTURE LOG]] updateGlobal: svs=" + svmModel.getSVs().size()
                 + ", localModelArray=" + localModelArray.length + ", knnModelMap=" + knnModelMap.size());

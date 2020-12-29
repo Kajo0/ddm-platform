@@ -24,14 +24,14 @@ import weka.core.Instances;
 import weka.core.neighboursearch.LinearNNSearch;
 
 @NoArgsConstructor
-public class ThirdMethodGlobalClassificationModel implements Classifier {
+public class GlobalClassifier implements Classifier {
 
     private SVMModel firstLevelClassifier;
-    private ThirdMethodLocalSVMWithRepresentatives[] secondLevelClassifiers;
+    private LocalRepresentativesModel[] secondLevelClassifiers;
     private Map<Integer, LinearNNSearch> knnModelMap;
 
-    public ThirdMethodGlobalClassificationModel(SVMModel firstLevelClassifier,
-                                                ThirdMethodLocalSVMWithRepresentatives[] secondLevelClassifiers,
+    public GlobalClassifier(SVMModel firstLevelClassifier,
+                                                LocalRepresentativesModel[] secondLevelClassifiers,
                                                 Map<Integer, LinearNNSearch> knnModelMap) {
         this.firstLevelClassifier = firstLevelClassifier;
         this.secondLevelClassifiers = secondLevelClassifiers;
@@ -54,8 +54,8 @@ public class ThirdMethodGlobalClassificationModel implements Classifier {
     }
 
     private SVMModel findLocalClassifier() {
-        LabeledObservation localhostHash = ThirdMethodLocalSVMWithRepresentatives.dummyObservation();
-        if (ThirdMethodLocalSVMWithRepresentatives.CANNOT_LOCALHOST == localhostHash.getIndex()) {
+        LabeledObservation localhostHash = LocalRepresentativesModel.dummyObservation();
+        if (LocalRepresentativesModel.CANNOT_LOCALHOST == localhostHash.getIndex()) {
             System.err.println("  [[FUTURE LOG]] Cannot InetAddress.getLocalHost()");
             throw new RuntimeException("Cannot InetAddress.getLocalHost(): CANNOT_LOCALHOST");
         }
@@ -64,10 +64,10 @@ public class ThirdMethodGlobalClassificationModel implements Classifier {
         SVMModel model = Stream.of(secondLevelClassifiers)
                 .filter(cl -> cl.getRepresentativeList()
                         .stream()
-                        .filter(o -> ThirdMethodLocalSVMWithRepresentatives.DUMMY_TARGET == o.getTarget())
+                        .filter(o -> LocalRepresentativesModel.DUMMY_TARGET == o.getTarget())
                         .anyMatch(o -> localhostHash.getIndex() == o.getIndex()))
                 .findFirst()
-                .map(ThirdMethodLocalSVMWithRepresentatives::getSvmModel)
+                .map(LocalRepresentativesModel::getSvmModel)
                 .orElseThrow(() -> new RuntimeException("Cannot find local classifier with hash ID " + localhostHash.getIndex()));
         System.out.println("  [[FUTURE LOG]] Found and using classifier with dummy ID: " + localhostHash.getIndex());
         return model;
@@ -80,7 +80,7 @@ public class ThirdMethodGlobalClassificationModel implements Classifier {
             Instances instances = knn.kNearestNeighbours(WekaUtils.toInstance(features), knnParam);
             List<SVMModel> svmModels = new ArrayList<>();
             for (Instance i : instances) {
-                ThirdMethodLocalSVMWithRepresentatives secondLevelClassifier = secondLevelClassifiers[(int) i.classValue()];
+                LocalRepresentativesModel secondLevelClassifier = secondLevelClassifiers[(int) i.classValue()];
                 svmModels.add(secondLevelClassifier.getSvmModel());
             }
             return majorityVoting(features, svmModels);

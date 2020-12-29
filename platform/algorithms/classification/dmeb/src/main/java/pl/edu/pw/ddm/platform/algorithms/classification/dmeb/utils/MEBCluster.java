@@ -2,30 +2,31 @@ package pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import lombok.Getter;
+import lombok.Setter;
+import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 
+@Getter
+@Setter
 public class MEBCluster implements Serializable {
+
+    private transient boolean debug;
+    private transient DistanceFunction distanceFunction;
+
     private Centroid centroid;
     private List<LabeledObservation> clusterElementList;
 
-    public Centroid getCentroid() {
-        return centroid;
+    // TODO make use of the function after removing weka impl.
+    public MEBCluster(DistanceFunction distanceFunction, boolean debug) {
+        this.distanceFunction = distanceFunction;
+        this.debug = debug;
     }
 
-    public List<LabeledObservation> getClusterElementList() {
-        return clusterElementList;
-    }
-
-    public void setCentroid(Centroid centroid) {
-        this.centroid = centroid;
-    }
-
-    public void setClusterElementList(List<LabeledObservation> clusterElementList) {
-        this.clusterElementList = clusterElementList;
-    }
-
-    public boolean containsAny(List<LabeledObservation> representativeList) {
+    public boolean containsAny(Collection<LabeledObservation> representativeList) {
         for (LabeledObservation observation : representativeList) {
             double[] features = Arrays.copyOfRange(observation.getFeatures(), 0, observation.getFeatures().length);
             if (Arrays.equals(features, centroid.getFeatures())) {
@@ -41,10 +42,14 @@ public class MEBCluster implements Serializable {
     }
 
     public LabeledObservation squashToCentroid() {
+        int count = clusterElementList.size();
         LabeledObservation any = clusterElementList.get(0);
         clusterElementList.clear();
         LabeledObservation squashed = new LabeledObservation(-1, centroid.getFeatures(), any.getTarget());
         clusterElementList.add(squashed);
+        if (debug) {
+            System.out.println("  [[FUTURE LOG]] Cluster with " + count + " elements squashed into 1");
+        }
         return squashed;
     }
 

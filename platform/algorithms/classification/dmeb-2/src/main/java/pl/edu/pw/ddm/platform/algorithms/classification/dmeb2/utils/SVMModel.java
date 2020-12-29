@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.List;
 
 public interface SVMModel extends Serializable {
+
+    boolean isSingleClass();
+
     int classify(double[] features);
 
     List<LabeledObservation> getSVs();

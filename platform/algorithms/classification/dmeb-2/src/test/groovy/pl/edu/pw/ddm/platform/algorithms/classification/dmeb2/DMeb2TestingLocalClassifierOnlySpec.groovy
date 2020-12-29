@@ -12,12 +12,12 @@ import spock.lang.Specification
 class DMeb2TestingLocalClassifierOnlySpec extends Specification {
 
     /**
-     * Used rather as debug not test cause of collecting localhost address which here is the same ThirdMethodGlobalClassificationModel#dummyObservation
+     * Used rather as debug not test cause of collecting localhost address which here is the same LocalRepresentativesModel()#dummyObservation
      */
     def "should perform correct classification of iris training data using only local classifiers"() {
         given:
         def pipeline = new DMeb2()
-        def miningMethod = new ThirdMethodGlobalClassificationModel(null, null, null)
+        def miningMethod = new GlobalClassifier(null, null, null)
 
         and:
         def config = DdmExecutionConfig.builder()

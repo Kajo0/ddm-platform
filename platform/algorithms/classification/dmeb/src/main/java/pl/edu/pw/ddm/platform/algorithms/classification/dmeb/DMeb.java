@@ -2,6 +2,8 @@ package pl.edu.pw.ddm.platform.algorithms.classification.dmeb;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -11,6 +13,7 @@ import pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils.MEBModel;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils.SVMModel;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils.Utils;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils.WekaSVMClassification;
+import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
@@ -20,6 +23,7 @@ import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalRepeater;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
+import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
 import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
@@ -46,8 +50,15 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
             mebClusters = Math.max(2, Math.ceil(Math.pow(Math.log(dataProvider.training().size()), 2)));
             System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
         }
-        MEBModel mebModel = new MEBClustering(mebClusters.intValue()).perform(labeledObservations, partitionId);
-        List<LabeledObservation> representativeList = mebModel.getClusterList().stream()
+
+        boolean debug = Boolean.TRUE.toString().equals(paramProvider.provide("debug", "false"));
+        String initMethod = paramProvider.provide("init_kmeans_method", "k-means++");
+        DistanceFunction distanceFunction = Optional.ofNullable(paramProvider.distanceFunction())
+                .orElseGet(EuclideanDistance::new);
+        MEBModel mebModel = new MEBClustering(mebClusters.intValue(), initMethod, distanceFunction, debug)
+                .perform(labeledObservations, partitionId);
+
+        Set<LabeledObservation> representativeList = mebModel.getClusterList().stream()
                 .flatMap(cluster -> {
                     if (Utils.moreThanOneClass(cluster.getClusterElementList())) {
                         return cluster.getClusterElementList().stream();
@@ -55,7 +66,7 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                         return Stream.of(cluster.squashToCentroid());
                     }
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         System.out.println("  [[FUTURE LOG]] processLocal: representativeList=" + representativeList.size()
                 + ", labeledObservations=" + labeledObservations.size());
@@ -73,8 +84,11 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
         List<LabeledObservation> trainingSet = localModels.stream()
                 .flatMap(localModel -> localModel.getRepresentativeList().stream())
                 .collect(Collectors.toList());
+        System.out.println("  [[FUTURE LOG]] processGlobal: trainingSet=" + trainingSet.size());
+
         String kernel = paramProvider.provide("kernel");
-        SVMModel svmModel = new WekaSVMClassification(kernel).train(trainingSet);
+        SVMModel svmModel = new WekaSVMClassification(kernel, seed(paramProvider)).train(trainingSet);
+
         List<LabeledObservation> observations = localModels.stream().flatMap(m ->
                 m.getMebModel().getClusterList().stream()
                         // FIXME KJ
@@ -90,24 +104,15 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
 
     @Override
     public MEBBaseMethodDeClustered repeatLocal(MEBBaseMethodChosenRepresentatives gModel, MEBBaseMethodLocalRepresentatives lModel, DataProvider dataProvider, ParamProvider paramProvider) {
-        MEBModel mebModel = lModel.getMebModel();
-        if (mebModel == null) {
-            System.out.println("mebModel is null");
-        } else if (mebModel.getClusterList() == null) {
-            System.out.println("mebModel cluster list is null");
-        }
-        List<LabeledObservation> observations = mebModel.getClusterList().stream()
-                // FIXME KJ
-//		List<LabeledObservation> observations = Optional.ofNullable(mebModel)
-//				.map(MEBModel::getClusterList)
-//				.orElseGet(Collections::emptyList)
-//				.stream()
+        System.out.println("  [[FUTURE LOG]] repeatLocal: before observations=" + lModel.getMebModel().getClusterList().size());
+        List<LabeledObservation> observations = lModel.getMebModel()
+                .getClusterList()
+                .stream()
                 .filter(cluster -> cluster.containsAny(gModel.getRepresentativeList()))
                 .flatMap(cluster -> cluster.getClusterElementList().stream())
                 .collect(Collectors.toList());
-//        this.representativeList = observations;
 
-        System.out.println("  [[FUTURE LOG]] repeatLocal: observations=" + observations.size());
+        System.out.println("  [[FUTURE LOG]] repeatLocal: after observations=" + observations.size());
         return new MEBBaseMethodDeClustered(observations);
     }
 
@@ -116,11 +121,12 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
         List<LabeledObservation> trainingSet = localModels.stream()
                 .flatMap(localModel -> localModel.getRepresentativeList().stream())
                 .collect(Collectors.toList());
-        String kernel = paramProvider.provide("kernel");
-        globalSVM = new WekaSVMClassification(kernel).train(trainingSet);
+        System.out.println("  [[FUTURE LOG]] updateGlobal: trainingSet=" + trainingSet.size());
 
-        System.out.println("  [[FUTURE LOG]] updateGlobal: svs=" + globalSVM.getSVs().size()
-                + ", trainingSet=" + trainingSet.size());
+        String kernel = paramProvider.provide("kernel");
+        globalSVM = new WekaSVMClassification(kernel, seed(paramProvider)).train(trainingSet);
+
+        System.out.println("  [[FUTURE LOG]] updateGlobal: svs=" + globalSVM.getSVs().size());
         return this;
     }
 
@@ -141,6 +147,15 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
                 .global(DMeb.class)
                 .repeatLocal(DMeb.class)
                 .lastGlobal(DMeb.class);
+    }
+
+    static Long seed(ParamProvider paramProvider) {
+        Double seed = paramProvider.provideNumeric("seed");
+        if (seed != null) {
+            return seed.longValue();
+        } else {
+            return null;
+        }
     }
 
     private void printParams(ParamProvider paramProvider) {

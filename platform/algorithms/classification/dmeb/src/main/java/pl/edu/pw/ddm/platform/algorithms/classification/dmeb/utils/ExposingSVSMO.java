@@ -2,11 +2,10 @@ package pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Random;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
@@ -22,6 +21,8 @@ import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 import weka.filters.unsupervised.attribute.Standardize;
 
 public class ExposingSVSMO extends SMO {
+
+    private transient Set<LabeledObservation> svs;
 
     @Override
     public void buildClassifier(Instances insts) throws Exception {
@@ -159,9 +160,12 @@ public class ExposingSVSMO extends SMO {
         }
     }
 
+    public Set<LabeledObservation> getSVs() {
+        if (svs != null) {
+            return svs;
+        }
+        svs = new HashSet<>();
 
-    public List<LabeledObservation> getSVs() {
-        List<LabeledObservation> sv = new ArrayList<>();
         for (int i = 0; i < m_classifiers.length; i++) {
             for (int j = 0; j < m_classifiers[0].length; j++) {
                 BinarySMO binarySMO = m_classifiers[i][j];
@@ -179,14 +183,15 @@ public class ExposingSVSMO extends SMO {
                         Instance instance = ((InstanceWithPreviousVersion) m_data.get(index)).getBefore();
                         double[] array = Arrays.copyOf(instance.toDoubleArray(), instance.toDoubleArray().length - 1);
                         int targetClass = (int) instance.value(instance.classIndex());
-                        sv.add(new LabeledObservation(-1, array, targetClass));
+                        svs.add(new LabeledObservation(-1, array, targetClass));
                         svCnt--;
                     }
                     index++;
                 }
             }
         }
-        return sv.stream().distinct().collect(Collectors.toList());
+
+        return svs;
     }
 
     private static Object getSupportVectors(BinarySMO binarySMO, String fieldName) {

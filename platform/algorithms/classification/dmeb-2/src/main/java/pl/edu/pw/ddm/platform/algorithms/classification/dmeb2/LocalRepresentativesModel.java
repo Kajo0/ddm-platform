@@ -5,35 +5,24 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabeledObservation;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.SVMModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
-public class ThirdMethodLocalSVMWithRepresentatives implements LocalModel {
+@Getter
+@RequiredArgsConstructor
+public class LocalRepresentativesModel implements LocalModel {
 
     public static final int CANNOT_LOCALHOST = -6;
     public static final int DUMMY_TARGET = -10;
 
-    private SVMModel svmModel;
-    private List<LabeledObservation> representativeList;
-
-    public ThirdMethodLocalSVMWithRepresentatives(SVMModel svmModel, List<LabeledObservation> representativeList) {
-        this.svmModel = svmModel;
-        this.representativeList = representativeList;
-    }
-
-    public SVMModel getSvmModel() {
-        return svmModel;
-    }
-
-    public List<LabeledObservation> getRepresentativeList() {
-        return representativeList;
-    }
+    private final SVMModel svmModel;
+    private final List<LabeledObservation> representativeList;
 
     public void clearRepresentativesButDummy() {
-        representativeList = representativeList.stream()
-                .filter(lo -> lo.getTarget() == DUMMY_TARGET)
-                .collect(Collectors.toList());
+        representativeList.removeIf(lo -> lo.getTarget() != DUMMY_TARGET);
     }
 
     public static LabeledObservation dummyObservation() {

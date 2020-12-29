@@ -1,23 +1,27 @@
 package pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import weka.core.Instances;
 
 public class WekaSVMClassification implements Serializable {
 
+    private static final double LINEARLY_EXP = 1.000000000000001; // to keep support vectors
+
+    private final Long seed;
     private final String kernelOptions;
 
-    public WekaSVMClassification(String kernel) {
+    public WekaSVMClassification(String kernel, Long seed) {
+        this.seed = seed;
+
         if (kernel == null) {
             throw new NullPointerException("kernel not provided");
         } else if ("rbf".equals(kernel)) {
             kernelOptions = "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.50625\"";
         } else if ("linear".equals(kernel)) {
-            double exp = 1 + Double.MIN_VALUE; // to keep support vectors
-            kernelOptions = "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -E " + exp + " -C 250007\"";
+            kernelOptions = "-C 12.5 -L 0.001 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -E " + LINEARLY_EXP + " -C 250007\"";
         } else {
             throw new IllegalArgumentException("Unsupported kernel value: " + kernel);
         }
@@ -29,22 +33,7 @@ public class WekaSVMClassification implements Serializable {
         } else {
             int target = trainSet.get(0)
                     .getTarget();
-            return new SVMModel() {
-                @Override
-                public int classify(double[] features) {
-                    // FIXME KJ
-                    // think abou copy train set
-//					 if (trainSet.isEmpty()) {
-//						return 0;
-//					}
-                    return target;
-                }
-
-                @Override
-                public List<LabeledObservation> getSVs() {
-                    return Collections.emptyList();
-                }
-            };
+            return new DummySVMModel(target);
         }
     }
 
@@ -60,7 +49,7 @@ public class WekaSVMClassification implements Serializable {
             }
 
             @Override
-            public List<LabeledObservation> getSVs() {
+            public Set<LabeledObservation> getSVs() {
                 return model.getSVs();
             }
         };
@@ -72,6 +61,9 @@ public class WekaSVMClassification implements Serializable {
             String[] options = weka.core.Utils.splitOptions(kernelOptions);
             model.setOptions(options);
             model.setChecksTurnedOff(true);
+            if (seed != null) {
+                model.setRandomSeed(seed.intValue());
+            }
             model.buildClassifier(dataset);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -99,7 +99,8 @@ class DMebTestingSpec extends Specification {
                 .executionParams([
                         'seed'        : '10',
                         'meb_clusters': '2',
-                        'kernel'      : 'rbf'
+                        'kernel'      : 'rbf',
+                        'debug'       : 'true'
                 ])
                 .build()
         def cr = new DdmPipelineRunner(config)
@@ -163,7 +164,8 @@ class DMebTestingSpec extends Specification {
                 .executionParams([
                         'seed'        : '12',
                         'meb_clusters': '-1',
-                        'kernel'      : 'linear'
+                        'kernel'      : 'linear',
+                        'debug'       : 'true'
                 ])
                 .build()
         def cr = new DdmPipelineRunner(config)

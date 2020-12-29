@@ -29,12 +29,12 @@ import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import weka.core.neighboursearch.LinearNNSearch;
 
-public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentatives>,
-        GlobalUpdater<ThirdMethodLocalSVMWithRepresentatives, ThirdMethodGlobalClassificationModel>,
+public class DMeb2 implements LocalProcessor<LocalRepresentativesModel>,
+        GlobalUpdater<LocalRepresentativesModel, GlobalClassifier>,
         AlgorithmConfig {
 
     @Override
-    public ThirdMethodLocalSVMWithRepresentatives processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
+    public LocalRepresentativesModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
         printParams(paramProvider);
 
         List<LabeledObservation> labeledObservations = toLabeledObservation(dataProvider.training());
@@ -48,11 +48,14 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
             mebClusters = Math.max(2, Math.ceil(Math.pow(Math.log(dataProvider.training().size()), 2)));
             System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
         }
-        MEBModel mebModel = new MEBClustering(mebClusters.intValue()).perform(labeledObservations, partitionId);
+        String initMethod = paramProvider.provide("init_kmeans_method", "k-means++");
+        MEBModel mebModel = new MEBClustering(mebClusters.intValue(), initMethod).perform(labeledObservations, partitionId);
 
         List<LabeledObservation> representativeList = mebModel.getClusterList().stream()
                 .flatMap(cluster -> {
-                    if (Utils.moreThanOneClass(cluster.getClusterElementList())) {
+                    if (useBorderLeaveFeature(paramProvider)) {
+                        return cluster.leaveBorder(paramProvider.distanceFunction()).stream();
+                    } else if (Utils.moreThanOneClass(cluster.getClusterElementList())) {
                         return cluster.getClusterElementList().stream();
                     } else {
                         return Stream.of(cluster.squashToCentroid());
@@ -64,10 +67,10 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
                 + ", labeledObservations=" + labeledObservations.size());
 
         if (useLocalClassifier(paramProvider)) {
-            LabeledObservation dummyObservation = ThirdMethodLocalSVMWithRepresentatives.dummyObservation();
-            return new ThirdMethodLocalSVMWithRepresentatives(svmModel, Collections.singletonList(dummyObservation));
+            LabeledObservation dummyObservation = LocalRepresentativesModel.dummyObservation();
+            return new LocalRepresentativesModel(svmModel, Collections.singletonList(dummyObservation));
         } else {
-            return new ThirdMethodLocalSVMWithRepresentatives(svmModel, representativeList);
+            return new LocalRepresentativesModel(svmModel, representativeList);
         }
     }
 
@@ -78,9 +81,9 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
     }
 
     @Override
-    public ThirdMethodGlobalClassificationModel updateGlobal(Collection<ThirdMethodLocalSVMWithRepresentatives> localModels, ParamProvider paramProvider) {
+    public GlobalClassifier updateGlobal(Collection<LocalRepresentativesModel> localModels, ParamProvider paramProvider) {
         if (useLocalClassifier(paramProvider)) {
-            return new ThirdMethodGlobalClassificationModel(null, localModels.toArray(new ThirdMethodLocalSVMWithRepresentatives[]{}), new HashMap<>());
+            return new GlobalClassifier(null, localModels.toArray(new LocalRepresentativesModel[]{}), new HashMap<>());
         }
 
         List<LabeledObservation> trainingSet = localModels.stream()
@@ -89,7 +92,7 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
         String kernel = paramProvider.provide("kernel");
         SVMModel svmModel = new WekaSVMClassification(kernel).train(trainingSet);
 
-        ThirdMethodLocalSVMWithRepresentatives[] localModelArray = localModels.toArray(new ThirdMethodLocalSVMWithRepresentatives[0]);
+        LocalRepresentativesModel[] localModelArray = localModels.toArray(new LocalRepresentativesModel[0]);
         Map<Integer, List<LabeledObservation>> classToLocalModel = new HashMap<>();
         List<String> labels = new ArrayList<>();
         for (int i = 0; i < localModelArray.length; i++) {
@@ -109,11 +112,11 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
         }
 
         Arrays.stream(localModelArray)
-                .forEach(ThirdMethodLocalSVMWithRepresentatives::clearRepresentativesButDummy);
+                .forEach(LocalRepresentativesModel::clearRepresentativesButDummy);
 
         System.out.println("  [[FUTURE LOG]] updateGlobal: svs=" + svmModel.getSVs().size()
                 + ", localModelArray=" + localModelArray.length + ", knnModelMap=" + knnModelMap.size());
-        return new ThirdMethodGlobalClassificationModel(svmModel, localModelArray, knnModelMap);
+        return new GlobalClassifier(svmModel, localModelArray, knnModelMap);
     }
 
     @Override
@@ -125,6 +128,10 @@ public class DMeb2 implements LocalProcessor<ThirdMethodLocalSVMWithRepresentati
 
     static boolean useLocalClassifier(ParamProvider paramProvider) {
         return Boolean.TRUE.toString().equals(paramProvider.provide("use_local_classifier", Boolean.FALSE.toString()));
+    }
+
+    static boolean useBorderLeaveFeature(ParamProvider paramProvider) {
+        return Boolean.TRUE.toString().equals(paramProvider.provide("border_leave", Boolean.FALSE.toString()));
     }
 
     private void printParams(ParamProvider paramProvider) {

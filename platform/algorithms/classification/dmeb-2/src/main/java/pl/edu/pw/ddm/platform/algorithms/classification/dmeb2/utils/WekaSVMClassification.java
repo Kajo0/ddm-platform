@@ -29,22 +29,7 @@ public class WekaSVMClassification implements Serializable {
         } else {
             int target = trainSet.get(0)
                     .getTarget();
-            return new SVMModel() {
-                @Override
-                public int classify(double[] features) {
-                    // FIXME KJ
-                    // think abou copy train set
-//					 if (trainSet.isEmpty()) {
-//						return 0;
-//					}
-                    return target;
-                }
-
-                @Override
-                public List<LabeledObservation> getSVs() {
-                    return Collections.emptyList();
-                }
-            };
+            return new DummySVMModel(target);
         }
     }
 
@@ -54,6 +39,11 @@ public class WekaSVMClassification implements Serializable {
         ExposingSVSMO model = classifier(dataset);
         Instances headers = dataset.stringFreeStructure();
         return new SVMModel() {
+            @Override
+            public boolean isSingleClass() {
+                return false;
+            }
+
             @Override
             public int classify(double[] features) {
                 return WekaUtils.classifyWeka(features, headers, labels, model);

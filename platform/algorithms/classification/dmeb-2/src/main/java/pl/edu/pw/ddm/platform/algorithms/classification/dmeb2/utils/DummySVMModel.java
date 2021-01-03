@@ -1,7 +1,7 @@
 package pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,8 +21,8 @@ public class DummySVMModel implements SVMModel {
     }
 
     @Override
-    public List<LabeledObservation> getSVs() {
-        return Collections.emptyList();
+    public Set<LabeledObservation> getSVs() {
+        return Collections.emptySet();
     }
 
 }

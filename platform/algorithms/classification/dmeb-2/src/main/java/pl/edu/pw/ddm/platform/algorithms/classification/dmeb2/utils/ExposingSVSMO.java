@@ -2,11 +2,10 @@ package pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Random;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
@@ -22,6 +21,8 @@ import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 import weka.filters.unsupervised.attribute.Standardize;
 
 public class ExposingSVSMO extends SMO {
+
+    private transient Set<LabeledObservation> svs;
 
     @Override
     public void buildClassifier(Instances insts) throws Exception {
@@ -111,7 +112,7 @@ public class ExposingSVSMO extends SMO {
         }
 
         // Build the binary classifiers
-        Random rand = new Random(); // FIXME pass from params
+        Random rand = new Random(m_randomSeed);
         m_classifiers = new BinarySMO[insts.numClasses()][insts.numClasses()];
         for (int i = 0; i < insts.numClasses(); i++) {
             for (int j = i + 1; j < insts.numClasses(); j++) {
@@ -160,36 +161,40 @@ public class ExposingSVSMO extends SMO {
     }
 
 
-    public List<LabeledObservation> getSVs() {
-        List<LabeledObservation> sv = new ArrayList<>();
+    public Set<LabeledObservation> getSVs() {
+        if (svs != null) {
+             return svs;
+        }
+        svs = new HashSet<>();
+
         for (int i = 0; i < m_classifiers.length; i++) {
             for (int j = 0; j < m_classifiers[0].length; j++) {
                 BinarySMO binarySMO = m_classifiers[i][j];
                 if (binarySMO == null)
                     continue;
-                SMOset m_supportVectors = (SMOset) getSupportVectors(binarySMO, "m_supportVectors");
-                Instances m_data = (Instances) getSupportVectors(binarySMO, "m_data");
+                SMOset m_supportVectors = (SMOset) getFieldValue(binarySMO, "m_supportVectors");
+                Instances m_data = (Instances) getFieldValue(binarySMO, "m_data");
 
-                // FIXME KJ
                 int svCnt = m_supportVectors == null ? 0 : m_supportVectors.numElements();
-//				int svCnt = m_supportVectors.numElements();
-                int index = 0;
-                while (svCnt > 0) {
-                    if (m_supportVectors.contains(index)) {
+                int index = m_data.numInstances() - 1;
+                while (svCnt > 0 || index > 0) {
+                    if (svCnt > 0 && m_supportVectors.contains(index)) {
                         Instance instance = ((InstanceWithPreviousVersion) m_data.get(index)).getBefore();
                         double[] array = Arrays.copyOf(instance.toDoubleArray(), instance.toDoubleArray().length - 1);
                         int targetClass = (int) instance.value(instance.classIndex());
-                        sv.add(new LabeledObservation(-1, array, targetClass));
-                        svCnt--;
+                        svs.add(new LabeledObservation(-1, array, targetClass));
+                        --svCnt;
+                    } else {
+                        m_data.set(index, NullInstance.INSTANCE);
                     }
-                    index++;
+                    --index;
                 }
             }
         }
-        return sv.stream().distinct().collect(Collectors.toList());
+        return svs;
     }
 
-    private static Object getSupportVectors(BinarySMO binarySMO, String fieldName) {
+    private static Object getFieldValue(BinarySMO binarySMO, String fieldName) {
         try {
             Field f = binarySMO.getClass().getDeclaredField(fieldName);
             f.setAccessible(true);

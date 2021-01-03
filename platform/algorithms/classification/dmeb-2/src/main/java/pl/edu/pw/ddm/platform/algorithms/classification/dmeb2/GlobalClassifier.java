@@ -49,7 +49,9 @@ public class GlobalClassifier implements Classifier {
                             sample.getNumericAttributes(),
                             localClassifier)));
         } else {
-            sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(), String.valueOf(classify(sample.getNumericAttributes(), knnParam))));
+            boolean firstLevelOnly = Boolean.TRUE.toString().equals(paramProvider.provide("use_first_level_only", "false"));
+            sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(),
+                    String.valueOf(classify(sample.getNumericAttributes(), knnParam, firstLevelOnly))));
         }
     }
 
@@ -73,9 +75,13 @@ public class GlobalClassifier implements Classifier {
         return model;
     }
 
-    private int classify(double[] features, int knnParam) {
+    private int classify(double[] features, int knnParam, boolean firstLevelOnly) {
         try {
             int predictedByFirstLevelClassifierLabel = firstLevelClassifier.classify(features);
+            if (firstLevelOnly) {
+                return predictedByFirstLevelClassifierLabel;
+            }
+
             LinearNNSearch knn = knnModelMap.get(predictedByFirstLevelClassifierLabel);
             Instances instances = knn.kNearestNeighbours(WekaUtils.toInstance(features), knnParam);
             List<SVMModel> svmModels = new ArrayList<>();

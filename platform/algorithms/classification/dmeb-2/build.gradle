@@ -31,6 +31,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     implementation 'nz.ac.waikato.cms.weka:weka-stable:3.8.4'
+    implementation 'de.lmu.ifi.dbs.elki:elki-data-generator:0.7.5'
 
     testImplementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
     testImplementation 'pl.edu.pw.ddm.platform.testing:interfaces-impl:0.0.1-SNAPSHOT'

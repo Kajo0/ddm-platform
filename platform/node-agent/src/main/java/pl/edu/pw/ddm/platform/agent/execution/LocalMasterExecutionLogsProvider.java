@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.agent.execution;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,11 +26,13 @@ class LocalMasterExecutionLogsProvider implements ExecutionLogsProvider {
     @SneakyThrows
     @Override
     public String loadAll(String executionId, String appId) {
-        // FIXME filter out spark INFO log
         log.info("Loading execution logs for execution id '{}' and app id '{}'.", executionId, appId);
         Path path = Paths.get(executionPath, executionId, centralLogFilename);
         if (Files.exists(path)) {
-            return new String(Files.readAllBytes(path));
+            return Files.readAllLines(path)
+                    .stream()
+                    .filter(LocalWorkerExecutionLogsProvider.SPARK_LOG_FILTER_PREDICATE)
+                    .collect(Collectors.joining(LocalWorkerExecutionLogsProvider.LINE_END));
         } else {
             log.warn("Log file not found for execution id '{}' and app id '{}'.", executionId, appId);
             return null;

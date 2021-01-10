@@ -22,9 +22,11 @@ import pl.edu.pw.ddm.platform.agent.util.ProfileConstants;
 @Profile(ProfileConstants.WORKER)
 class LocalWorkerExecutionLogsProvider implements ExecutionLogsProvider {
 
-    private static final Predicate<String> SPARK_LOG_FILTER_PREDICATE = Pattern.compile("^\\d{2}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2} .+ .*$")
+    static final String LINE_END = System.lineSeparator();
+    static final Predicate<String> SPARK_LOG_FILTER_PREDICATE = Pattern.compile("^\\d{2}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2} .+ .*$")
             .asPredicate()
             .negate();
+
     private static final Predicate<String> SPARK_NON_LOG_LIKE_FILTER_PREDICATE = Pattern.compile("^========================================.*$|" +
             "^$|" +
             "^Spark Executor Command.*$|" +
@@ -67,9 +69,9 @@ class LocalWorkerExecutionLogsProvider implements ExecutionLogsProvider {
                     .filter(SPARK_NON_LOG_LIKE_FILTER_PREDICATE)
                     .filter(SPARK_LOG_FILTER_PREDICATE)
                     .map(l -> "error log-line:  " + l)
-                    .collect(Collectors.joining("\n"));
+                    .collect(Collectors.joining(LINE_END));
 
-            return stdout + "\n" + stderr;
+            return stdout + LINE_END + stderr;
         } else {
             log.warn("Log dir not found for execution id '{}' and app id '{}'.", executionId, appId);
             return null;

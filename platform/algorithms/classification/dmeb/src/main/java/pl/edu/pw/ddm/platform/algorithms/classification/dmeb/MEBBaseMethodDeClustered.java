@@ -2,19 +2,20 @@ package pl.edu.pw.ddm.platform.algorithms.classification.dmeb;
 
 import java.util.List;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb.utils.LabeledObservation;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 
+@Getter
+@RequiredArgsConstructor
 public class MEBBaseMethodDeClustered implements LocalModel {
 
-    private List<LabeledObservation> representativeList;
+    private final List<LabeledObservation> representativeList;
 
-    public MEBBaseMethodDeClustered(List<LabeledObservation> representativeList) {
-        this.representativeList = representativeList;
-    }
-
-    public List<LabeledObservation> getRepresentativeList() {
-        return representativeList;
+    @Override
+    public String customMetrics() {
+        return String.valueOf(representativeList.size());
     }
 
 }

@@ -12,6 +12,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
+import pl.edu.pw.ddm.platform.interfaces.model.BaseModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.data.NodeDataProvider;
 import pl.edu.pw.ddm.platform.runner.data.NodeParamProvider;
@@ -54,10 +55,16 @@ class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrap
         wrapper.getTimeStatistics().setDataLoadingMillis(dataProvider.getLoadingMillis());
 
         wrapper.getDatasetStatistics().setTrainingSamplesAmount(dataProvider.trainingSize());
-        Optional.of(dataProvider)
-                .map(NodeDataProvider::trainingSample)
+        double avg = dataProvider.trainingSample10()
+                .stream()
                 .map(TransferSizeUtil::sizeOf)
-                .ifPresent(wrapper.getDatasetStatistics()::setAvgSampleSize);
+                .mapToInt(i -> i)
+                .average()
+                .orElse(-1);
+        wrapper.getDatasetStatistics().setAvgSampleSize((int) avg);
+        Optional.of(model)
+                .map(BaseModel::customMetrics)
+                .ifPresent(wrapper.getDatasetStatistics()::setCustomMetrics);
 
         return new SingletonIterator(wrapper);
     }

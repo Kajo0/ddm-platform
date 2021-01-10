@@ -3,6 +3,7 @@ package pl.edu.pw.ddm.platform.runner;
 import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.Iterator;
+import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalRepeater;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
+import pl.edu.pw.ddm.platform.interfaces.model.BaseModel;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.data.NodeDataProvider;
@@ -52,6 +54,10 @@ class LocalRepeatRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         wrapper.getTimeStatistics().setStart(start);
         wrapper.getTimeStatistics().setEnd(end);
         wrapper.getTimeStatistics().setDataLoadingMillis(dataProvider.getLoadingMillis());
+
+        Optional.of(model)
+                .map(BaseModel::customMetrics)
+                .ifPresent(wrapper.getDatasetStatistics()::setCustomMetrics);
 
         return new SingletonIterator(wrapper);
     }

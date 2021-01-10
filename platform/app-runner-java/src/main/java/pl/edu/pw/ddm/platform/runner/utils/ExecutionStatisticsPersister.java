@@ -37,6 +37,7 @@ public class ExecutionStatisticsPersister {
         TimeStats time;
         TransferStats transfer;
         DataStats data;
+        CustomMetrics custom;
     }
 
     @Data
@@ -209,6 +210,8 @@ public class ExecutionStatisticsPersister {
         @Singular
         private List<Integer> globalsBytes;
 
+        private int globalMethodBytes;
+
         @JsonProperty("localBytes")
         int getLocalBytes() {
             return localsBytes.stream()
@@ -220,7 +223,7 @@ public class ExecutionStatisticsPersister {
         @JsonProperty("globalBytes")
         int getGlobalBytes() {
             return globalsBytes.stream()
-                    .reduce(0, Integer::sum);
+                    .reduce(0, Integer::sum) - globalMethodBytes;
         }
     }
 
@@ -241,6 +244,19 @@ public class ExecutionStatisticsPersister {
                     .filter(Objects::nonNull)
                     .reduce(0, Integer::sum);
         }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    static class CustomMetrics {
+
+        @Singular
+        private List<Map<String, String>> locals;
+
+        @Singular
+        private List<String> globals;
     }
 
 }

@@ -8,10 +8,10 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Iterables;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
@@ -86,13 +86,17 @@ public class NodeDataProvider implements DataProvider {
         }
     }
 
-    public Data trainingSample() {
+    public List<Data> trainingSample10() {
         if (CollectionUtils.isNotEmpty(trainingSet)) {
-            return Iterables.getFirst(trainingSet, null);
+            return trainingSet.stream()
+                    .limit(10)
+                    .collect(Collectors.toList());
         } else if (CollectionUtils.isNotEmpty(allSet)) {
-            return Iterables.getFirst(allSet, null);
+            return allSet.stream()
+                    .limit(10)
+                    .collect(Collectors.toList());
         } else {
-            return null;
+            return Collections.emptyList();
         }
     }
 

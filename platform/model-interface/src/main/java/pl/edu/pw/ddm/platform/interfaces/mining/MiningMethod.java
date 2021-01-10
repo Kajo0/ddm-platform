@@ -1,8 +1,8 @@
 package pl.edu.pw.ddm.platform.interfaces.mining;
 
-import java.io.Serializable;
+import pl.edu.pw.ddm.platform.interfaces.model.BaseModel;
 
-public interface MiningMethod extends Serializable {
+public interface MiningMethod extends BaseModel {
 
     String name();
 

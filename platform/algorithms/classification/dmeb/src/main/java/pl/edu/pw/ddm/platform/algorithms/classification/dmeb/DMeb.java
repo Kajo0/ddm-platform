@@ -45,9 +45,10 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
         List<LabeledObservation> labeledObservations = toLabeledObservation(dataProvider.training());
         // FIXME unused partitionId?
         int partitionId = 0;
-        Double mebClusters = paramProvider.provideNumeric("meb_clusters", 32d);
+        int trainingSize = dataProvider.training().size();
+        int mebClusters = paramProvider.provideNumeric("meb_clusters", 32d).intValue();
         if (mebClusters <= 0) {
-            mebClusters = Math.max(2, Math.ceil(Math.pow(Math.log(dataProvider.training().size()), 2)));
+            mebClusters = (int) Math.max(2, Math.ceil(Math.pow(Math.log(trainingSize), 2)));
             System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
         }
 
@@ -55,7 +56,7 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
         String initMethod = paramProvider.provide("init_kmeans_method", "k-means++");
         DistanceFunction distanceFunction = Optional.ofNullable(paramProvider.distanceFunction())
                 .orElseGet(EuclideanDistance::new);
-        MEBModel mebModel = new MEBClustering(mebClusters.intValue(), initMethod, distanceFunction, debug)
+        MEBModel mebModel = new MEBClustering(mebClusters, initMethod, distanceFunction, debug)
                 .perform(labeledObservations, partitionId);
 
         Set<LabeledObservation> representativeList = mebModel.getClusterList().stream()
@@ -70,7 +71,7 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
 
         System.out.println("  [[FUTURE LOG]] processLocal: representativeList=" + representativeList.size()
                 + ", labeledObservations=" + labeledObservations.size());
-        return new MEBBaseMethodLocalRepresentatives(representativeList, mebModel);
+        return new MEBBaseMethodLocalRepresentatives(mebModel, trainingSize);
     }
 
     private List<LabeledObservation> toLabeledObservation(Collection<Data> training) {

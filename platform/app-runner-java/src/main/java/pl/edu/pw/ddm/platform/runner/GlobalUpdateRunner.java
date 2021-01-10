@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalUpdater;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
+import pl.edu.pw.ddm.platform.interfaces.model.BaseModel;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.data.NodeParamProvider;
@@ -54,6 +56,10 @@ class GlobalUpdateRunner implements FlatMapFunction<Iterator<LocalModel>, ModelW
         ModelWrapper wrapper = ModelWrapper.globalMethod(model, method, InetAddress.getLocalHost().toString());
         wrapper.getTimeStatistics().setStart(start);
         wrapper.getTimeStatistics().setEnd(end);
+
+        Optional.of(model)
+                .map(BaseModel::customMetrics)
+                .ifPresent(wrapper.getDatasetStatistics()::setCustomMetrics);
 
         return new SingletonIterator(wrapper);
     }

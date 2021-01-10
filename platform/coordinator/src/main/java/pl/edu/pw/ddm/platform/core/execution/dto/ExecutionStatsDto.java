@@ -11,6 +11,7 @@ public class ExecutionStatsDto {
     private TimeStatsDto time;
     private TransferStatsDto transfer;
     private DataStatsDto data;
+    private CustomMetrics custom;
 
     @Data
     public static class TimeStatsDto {
@@ -58,6 +59,7 @@ public class ExecutionStatsDto {
 
         private List<Map<String, Integer>> localsBytes;
         private List<Integer> globalsBytes;
+        private int globalMethodBytes;
         private int localBytes;
         private int globalBytes;
     }
@@ -67,6 +69,13 @@ public class ExecutionStatsDto {
 
         private List<Map<String, Integer>> trainingsBytes;
         private int trainingBytes;
+    }
+
+    @Data
+    public static class CustomMetrics {
+
+        private List<Map<String, String>> locals;
+        private List<String> globals;
     }
 
 }

@@ -13,6 +13,7 @@ import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.MiningMethod;
+import pl.edu.pw.ddm.platform.interfaces.model.BaseModel;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 import pl.edu.pw.ddm.platform.interfaces.model.LocalModel;
 import pl.edu.pw.ddm.platform.runner.data.NodeDataProvider;
@@ -61,10 +62,16 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
 
         // TODO FIXME not always required when localProcess is present
         wrapper.getDatasetStatistics().setTrainingSamplesAmount(dataProvider.trainingSize());
-        Optional.of(dataProvider)
-                .map(NodeDataProvider::trainingSample)
+        double avg = dataProvider.trainingSample10()
+                .stream()
                 .map(TransferSizeUtil::sizeOf)
-                .ifPresent(wrapper.getDatasetStatistics()::setAvgSampleSize);
+                .mapToInt(i -> i)
+                .average()
+                .orElse(-1);
+        wrapper.getDatasetStatistics().setAvgSampleSize((int) avg);
+        Optional.of(model)
+                .map(BaseModel::customMetrics)
+                .ifPresent(wrapper.getDatasetStatistics()::setCustomMetrics);
 
         return new SingletonIterator(wrapper);
     }

@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import pl.edu.pw.ddm.platform.runner.models.DatasetStatistics;
+import pl.edu.pw.ddm.platform.runner.models.GlobalMethodModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.models.TimeStatistics;
 
@@ -67,6 +69,10 @@ public class CentralDdmSummarizer {
 
         ExecutionStatisticsPersister.TransferStats.TransferStatsBuilder transfer = ExecutionStatisticsPersister.TransferStats.builder();
         globals.forEach(globalModel -> transfer.globalsByte(TransferSizeUtil.sizeOf(globalModel.getGlobalModel())));
+        globals.stream()
+                .filter(wrapper -> wrapper.getGlobalModel() instanceof GlobalMethodModelWrapper)
+                .findFirst() // there is only one global method
+                .ifPresent(wrapper -> transfer.globalMethodBytes(TransferSizeUtil.sizeOf(wrapper.getGlobalModel())));
         locals.stream()
                 .map(localModels -> localModels.stream()
                         .collect(Collectors.toMap(
@@ -82,7 +88,19 @@ public class CentralDdmSummarizer {
                                 lm -> lm.getDatasetStatistics().trainingDataSize())
                         )).forEach(data::trainingsByte);
 
-        stats = Stats.of(time.build(), transfer.build(), data.build());
+        ExecutionStatisticsPersister.CustomMetrics.CustomMetricsBuilder metrics = ExecutionStatisticsPersister.CustomMetrics.builder();
+        locals.stream()
+                .map(localModels -> localModels.stream()
+                        .collect(Collectors.toMap(
+                                ModelWrapper::getAddress,
+                                lm -> lm.getDatasetStatistics().getCustomMetrics())
+                        )).forEach(metrics::local);
+        globals.stream()
+                .map(ModelWrapper::getDatasetStatistics)
+                .map(DatasetStatistics::getCustomMetrics)
+                .forEach(metrics::global);
+
+        stats = Stats.of(time.build(), transfer.build(), data.build(), metrics.build());
         return stats;
     }
 
@@ -187,6 +205,27 @@ public class CentralDdmSummarizer {
                     .get(i)
                     .values()
                     .forEach(System.out::println);
+        }
+
+        return this;
+    }
+
+    public CentralDdmSummarizer printCustomMetricsSummary() {
+        ExecutionStatisticsPersister.CustomMetrics metrics = prepareStats().getCustom();
+
+        System.out.println("====== Custom Metrics Summary:");
+        System.out.println("  Local models (metrics):");
+        for (int i = 0; i < metrics.getLocals().size(); ++i) {
+            System.out.println("  [" + i + "] local stage");
+            metrics.getLocals()
+                    .get(i)
+                    .values()
+                    .forEach(System.out::println);
+        }
+        System.out.println("  Global model (bytes):");
+        for (int i = 0; i < metrics.getGlobals().size(); ++i) {
+            System.out.println("  [" + i + "] global stage");
+            System.out.println(metrics.getGlobals().get(i));
         }
 
         return this;

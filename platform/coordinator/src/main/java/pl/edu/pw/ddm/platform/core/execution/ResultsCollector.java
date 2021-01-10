@@ -21,6 +21,7 @@ interface ResultsCollector {
         private TimeStats time;
         private TransferStats transfer;
         private DataStats data;
+        private CustomMetrics custom;
 
         @Data
         static class TimeStats {
@@ -67,6 +68,7 @@ interface ResultsCollector {
 
             private List<Map<String, Integer>> localsBytes;
             private List<Integer> globalsBytes;
+            private int globalMethodBytes;
             private int localBytes;
             private int globalBytes;
         }
@@ -76,6 +78,13 @@ interface ResultsCollector {
 
             private List<Map<String, Integer>> trainingsBytes;
             private int trainingBytes;
+        }
+
+        @Data
+        static class CustomMetrics {
+
+            private List<Map<String, String>> locals;
+            private List<String> globals;
         }
     }
 

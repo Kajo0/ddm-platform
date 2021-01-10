@@ -134,7 +134,8 @@ public final class CentralRunner {
                 .printDispersionSummary()
                 .printTimeSummary()
                 .printTransferSummary()
-                .printAvgDataSizeSummary();
+                .printAvgDataSizeSummary()
+                .printCustomMetricsSummary();
 
         statusPersister.finish();
     }

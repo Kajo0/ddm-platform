@@ -9,6 +9,7 @@ public class DatasetStatistics implements Serializable {
 
     private Integer avgSampleSize;
     private Integer trainingSamplesAmount;
+    private String customMetrics;
 
     public int trainingDataSize() {
         if (avgSampleSize == null || trainingSamplesAmount == null) {
@@ -16,6 +17,10 @@ public class DatasetStatistics implements Serializable {
         } else {
             return avgSampleSize * trainingSamplesAmount;
         }
+    }
+
+    public String getCustomMetrics() {
+        return String.valueOf(customMetrics);
     }
 
     @Override

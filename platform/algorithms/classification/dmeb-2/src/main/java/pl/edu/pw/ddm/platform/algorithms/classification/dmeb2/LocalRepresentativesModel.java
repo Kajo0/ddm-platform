@@ -19,6 +19,8 @@ public class LocalRepresentativesModel implements LocalModel {
 
     private final SVMModel svmModel;
     private final Set<LabeledObservation> representativeList;
+    private final transient int trainingSize;
+    private final transient int mebClusters;
 
     public void clearRepresentativesButDummy() {
         representativeList.removeIf(lo -> lo.getTarget() != DUMMY_TARGET);
@@ -31,6 +33,11 @@ public class LocalRepresentativesModel implements LocalModel {
             System.err.println("  [[FUTURE LOG]] Cannot InetAddress.getLocalHost(): " + e.getMessage());
             return new LabeledObservation(CANNOT_LOCALHOST, new int[]{}, DUMMY_TARGET);
         }
+    }
+
+    @Override
+    public String customMetrics() {
+        return representativeList.size() + "/" + trainingSize + "%" + mebClusters;
     }
 
 }

@@ -180,7 +180,10 @@ public class ExposingSVSMO extends SMO {
                 int index = 0;
                 while (svCnt > 0) {
                     if (m_supportVectors.contains(index)) {
-                        Instance instance = ((InstanceWithPreviousVersion) m_data.get(index)).getBefore();
+                        Instance instance = m_data.get(index);
+                        if (m_filterType != FILTER_NONE) {
+                            instance = ((InstanceWithPreviousVersion) instance).getBefore();
+                        }
                         double[] array = Arrays.copyOf(instance.toDoubleArray(), instance.toDoubleArray().length - 1);
                         int targetClass = (int) instance.value(instance.classIndex());
                         svs.add(new LabeledObservation(-1, array, targetClass));

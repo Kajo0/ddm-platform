@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
+import weka.classifiers.functions.SMO;
 import weka.core.Instances;
+import weka.core.SelectedTag;
 
 public class WekaSVMClassification implements Serializable {
 
@@ -61,6 +63,7 @@ public class WekaSVMClassification implements Serializable {
             String[] options = weka.core.Utils.splitOptions(kernelOptions);
             model.setOptions(options);
             model.setChecksTurnedOff(true);
+            model.setFilterType(new SelectedTag(SMO.FILTER_NORMALIZE, SMO.TAGS_FILTER));
             if (seed != null) {
                 model.setRandomSeed(seed.intValue());
             }

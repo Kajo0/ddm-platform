@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.CustomizableNormalize;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
@@ -20,9 +23,13 @@ import weka.filters.unsupervised.attribute.Normalize;
 import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 import weka.filters.unsupervised.attribute.Standardize;
 
+@RequiredArgsConstructor
 public class ExposingSVSMO extends SMO {
 
     private transient Set<LabeledObservation> svs;
+
+    private final transient double[] minAttrValues;
+    private final transient double[] maxAttrValues;
 
     @Override
     public void buildClassifier(Instances insts) throws Exception {
@@ -87,7 +94,11 @@ public class ExposingSVSMO extends SMO {
             m_Filter.setInputFormat(insts);
             insts = useFilter(insts, m_Filter);
         } else if (m_filterType == FILTER_NORMALIZE) {
-            m_Filter = new Normalize();
+            if (minAttrValues != null && maxAttrValues != null) {
+                m_Filter = new CustomizableNormalize(minAttrValues, maxAttrValues);
+            } else {
+                m_Filter = new Normalize();
+            }
             m_Filter.setInputFormat(insts);
             insts = useFilter(insts, m_Filter);
         } else {

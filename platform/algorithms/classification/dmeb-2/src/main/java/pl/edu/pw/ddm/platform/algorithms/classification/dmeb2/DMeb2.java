@@ -29,25 +29,66 @@ import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.CentralDdmPipeline;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalProcessor;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.GlobalUpdater;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalProcessor;
+import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalRepeater;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import weka.core.neighboursearch.LinearNNSearch;
 
-public class DMeb2 implements LocalProcessor<LocalRepresentativesModel>,
+public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
+        GlobalProcessor<LocalMinMaxModel, GlobalMinMaxModel>,
+        LocalRepeater<LocalMinMaxModel, LocalRepresentativesModel, GlobalMinMaxModel>,
         GlobalUpdater<LocalRepresentativesModel, GlobalClassifier>,
         AlgorithmConfig {
 
     @Override
-    public LocalRepresentativesModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
+    public LocalMinMaxModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
         printParams(paramProvider);
 
+        if (!performGlobalNormalization(paramProvider)) {
+            return new LocalMinMaxModel(null);
+        }
+
+        System.out.println("  [[FUTURE LOG]] preProcessLocal: Searching for min max within " + dataProvider.training().size());
+        List<Data> minMax = new MinMaxExtractor(dataProvider.training()).search();
+        System.out.println("  [[FUTURE LOG]] preProcessLocal: Found minMaxes=" + minMax);
+
+        return new LocalMinMaxModel(new HashSet<>(minMax));
+    }
+
+    @Override
+    public GlobalMinMaxModel processGlobal(Collection<LocalMinMaxModel> collection, ParamProvider paramProvider) {
+        if (!performGlobalNormalization(paramProvider)) {
+            return new GlobalMinMaxModel(null, null);
+        }
+
+        Set<Data> data = collection.stream()
+                .map(LocalMinMaxModel::getObservations)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+        System.out.println("  [[FUTURE LOG]] preProcessGlobal: Searching for min max within " + data.size());
+
+        List<Data> minMax = new MinMaxExtractor(data).search();
+        System.out.println("  [[FUTURE LOG]] preProcessGlobal: Found minMaxes=" + minMax);
+
+        return new GlobalMinMaxModel(minMax.get(0), minMax.get(1));
+    }
+
+    @Override
+    public LocalRepresentativesModel repeatLocal(GlobalMinMaxModel globalMinMaxModel, LocalMinMaxModel localMinMaxModel,
+            DataProvider dataProvider, ParamProvider paramProvider) {
         List<LabeledObservation> labeledObservations = toLabeledObservation(dataProvider.training());
+
         String kernel = paramProvider.provide("kernel");
         WekaSVMClassification wekaClassifier = new WekaSVMClassification(kernel, seed(paramProvider));
+        if (performGlobalNormalization(paramProvider)) {
+            wekaClassifier.setMinAttrValues(globalMinMaxModel.getMinValues().getNumericAttributes());
+            wekaClassifier.setMaxAttrValues(globalMinMaxModel.getMaxValues().getNumericAttributes());
+        }
         SVMModel svmModel = wekaClassifier.train(labeledObservations);
         System.out.println("  [[FUTURE LOG]] SVM svs found=" + svmModel.getSVs().size());
 
@@ -167,7 +208,8 @@ public class DMeb2 implements LocalProcessor<LocalRepresentativesModel>,
         System.out.println("  [[FUTURE LOG]] updateGlobal: expanded trainSet=" + trainingSet.size());
 
         String kernel = paramProvider.provide("kernel");
-        SVMModel svmModel = new WekaSVMClassification(kernel, seed(paramProvider)).train(trainingSet);
+        WekaSVMClassification wekaClassifier = new WekaSVMClassification(kernel, seed(paramProvider));
+        SVMModel svmModel = wekaClassifier.train(trainingSet);
 
         LocalRepresentativesModel[] localModelArray = localModels.toArray(new LocalRepresentativesModel[0]);
         Map<Integer, List<LabeledObservation>> classToLocalModel = new HashMap<>();
@@ -228,11 +270,17 @@ public class DMeb2 implements LocalProcessor<LocalRepresentativesModel>,
     public DdmPipeline pipeline() {
         return CentralDdmPipeline.builder()
                 .local(DMeb2.class)
+                .global(DMeb2.class)
+                .repeatLocal(DMeb2.class)
                 .lastGlobal(DMeb2.class);
     }
 
     static boolean useLocalClassifier(ParamProvider paramProvider) {
         return Boolean.TRUE.toString().equals(paramProvider.provide("use_local_classifier", Boolean.FALSE.toString()));
+    }
+
+    static boolean performGlobalNormalization(ParamProvider paramProvider) {
+        return Boolean.TRUE.toString().equals(paramProvider.provide("global_normalization", Boolean.FALSE.toString()));
     }
 
     static Long seed(ParamProvider paramProvider) {

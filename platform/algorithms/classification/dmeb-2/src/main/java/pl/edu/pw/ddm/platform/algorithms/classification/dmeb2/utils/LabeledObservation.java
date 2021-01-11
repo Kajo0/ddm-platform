@@ -7,17 +7,17 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import pl.edu.pw.ddm.platform.interfaces.data.Data;
+
+@Getter
+@RequiredArgsConstructor
 public class LabeledObservation implements Serializable {
+
     private final int index;
     private final double[] features;
     private final int target;
-
-
-    public LabeledObservation(int index, double[] features, int target) {
-        this.index = index;
-        this.features = features;
-        this.target = target;
-    }
 
     public LabeledObservation(int index, int[] coordinates, int target) {
         this.index = index;
@@ -25,16 +25,8 @@ public class LabeledObservation implements Serializable {
         this.target = target;
     }
 
-    public int getIndex() {
-        return index;
-    }
-
-    public double[] getFeatures() {
-        return features;
-    }
-
-    public int getTarget() {
-        return target;
+    public static LabeledObservation fromUnlabelled(Data data, int label) {
+        return new LabeledObservation(-1, data.getNumericAttributes(), label);
     }
 
     public UnlabeledObservation toUnlabeledObservation() {
@@ -60,9 +52,9 @@ public class LabeledObservation implements Serializable {
 
     @Override
     public int hashCode() {
-
         int result = Objects.hash(target);
         result = 31 * result + Arrays.hashCode(features);
         return result;
     }
+
 }

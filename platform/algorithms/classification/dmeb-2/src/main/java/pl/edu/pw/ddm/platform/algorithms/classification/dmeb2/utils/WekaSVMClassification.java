@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
+import lombok.Setter;
 import weka.classifiers.functions.SMO;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
@@ -15,6 +16,12 @@ public class WekaSVMClassification implements Serializable {
 
     private final Long seed;
     private final String kernelOptions;
+
+    @Setter
+    private transient double[] minAttrValues;
+
+    @Setter
+    private transient double[] maxAttrValues;
 
     public WekaSVMClassification(String kernel, Long seed) {
         this.seed = seed;
@@ -43,7 +50,7 @@ public class WekaSVMClassification implements Serializable {
     private SVMModel doTrain(List<LabeledObservation> trainSet) {
         List<String> labels = WekaUtils.convertToLabels(trainSet);
         Instances dataset = WekaUtils.convertToInstances(trainSet, labels);
-        ExposingSVSMO model = classifier(dataset);
+        ExposingSVSMO model = classifier(dataset, minAttrValues, maxAttrValues);
         Instances headers = dataset.stringFreeStructure();
         return new SVMModel() {
             @Override
@@ -63,8 +70,8 @@ public class WekaSVMClassification implements Serializable {
         };
     }
 
-    public ExposingSVSMO classifier(Instances dataset) {
-        ExposingSVSMO model = new ExposingSVSMO();
+    public ExposingSVSMO classifier(Instances dataset, double[] minAttrValues, double[] maxAttrValues) {
+        ExposingSVSMO model = new ExposingSVSMO(minAttrValues, maxAttrValues);
         try {
             String[] options = weka.core.Utils.splitOptions(kernelOptions);
             model.setOptions(options);

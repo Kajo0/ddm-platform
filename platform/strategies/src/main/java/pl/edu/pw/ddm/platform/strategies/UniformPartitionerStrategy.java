@@ -24,13 +24,19 @@ public class UniformPartitionerStrategy implements PartitionerStrategy {
     @Override
     public List<Path> partition(DataDesc dataDesc, StrategyParameters strategyParameters, PartitionFileCreator partitionFileCreator) throws IOException {
         int workers = strategyParameters.getPartitions();
-        long samplesCount = dataDesc.getNumberOfSamples();
+        Long samplesCount = dataDesc.getNumberOfSamples();
+        if (samplesCount == null) {
+            // TODO handle already partitioned files
+            Path path = Path.of(Iterables.getOnlyElement(dataDesc.getFilesLocations()));
+            samplesCount = (long) Files.readAllLines(path)
+                    .size();
+        }
 
         List<Path> tempFiles = partitionFileCreator.create(workers);
 
         int partSize = (int) (samplesCount / workers);
         int lastRest = (int) (samplesCount % workers);
-        List<Integer> shuffleIndices = new ArrayList<>((int) samplesCount);
+        List<Integer> shuffleIndices = new ArrayList<>(samplesCount.intValue());
         for (int i = 0; i < lastRest; ++i) {
             shuffleIndices.add(0);
         }

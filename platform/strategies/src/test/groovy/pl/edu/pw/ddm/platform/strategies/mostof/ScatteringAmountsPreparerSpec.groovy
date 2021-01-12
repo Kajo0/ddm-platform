@@ -6,7 +6,7 @@ class ScatteringAmountsPreparerSpec extends Specification {
 
     def "should prepare scattering amounts when labels < workers with no additional classes"() {
         given:
-        def labelScattering = new ScatteringLabelsPreparer(4, 3, 0).prepare() // FIXME it assumes that works
+        def labelScattering = new ScatteringLabelsPreparer(4, 3, 0, 0).prepare() // FIXME it assumes that works
         def labelCount = ['A': 1000L,
                           'B': 1000L,
                           'C': 1000L]
@@ -27,9 +27,34 @@ class ScatteringAmountsPreparerSpec extends Specification {
         scattering.mainMap[3].map['C'].intValue() == 200
     }
 
+    def "should prepare scattering amounts when labels < workers with no additional classes and two classes on empty"() {
+        given:
+        def labelScattering = new ScatteringLabelsPreparer(5, 3, 0, 2).prepare() // FIXME it assumes that works
+        def labelCount = ['A': 1000L,
+                          'B': 1000L,
+                          'C': 1000L]
+        def preparer = new ScatteringAmountsPreparer(labelCount, labelScattering, 0.5, 0.05)
+
+        when:
+        def scattering = preparer.prepare()
+
+        then:
+        scattering.mainMap[0].map['A'].intValue() == 500
+
+        scattering.mainMap[1].map['B'].intValue() == 500
+
+        scattering.mainMap[2].map['C'].intValue() == 500
+
+        scattering.mainMap[3].map['A'].intValue() == 250
+        scattering.mainMap[3].map['B'].intValue() == 500
+
+        scattering.mainMap[4].map['C'].intValue() == 500
+        scattering.mainMap[4].map['A'].intValue() == 250
+    }
+
     def "should prepare scattering amounts when labels < workers with additional classes"() {
         given:
-        def labelScattering = new ScatteringLabelsPreparer(4, 3, 2).prepare() // FIXME it assumes that works
+        def labelScattering = new ScatteringLabelsPreparer(4, 3, 2, 0).prepare() // FIXME it assumes that works
         def labelCount = ['A': 1000L,
                           'B': 1000L,
                           'C': 1000L]
@@ -58,7 +83,7 @@ class ScatteringAmountsPreparerSpec extends Specification {
 
     def "should prepare scattering amounts when labels == workers with one additional class"() {
         given:
-        def labelScattering = new ScatteringLabelsPreparer(3, 3, 1).prepare() // FIXME it assumes that works
+        def labelScattering = new ScatteringLabelsPreparer(3, 3, 1, 0).prepare() // FIXME it assumes that works
         def labelCount = ['A': 1000L,
                           'B': 1000L,
                           'C': 1000L]
@@ -80,7 +105,7 @@ class ScatteringAmountsPreparerSpec extends Specification {
 
     def "should prepare scattering amounts when labels > workers with no additional classes"() {
         given:
-        def labelScattering = new ScatteringLabelsPreparer(3, 5, 0).prepare() // FIXME it assumes that works
+        def labelScattering = new ScatteringLabelsPreparer(3, 5, 0, 0).prepare() // FIXME it assumes that works
         def labelCount = ['A': 1000L,
                           'B': 1000L,
                           'C': 1000L,
@@ -103,7 +128,7 @@ class ScatteringAmountsPreparerSpec extends Specification {
 
     def "should prepare scattering amounts when labels > workers with four or more additional classes"() {
         given:
-        def labelScattering = new ScatteringLabelsPreparer(3, 5, additional).prepare() // FIXME it assumes that works
+        def labelScattering = new ScatteringLabelsPreparer(3, 5, additional, 0).prepare() // FIXME it assumes that works
         def labelCount = ['A': 1000L,
                           'B': 1000L,
                           'C': 1000L,

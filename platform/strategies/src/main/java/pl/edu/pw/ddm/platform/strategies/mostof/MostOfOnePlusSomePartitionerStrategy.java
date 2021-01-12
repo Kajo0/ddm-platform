@@ -30,6 +30,7 @@ public class MostOfOnePlusSomePartitionerStrategy implements PartitionerStrategy
 
         var labelsPreparer = new ScatteringLabelsPreparer(strategyParameters.getPartitions(), labels.keySet()
                 .size(), params.getOrDefault("additionalClassesNumber", 0d)
+                .intValue(), params.getOrDefault("emptyWorkerFill", 0d)
                 .intValue());
         var labelScattering = labelsPreparer.prepare();
         log.info("Prepared labels scattering: '{}'.", labelScattering);

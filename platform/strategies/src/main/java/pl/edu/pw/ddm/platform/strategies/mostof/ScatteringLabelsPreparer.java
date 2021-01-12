@@ -11,11 +11,18 @@ class ScatteringLabelsPreparer {
     private final int workers;
     private final int labels;
     private final int additionalClassesNumber;
+    /**
+     * 0  - fill empty workers with all labels
+     * >0 - fill next {given} number of labels on every empty node
+     */
+    private final int emptyWorkerFill;
 
     private void checkParams() {
         Preconditions.checkState(workers > 0, "Workers count cannot be less than 1");
         Preconditions.checkState(labels > 0, "Labels count cannot be less than 1");
         Preconditions.checkState(additionalClassesNumber >= 0, "Additional classes number cannot be negative");
+        Preconditions.checkState(emptyWorkerFill >= 0,
+                "Empty worker fill type must be equal -1 or greater equal than 0");
     }
 
     NodeToLabelScattering prepare() {
@@ -37,11 +44,12 @@ class ScatteringLabelsPreparer {
             log.info("workers > labels -> fill empty required");
         }
 
-        for (int worker = labels; worker < workers; ++worker) {
-            for (int label = 0; label < labels; ++label) {
-                scattering.getEmpty()
-                        .add(worker, label);
-            }
+        if (emptyWorkerFill == 0) {
+            fillEmptyNextSeparated(scattering, labels);
+        } else if (emptyWorkerFill > 0) {
+            fillEmptyNextSeparated(scattering, emptyWorkerFill);
+        } else {
+            throw new IllegalArgumentException("Not allowed emptyWorkerFill value = " + emptyWorkerFill);
         }
 
         if (additionalClassesNumber > 0) {
@@ -65,6 +73,18 @@ class ScatteringLabelsPreparer {
                         additional.add(worker, currClass);
                     }
                 }
+            }
+        }
+    }
+
+    private void fillEmptyNextSeparated(NodeToLabelScattering scattering, int amount) {
+        amount = Math.min(labels, amount);
+        int label = 0;
+        for (int worker = labels; worker < workers; ++worker) {
+            for (int i = 0; i < amount; ++i) {
+                scattering.getEmpty()
+                        .add(worker, label++);
+                label %= labels;
             }
         }
     }

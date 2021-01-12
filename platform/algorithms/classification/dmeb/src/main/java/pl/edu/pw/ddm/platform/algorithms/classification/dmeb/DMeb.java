@@ -49,6 +49,7 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
         int mebClusters = paramProvider.provideNumeric("meb_clusters", 32d).intValue();
         if (mebClusters <= 0) {
             mebClusters = (int) Math.max(2, Math.ceil(Math.pow(Math.log(trainingSize), 2)));
+            mebClusters = (int) Math.min(mebClusters, Math.ceil((float) trainingSize / 2));
             System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
         }
 

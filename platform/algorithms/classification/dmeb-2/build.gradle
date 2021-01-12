@@ -36,6 +36,7 @@ dependencies {
     testImplementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
     testImplementation 'pl.edu.pw.ddm.platform.testing:interfaces-impl:0.0.1-SNAPSHOT'
     testImplementation 'pl.edu.pw.ddm.platform:metrics:0.0.1-SNAPSHOT'
+    testImplementation 'pl.edu.pw.ddm.platform:strategies:0.0.1-SNAPSHOT'
 
     testImplementation platform('org.spockframework:spock-bom:2.0-M1-groovy-2.5')
     testImplementation 'org.spockframework:spock-core'

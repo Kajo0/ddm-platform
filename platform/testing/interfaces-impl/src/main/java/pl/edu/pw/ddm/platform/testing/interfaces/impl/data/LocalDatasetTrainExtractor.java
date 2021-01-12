@@ -1,29 +1,27 @@
-package pl.edu.pw.ddm.platform.core.data;
+package pl.edu.pw.ddm.platform.testing.interfaces.impl.data;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Random;
-import java.util.function.Predicate;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
+import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.strategy.TempFileCreator;
 
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class LocalDatasetTrainExtractor {
+@RequiredArgsConstructor(access = AccessLevel.PUBLIC)
+public class LocalDatasetTrainExtractor {
 
-    // TODO wrap in wrapper
     private final Path dataPath;
-    private final String separator;
-    private final Integer labelIndex; // TODO maybe in the future for uniform rand
-    private final DataLoader.DataOptions dataOptions;
+    private final int percentage;
+    private final Long seed;
+    private final TempFileCreator fileCreator;
 
-    private Integer percentage;
     private Random rand;
-    private TempFileCreator fileCreator;
 
     @Getter
     private Path trainFile;
@@ -31,7 +29,7 @@ class LocalDatasetTrainExtractor {
     @Getter
     private Path testFile;
 
-    void extract() throws IOException {
+    public void extract() throws IOException {
         if (processed()) {
             return;
         }
@@ -42,23 +40,23 @@ class LocalDatasetTrainExtractor {
         testFile = fileCreator.create("test");
 
         Files.lines(dataPath)
-                .filter(Predicate.not(String::isBlank))
+                .filter(StringUtils::isNotBlank)
                 .forEach(this::processLine);
     }
 
     @SneakyThrows
-    void cleanup() {
+    public void cleanup() {
         fileCreator.cleanup();
     }
 
     @SneakyThrows
     private void processLine(String line) {
-        var path = testFile;
+        Path path = testFile;
         if (trainRandom()) {
             path = trainFile;
         }
 
-        Files.writeString(path, line + System.lineSeparator(), StandardOpenOption.APPEND);
+        Files.write(path, (line + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
     }
 
     private boolean trainRandom() {
@@ -66,10 +64,6 @@ class LocalDatasetTrainExtractor {
     }
 
     private void checkOptions() {
-        Integer percentage = dataOptions.getExtractTrainPercentage();
-        if (percentage == null) {
-            throw new IllegalArgumentException("Extract train percentage is null.");
-        }
         if (percentage <= 0 || percentage >= 100) {
             throw new IllegalArgumentException(
                     "Extract train percentage is value is out of range (0, 100) = " + percentage);
@@ -77,13 +71,11 @@ class LocalDatasetTrainExtractor {
     }
 
     private void init() {
-        percentage = dataOptions.getExtractTrainPercentage();
-        if (dataOptions.getSeed() != null) {
-            rand = new Random(dataOptions.getSeed());
+        if (seed != null) {
+            rand = new Random(seed);
         } else {
             rand = new Random();
         }
-        fileCreator = new TempFileCreator();
     }
 
     private boolean processed() {

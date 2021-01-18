@@ -297,7 +297,7 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
             # 'distanceFunctionId': '1156746230', # loaded equality
             'preCalcCentroids': 'true',
             'b': '2',
-            'meb_clusters': '50',
+            'meb_clusters': '-1',
             'kernel': 'linear', #rbf #linear
             'knn_k': '3',
             'use_local_classifier': 'false'

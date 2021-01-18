@@ -21,6 +21,7 @@ import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
+import pl.edu.pw.ddm.platform.runner.utils.TransferSizeUtil;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalRepeatRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
@@ -55,6 +56,14 @@ class LocalRepeatRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
         wrapper.getTimeStatistics().setEnd(end);
         wrapper.getTimeStatistics().setDataLoadingMillis(dataProvider.getLoadingMillis());
 
+        wrapper.getDatasetStatistics().setTrainingSamplesAmount(dataProvider.trainingSize());
+        double avg = dataProvider.trainingSample10()
+                .stream()
+                .map(TransferSizeUtil::sizeOf)
+                .mapToInt(i -> i)
+                .average()
+                .orElse(-1);
+        wrapper.getDatasetStatistics().setAvgSampleSize((int) avg);
         Optional.of(model)
                 .map(BaseModel::customMetrics)
                 .ifPresent(wrapper.getDatasetStatistics()::setCustomMetrics);

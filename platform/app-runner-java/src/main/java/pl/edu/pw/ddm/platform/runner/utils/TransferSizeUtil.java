@@ -33,6 +33,7 @@ public class TransferSizeUtil {
                 return baos.toByteArray().length;
             }
         } catch (IOException e) {
+            System.out.println("  [[FUTURE LOG]] Transfer size error: " + e.getMessage());
             return null;
         }
     }

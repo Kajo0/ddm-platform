@@ -47,8 +47,18 @@ public class DMeb implements LocalProcessor<MEBBaseMethodLocalRepresentatives>,
         int partitionId = 0;
         int trainingSize = dataProvider.training().size();
         int mebClusters = paramProvider.provideNumeric("meb_clusters", 32d).intValue();
+        int labelMultiplier = 1;
+        if (mebClusters == -2) {
+            labelMultiplier = (int) dataProvider.training()
+                    .stream()
+                    .map(Data::getLabel)
+                    .distinct()
+                    .count();
+            System.out.println("  [[FUTURE LOG]] Found " + labelMultiplier + " in " + trainingSize + " data samples");
+        }
         if (mebClusters <= 0) {
             mebClusters = (int) Math.max(2, Math.ceil(Math.pow(Math.log(trainingSize), 2)));
+            mebClusters *= labelMultiplier;
             mebClusters = (int) Math.min(mebClusters, Math.ceil((float) trainingSize / 2));
             System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
         }

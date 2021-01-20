@@ -10,12 +10,16 @@ import pl.edu.pw.ddm.platform.interfaces.algorithm.central.LocalUpdater;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
+import weka.classifiers.functions.SMO;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instances;
+import weka.core.SelectedTag;
 import weka.core.Utils;
 
 public class SvmWeka implements LocalUpdater<LGModel, LGModel, WekaClassifier> {
+
+    private static final double LINEARLY_EXP = 1.000000000000001; // to keep support vectors
 
     @SneakyThrows
     @Override
@@ -52,6 +56,12 @@ public class SvmWeka implements LocalUpdater<LGModel, LGModel, WekaClassifier> {
         // default linear poly kernel with some parameters
         String[] options = Utils.splitOptions(fetchOptions(paramProvider));
         smo.setOptions(options);
+        smo.setChecksTurnedOff(true);
+        smo.setFilterType(new SelectedTag(SMO.FILTER_NORMALIZE, SMO.TAGS_FILTER));
+        Double seed = paramProvider.provideNumeric("seed");
+        if (seed != null) {
+            smo.setRandomSeed(seed.intValue());
+        }
         smo.buildClassifier(dataset);
 
         return smo;
@@ -62,9 +72,9 @@ public class SvmWeka implements LocalUpdater<LGModel, LGModel, WekaClassifier> {
         String kernelOptions = "";
 
         if (kernel == null || "linear".equals(kernel)) {
-            kernelOptions = "-K \"weka.classifiers.functions.supportVector.PolyKernel -E 1.0 -C 250007\"";
+            kernelOptions = "-K \"weka.classifiers.functions.supportVector.PolyKernel -E " + LINEARLY_EXP + " -C -1\"";
         } else if ("rbf".equals(kernel)) {
-            kernelOptions = "-K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.50625\"";
+            kernelOptions = "-K \"weka.classifiers.functions.supportVector.RBFKernel -C -1 -G 0.50625\"";
         } else {
             throw new IllegalArgumentException("Unsupported kernel value: " + kernel);
         }

@@ -5,6 +5,7 @@ import pprint
 import requests
 import sys
 import time
+import re
 
 lastExecFile = './last_exec.properties'
 baseUrl = 'http://localhost:7000'
@@ -767,6 +768,8 @@ def schedule():
                     headers.append('recall')
                     headers.append('precision')
                     headers.append('ddmTotalTrainingProcessing')
+                    headers.append('sentSamples')
+                    headers.append('allSamples')
                     headers.append('localBytes')
                     headers.append('globalBytes')
                     headers.append('trainingBytes')
@@ -787,6 +790,7 @@ def schedule():
                     values.append(metrics.get('recall', ''))
                     values.append(metrics.get('precision', ''))
                     values.append(stats['time']['ddmTotalProcessing'])
+                    values.append(handleCustomMetrics(stats['custom']))
                     values.append(stats['transfer']['localBytes'])
                     values.append(stats['transfer']['globalBytes'])
                     values.append(stats['data']['trainingBytes'])
@@ -797,6 +801,39 @@ def schedule():
 
     print('')
     print('SCHEDULE FINISHED')
+
+
+def handleCustomMetrics(metrics):
+    try:
+        locals = metrics['locals']
+        globals = metrics['globals']
+        if not locals and not globals:
+            return 'n/a'
+
+        transferred = 0
+        all = 0
+        for lm in locals:
+            for key, lmval in lm.items():
+                if lmval == 'null':
+                    continue
+
+                values = re.split('/|%', lmval)
+                transferred += int(values[0])
+                if len(values) > 1:
+                    all += int(values[1])
+
+        for gm in globals:
+            if gm == 'null':
+                continue
+
+            values = re.split('/|%', gm)
+            transferred += int(values[0])
+            if len(values) > 1:
+                all += int(values[1])
+
+        return str(transferred) + ';' + str(all)
+    except:
+        return str(sys.exc_info()[0]) + ';'
 
 
 if len(sys.argv) < 2:

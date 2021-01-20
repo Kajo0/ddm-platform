@@ -39,6 +39,7 @@ class LocalDataPartitioner implements DataPartitioner {
     @Override
     public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String distanceFunctionId, String params, Long seed) {
         log.info("Scattering train data '{}' with strategy '{}' and distance func '{}' into nodes '{}' with seed '{}'.", dataDesc, strategy, distanceFunctionId, addresses, seed);
+        log.info("User params for '{}' partitioning strategy: '{}'", strategy, params);
         // TODO if data with same params already scattered - do not send again but think about naming that use only id without params
 
         List<InstanceAddrDto> workers = addresses.stream()

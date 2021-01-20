@@ -53,12 +53,11 @@ public class MEBCluster implements Serializable {
 
     private boolean containsAny(Collection<LabeledObservation> representativeList) {
         for (LabeledObservation observation : representativeList) {
-            double[] features = Arrays.copyOfRange(observation.getFeatures(), 0, observation.getFeatures().length);
-            if (Arrays.equals(features, centroid.getFeatures())) {
+            if (Arrays.equals(observation.getFeatures(), centroid.getFeatures())) {
                 return true;
             }
             for (LabeledObservation ce : clusterElementList) {
-                if (Arrays.equals(features, ce.getFeatures())) {
+                if (Arrays.equals(observation.getFeatures(), ce.getFeatures())) {
                     return true;
                 }
             }

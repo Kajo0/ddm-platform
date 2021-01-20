@@ -1,5 +1,7 @@
 package pl.edu.pw.ddm.platform.algorithms.classification.dmeb2;
 
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.summarizingDouble;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -13,10 +15,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import de.lmu.ifi.dbs.elki.data.synthetic.bymodel.GeneratorSingleCluster;
 import de.lmu.ifi.dbs.elki.math.statistics.distribution.NormalDistribution;
+import de.lmu.ifi.dbs.elki.math.statistics.distribution.UniformDistribution;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabeledObservation;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabelledWrapper;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.MEBCluster;
@@ -118,6 +122,7 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                 .orElseGet(EuclideanDistance::new);
         MEBModel mebModel = new MEBClustering(mebClusters, initMethod, distanceFunction, debug)
                 .perform(labeledObservations, partitionId);
+        mebModel.markSupportClusters(svmModel.getSVs());
 
         Set<LabeledObservation> representativeList = new HashSet<>(svmModel.getSVs());
 
@@ -127,30 +132,43 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
             case "leave_border":
                 mebModel.getClusterList()
                         .stream()
-                        .filter(cluster -> cluster.containsAny(svmModel.getSVs()))
+                        .filter(cluster -> cluster.isMultiClass() || cluster.isSupportCluster())
                         .map(MEBCluster::leaveBorder)
                         .forEach(representativeList::addAll);
                 break;
             case "close_to":
                 double closeToPercent = paramProvider.provideNumeric("close_to_percent", 0.2);
+                double closeRandomPercent = paramProvider.provideNumeric("random_percent", 0.2);
                 mebModel.getClusterList()
                         .stream()
-                        .filter(cluster -> cluster.containsAny(svmModel.getSVs()))
+                        .filter(MEBCluster::isSupportCluster)
                         .map(cluster -> cluster.leaveCloseToSvs(closeToPercent, svmModel.getSVs()))
+                        .forEach(representativeList::addAll);
+                mebModel.multiClassClusters()
+                        .stream()
+                        .filter(cluster -> !cluster.isSupportCluster())
+                        .map(cluster -> cluster.random(closeRandomPercent, seed(paramProvider)))
+                        .forEach(representativeList::addAll);
+                break;
+            case "random":
+                double randomPercent = paramProvider.provideNumeric("random_percent", 0.2);
+                mebModel.getClusterList()
+                        .stream()
+                        .filter(cluster -> cluster.isMultiClass() || cluster.isSupportCluster())
+                        .map(cluster -> cluster.random(randomPercent, seed(paramProvider)))
                         .forEach(representativeList::addAll);
                 break;
             case "all_with":
                 mebModel.getClusterList()
                         .stream()
-                        .filter(cluster -> cluster.containsAny(svmModel.getSVs()))
+                        .filter(MEBCluster::isSupportCluster)
                         .map(MEBCluster::getClusterElementList)
                         .forEach(representativeList::addAll);
                 break;
             case "all_when_multi":
             default:
-                mebModel.getClusterList()
+                mebModel.multiClassClusters()
                         .stream()
-                        .filter(cluster -> cluster.isMultiClass() || cluster.containsAny(svmModel.getSVs()))
                         .map(MEBCluster::getClusterElementList)
                         .forEach(representativeList::addAll);
                 break;
@@ -162,7 +180,7 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
             case "metrics_collect":
                 mebModel.singleClassClusters()
                         .stream()
-                        .filter(cluster -> !cluster.containsAny(svmModel.getSVs()))
+                        .filter(cluster -> !cluster.isSupportCluster())
                         .peek(MEBCluster::calculateMetrics)
                         .peek(MEBCluster::squashToCentroid)
                         .map(LabelledWrapper::ofPrecalculated)
@@ -172,15 +190,29 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                 double randomPercent = paramProvider.provideNumeric("random_percent", 0.1);
                 mebModel.singleClassClusters()
                         .stream()
-                        .filter(cluster -> !cluster.containsAny(svmModel.getSVs()))
+                        .filter(cluster -> !cluster.isSupportCluster())
                         .map(cluster -> cluster.random(randomPercent, seed(paramProvider)))
                         .forEach(representativeList::addAll);
+                break;
+            case "leave_border":
+                mebModel.singleClassClusters()
+                        .stream()
+                        .filter(cluster -> !cluster.isSupportCluster())
+                        .map(MEBCluster::leaveBorder)
+                        .forEach(representativeList::addAll);
+                break;
+            case "squash_to_median":
+                mebModel.singleClassClusters()
+                        .stream()
+                        .filter(cluster -> !cluster.isSupportCluster())
+                        .map(MEBCluster::squashToMedian)
+                        .forEach(representativeList::add);
                 break;
             case "squash_to_centroid":
             default:
                 mebModel.singleClassClusters()
                         .stream()
-                        .filter(cluster -> !cluster.containsAny(svmModel.getSVs()))
+                        .filter(cluster -> !cluster.isSupportCluster())
                         .map(MEBCluster::squashToCentroid)
                         .forEach(representativeList::add);
                 break;

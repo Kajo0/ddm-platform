@@ -1,6 +1,7 @@
 package pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
@@ -23,11 +24,13 @@ public class LabelledWrapper extends LabeledObservation {
                 .findFirst()
                 .get());
 
-        lw.elements = cluster.getPrimaryDensityStats().getElements();
-        lw.mean = cluster.getPrimaryDensityStats().getFMean();
-        lw.stddev = cluster.getPrimaryDensityStats().getFStddev();
-        lw.min = cluster.getPrimaryDensityStats().getFMin();
-        lw.max = cluster.getPrimaryDensityStats().getFMax();
+        MEBCluster.DensityStats stats = cluster.getPrimaryDensityStats();
+        lw.elements = stats.getElements();
+
+        lw.mean = stats.getFMean();
+        lw.stddev = stats.getFStddev();
+        lw.min = stats.getFMin();
+        lw.max = stats.getFMax();
 
         return lw;
     }

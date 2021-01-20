@@ -5,11 +5,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
@@ -21,6 +27,7 @@ public class MEBCluster implements Serializable {
     private transient boolean debug;
     private transient DistanceFunction distanceFunction;
 
+    private boolean supportCluster;
     private Centroid centroid;
     private List<LabeledObservation> clusterElementList;
     private DensityStats primaryDensityStats = new DensityStats();
@@ -36,11 +43,15 @@ public class MEBCluster implements Serializable {
         primaryDensityStats.reset();
     }
 
-    public boolean containsAny(LabeledObservation representativeList) {
+    public void markSupportCluster(Set<LabeledObservation> sVs) {
+        supportCluster = containsAny(sVs);
+    }
+
+    private boolean containsAny(LabeledObservation representativeList) {
         return containsAny(Collections.singletonList(representativeList));
     }
 
-    public boolean containsAny(Collection<LabeledObservation> representativeList) {
+    private boolean containsAny(Collection<LabeledObservation> representativeList) {
         for (LabeledObservation observation : representativeList) {
             double[] features = Arrays.copyOfRange(observation.getFeatures(), 0, observation.getFeatures().length);
             if (Arrays.equals(features, centroid.getFeatures())) {
@@ -67,6 +78,21 @@ public class MEBCluster implements Serializable {
         return squashed;
     }
 
+    public LabeledObservation squashToMedian() {
+        primaryDensityStats.elements = clusterElementList.size();
+        LabeledObservation median = clusterElementList.stream()
+                .sorted(Comparator.comparingDouble(d -> distanceFunction.distance(centroid.getFeatures(), d.getFeatures())))
+                .skip(primaryDensityStats.elements / 2)
+                .findFirst()
+                .get();
+        clusterElementList.clear();
+        clusterElementList.add(median);
+        if (debug) {
+            System.out.println("  [[FUTURE LOG]] Cluster with " + primaryDensityStats.elements + " elements medianed into 1");
+        }
+        return median;
+    }
+
     public List<LabeledObservation> random(double percent, Long seed) {
         Random rand = Optional.ofNullable(seed)
                 .map(Random::new)
@@ -85,18 +111,32 @@ public class MEBCluster implements Serializable {
 
     public List<LabeledObservation> leaveCloseToSvs(double percent, Collection<LabeledObservation> svs) {
         primaryDensityStats.elements = clusterElementList.size();
+        Set<LabeledObservation> clusterSvs = matchInnerSupportVectors(svs);
         clusterElementList = clusterElementList.stream()
-                .sorted(Comparator.comparingDouble(d -> svs
-                        .stream()
-                        .map(sv -> distanceFunction.distance(d.getFeatures(), sv.getFeatures()))
-                        .reduce(Double::sum)
-                        .orElse(0d)))
-                .limit((long) Math.max(1, primaryDensityStats.elements * percent))
+                .collect(Collectors.groupingBy(LabeledObservation::getTarget, Collectors.toSet()))
+                .entrySet()
+                .stream()
+                .filter(e -> e.getKey() != -1)
+                .map(Map.Entry::getValue)
+                .map(classList -> classList.stream()
+                        .sorted(Comparator.comparingDouble(d -> clusterSvs.stream()
+                                .map(sv -> distanceFunction.distance(d.getFeatures(), sv.getFeatures()))
+                                .reduce(Double::sum)
+                                .orElse(0d)))
+                        .limit((long) Math.max(1, classList.size() * percent))
+                        .collect(Collectors.toSet()))
+                .flatMap(Collection::stream)
                 .collect(Collectors.toList());
         if (debug) {
             System.out.println("  [[FUTURE LOG]] Cluster with " + primaryDensityStats.elements + " reduced by svs close to " + clusterElementList.size() + " elements");
         }
         return clusterElementList;
+    }
+
+    private Set<LabeledObservation> matchInnerSupportVectors(Collection<LabeledObservation> svs) {
+        return svs.stream()
+                .filter(this::containsAny)
+                .collect(Collectors.toSet());
     }
 
     public List<LabeledObservation> leaveBorder() {
@@ -107,7 +147,10 @@ public class MEBCluster implements Serializable {
         }
 
         double threshold = primaryDensityStats.max - primaryDensityStats.stddev;
-        clusterElementList.removeIf(p -> distanceFunction.distance(centroid.getFeatures(), p.getFeatures()) < threshold);
+        clusterElementList.removeIf(p -> {
+            double dist = distanceFunction.distance(centroid.getFeatures(), p.getFeatures());
+            return dist < threshold && dist > primaryDensityStats.stddev;
+        });
         if (closest != null && !clusterElementList.contains(closest)) {
             clusterElementList.add(closest);
             if (debug) {

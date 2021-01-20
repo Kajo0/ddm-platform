@@ -6,7 +6,11 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import lombok.Getter;
+
+@Getter
 public class MEBModel implements Serializable {
 
     private final List<MEBCluster> clusterList;
@@ -17,12 +21,8 @@ public class MEBModel implements Serializable {
         this.clusterList = clusterList;
     }
 
-    public List<MEBCluster> getClusterList() {
-        return clusterList;
-    }
-
-    public Integer getPartitionId() {
-        return partitionId;
+    public void markSupportClusters(Set<LabeledObservation> sVs) {
+        clusterList.forEach(cluster -> cluster.markSupportCluster(sVs));
     }
 
     public List<MEBCluster> singleClassClusters() {

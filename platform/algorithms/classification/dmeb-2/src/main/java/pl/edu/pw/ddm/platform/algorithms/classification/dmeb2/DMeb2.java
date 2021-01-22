@@ -96,130 +96,146 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
         SVMModel svmModel = wekaClassifier.train(labeledObservations);
         System.out.println("  [[FUTURE LOG]] SVM svs found=" + svmModel.getSVs().size());
 
-        // FIXME unused partitionId?
-        int partitionId = 0;
         int trainingSize = dataProvider.training().size();
-        int mebClusters = paramProvider.provideNumeric("meb_clusters", 32d).intValue();
-        int labelMultiplier = 1;
-        if (mebClusters == -2) {
-            labelMultiplier = (int) dataProvider.training()
-                    .stream()
-                    .map(Data::getLabel)
-                    .distinct()
-                    .count();
-            System.out.println("  [[FUTURE LOG]] Found " + labelMultiplier + " in " + trainingSize + " data samples");
-        }
-        if (mebClusters <= 0) {
-            mebClusters = (int) Math.max(2, Math.ceil(Math.pow(Math.log(trainingSize), 2)));
-            mebClusters *= labelMultiplier;
-            mebClusters = (int) Math.min(mebClusters, Math.ceil((float) trainingSize / 2));
-            System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
-        }
-
-        boolean debug = Boolean.TRUE.toString().equals(paramProvider.provide("debug", "false"));
-        String initMethod = paramProvider.provide("init_kmeans_method", "k-means++");
-        DistanceFunction distanceFunction = Optional.ofNullable(paramProvider.distanceFunction())
-                .orElseGet(EuclideanDistance::new);
-        MEBModel mebModel = new MEBClustering(mebClusters, initMethod, distanceFunction, debug)
-                .perform(labeledObservations, partitionId);
-        mebModel.markSupportClusters(svmModel.getSVs());
-
+        int mebClusters = 0;
         Set<LabeledObservation> representativeList = new HashSet<>(svmModel.getSVs());
 
-        String localForSvs = paramProvider.provide("local_method_for_svs_clusters", "all_with_svs");
-        System.out.println("  [[FUTURE LOG]] local_method_for_svs_clusters: " + localForSvs);
-        switch (localForSvs) {
-            case "leave_border":
-                mebModel.getClusterList()
-                        .stream()
-                        .filter(cluster -> cluster.isMultiClass() || cluster.isSupportCluster())
-                        .map(MEBCluster::leaveBorder)
-                        .forEach(representativeList::addAll);
-                break;
-            case "close_to":
-                double closeToPercent = paramProvider.provideNumeric("close_to_percent", 0.2);
-                double closeRandomPercent = paramProvider.provideNumeric("random_percent", 0.2);
-                mebModel.getClusterList()
-                        .stream()
-                        .filter(MEBCluster::isSupportCluster)
-                        .map(cluster -> cluster.leaveCloseToSvs(closeToPercent, svmModel.getSVs()))
-                        .forEach(representativeList::addAll);
-                mebModel.multiClassClusters()
-                        .stream()
-                        .filter(cluster -> !cluster.isSupportCluster())
-                        .map(cluster -> cluster.random(closeRandomPercent, seed(paramProvider)))
-                        .forEach(representativeList::addAll);
-                break;
-            case "random":
-                double randomPercent = paramProvider.provideNumeric("random_percent", 0.2);
-                mebModel.getClusterList()
-                        .stream()
-                        .filter(cluster -> cluster.isMultiClass() || cluster.isSupportCluster())
-                        .map(cluster -> cluster.random(randomPercent, seed(paramProvider)))
-                        .forEach(representativeList::addAll);
-                break;
-            case "all_with":
-                mebModel.getClusterList()
-                        .stream()
-                        .filter(MEBCluster::isSupportCluster)
-                        .map(MEBCluster::getClusterElementList)
-                        .forEach(representativeList::addAll);
-                break;
-            case "all_when_multi":
-            default:
-                mebModel.multiClassClusters()
-                        .stream()
-                        .map(MEBCluster::getClusterElementList)
-                        .forEach(representativeList::addAll);
-                break;
-        }
+        if (Boolean.TRUE.toString().equals(paramProvider.provide("just_random", "false"))) {
+            System.out.println("  [[FUTURE LOG]] Just random observations from entire data");
+            Random rand = Optional.ofNullable(seed(paramProvider))
+                    .map(Random::new)
+                    .orElseGet(Random::new);
+            // TODO FIXME optimize but here we've got non returned new Random().ints() 'stream'
+            Collections.shuffle(labeledObservations, rand);
 
-        String localForNonMulti = paramProvider.provide("local_method_for_non_multiclass_clusters", "squash_to_centroid");
-        System.out.println("  [[FUTURE LOG]] local_method_for_non_multiclass_clusters: " + localForNonMulti);
-        switch (localForNonMulti) {
-            case "metrics_collect":
-                mebModel.singleClassClusters()
+            double randomPercent = paramProvider.provideNumeric("random_percent", 0.2);
+            long amount = (long) (trainingSize * randomPercent);
+            labeledObservations.stream()
+                    .limit(Math.max(1, amount))
+                    .forEach(representativeList::add);
+            System.out.println("  [[FUTURE LOG]] Randomly chosen " + amount + " of " + trainingSize + " elements");
+        } else {
+            // FIXME unused partitionId?
+            int partitionId = 0;
+            mebClusters = paramProvider.provideNumeric("meb_clusters", 32d).intValue();
+            int labelMultiplier = 1;
+            if (mebClusters == -2) {
+                labelMultiplier = (int) dataProvider.training()
                         .stream()
-                        .filter(cluster -> !cluster.isSupportCluster())
-                        .peek(MEBCluster::calculateMetrics)
-                        .peek(MEBCluster::squashToCentroid)
-                        .map(LabelledWrapper::ofPrecalculated)
-                        .forEach(representativeList::add);
-                break;
-            case "random":
-                double randomPercent = paramProvider.provideNumeric("random_percent", 0.1);
-                mebModel.singleClassClusters()
-                        .stream()
-                        .filter(cluster -> !cluster.isSupportCluster())
-                        .map(cluster -> cluster.random(randomPercent, seed(paramProvider)))
-                        .forEach(representativeList::addAll);
-                break;
-            case "leave_border":
-                mebModel.singleClassClusters()
-                        .stream()
-                        .filter(cluster -> !cluster.isSupportCluster())
-                        .map(MEBCluster::leaveBorder)
-                        .forEach(representativeList::addAll);
-                break;
-            case "squash_to_median":
-                mebModel.singleClassClusters()
-                        .stream()
-                        .filter(cluster -> !cluster.isSupportCluster())
-                        .map(MEBCluster::squashToMedian)
-                        .forEach(representativeList::add);
-                break;
-            case "squash_to_centroid":
-            default:
-                mebModel.singleClassClusters()
-                        .stream()
-                        .filter(cluster -> !cluster.isSupportCluster())
-                        .map(MEBCluster::squashToCentroid)
-                        .forEach(representativeList::add);
-                break;
-        }
+                        .map(Data::getLabel)
+                        .distinct()
+                        .count();
+                System.out.println("  [[FUTURE LOG]] Found " + labelMultiplier + " in " + trainingSize + " data samples");
+            }
+            if (mebClusters <= 0) {
+                mebClusters = (int) Math.max(2, Math.ceil(Math.pow(Math.log(trainingSize), 2)));
+                mebClusters *= labelMultiplier;
+                mebClusters = (int) Math.min(mebClusters, Math.ceil((float) trainingSize / 2));
+                System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
+            }
 
-        System.out.println("  [[FUTURE LOG]] processLocal: svs=" + svmModel.getSVs().size() + ", representativeList="
-                + representativeList.size() + ", labeledObservations=" + labeledObservations.size());
+            boolean debug = Boolean.TRUE.toString().equals(paramProvider.provide("debug", "false"));
+            String initMethod = paramProvider.provide("init_kmeans_method", "k-means++");
+            DistanceFunction distanceFunction = Optional.ofNullable(paramProvider.distanceFunction())
+                    .orElseGet(EuclideanDistance::new);
+            MEBModel mebModel = new MEBClustering(mebClusters, initMethod, distanceFunction, debug)
+                    .perform(labeledObservations, partitionId);
+            mebModel.markSupportClusters(svmModel.getSVs());
+
+            String localForSvs = paramProvider.provide("local_method_for_svs_clusters", "all_with_svs");
+            System.out.println("  [[FUTURE LOG]] local_method_for_svs_clusters: " + localForSvs);
+            switch (localForSvs) {
+                case "leave_border":
+                    mebModel.getClusterList()
+                            .stream()
+                            .filter(cluster -> cluster.isMultiClass() || cluster.isSupportCluster())
+                            .map(MEBCluster::leaveBorder)
+                            .forEach(representativeList::addAll);
+                    break;
+                case "close_to":
+                    double closeToPercent = paramProvider.provideNumeric("close_to_percent", 0.2);
+                    double closeRandomPercent = paramProvider.provideNumeric("random_percent", 0.2);
+                    mebModel.getClusterList()
+                            .stream()
+                            .filter(MEBCluster::isSupportCluster)
+                            .map(cluster -> cluster.leaveCloseToSvs(closeToPercent, svmModel.getSVs()))
+                            .forEach(representativeList::addAll);
+                    mebModel.multiClassClusters()
+                            .stream()
+                            .filter(cluster -> !cluster.isSupportCluster())
+                            .map(cluster -> cluster.random(closeRandomPercent, seed(paramProvider)))
+                            .forEach(representativeList::addAll);
+                    break;
+                case "random":
+                    double randomPercent = paramProvider.provideNumeric("random_percent", 0.2);
+                    mebModel.getClusterList()
+                            .stream()
+                            .filter(cluster -> cluster.isMultiClass() || cluster.isSupportCluster())
+                            .map(cluster -> cluster.random(randomPercent, seed(paramProvider)))
+                            .forEach(representativeList::addAll);
+                    break;
+                case "all_with":
+                    mebModel.getClusterList()
+                            .stream()
+                            .filter(MEBCluster::isSupportCluster)
+                            .map(MEBCluster::getClusterElementList)
+                            .forEach(representativeList::addAll);
+                    break;
+                case "all_when_multi":
+                default:
+                    mebModel.multiClassClusters()
+                            .stream()
+                            .map(MEBCluster::getClusterElementList)
+                            .forEach(representativeList::addAll);
+                    break;
+            }
+
+            String localForNonMulti = paramProvider.provide("local_method_for_non_multiclass_clusters", "squash_to_centroid");
+            System.out.println("  [[FUTURE LOG]] local_method_for_non_multiclass_clusters: " + localForNonMulti);
+            switch (localForNonMulti) {
+                case "metrics_collect":
+                    mebModel.singleClassClusters()
+                            .stream()
+                            .filter(cluster -> !cluster.isSupportCluster())
+                            .peek(MEBCluster::calculateMetrics)
+                            .peek(MEBCluster::squashToCentroid)
+                            .map(LabelledWrapper::ofPrecalculated)
+                            .forEach(representativeList::add);
+                    break;
+                case "random":
+                    double randomPercent = paramProvider.provideNumeric("random_percent", 0.1);
+                    mebModel.singleClassClusters()
+                            .stream()
+                            .filter(cluster -> !cluster.isSupportCluster())
+                            .map(cluster -> cluster.random(randomPercent, seed(paramProvider)))
+                            .forEach(representativeList::addAll);
+                    break;
+                case "leave_border":
+                    mebModel.singleClassClusters()
+                            .stream()
+                            .filter(cluster -> !cluster.isSupportCluster())
+                            .map(MEBCluster::leaveBorder)
+                            .forEach(representativeList::addAll);
+                    break;
+                case "squash_to_median":
+                    mebModel.singleClassClusters()
+                            .stream()
+                            .filter(cluster -> !cluster.isSupportCluster())
+                            .map(MEBCluster::squashToMedian)
+                            .forEach(representativeList::add);
+                    break;
+                case "squash_to_centroid":
+                default:
+                    mebModel.singleClassClusters()
+                            .stream()
+                            .filter(cluster -> !cluster.isSupportCluster())
+                            .map(MEBCluster::squashToCentroid)
+                            .forEach(representativeList::add);
+                    break;
+            }
+            System.out.println("  [[FUTURE LOG]] processLocal: svs=" + svmModel.getSVs().size() + ", representativeList="
+                    + representativeList.size() + ", labeledObservations=" + labeledObservations.size());
+        }
 
         if (useLocalClassifier(paramProvider)) {
             LabeledObservation dummyObservation = LocalRepresentativesModel.dummyObservation();

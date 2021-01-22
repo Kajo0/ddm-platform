@@ -41,6 +41,10 @@ public class GlobalClassifier implements Classifier {
     @Override
     public void classify(SampleProvider sampleProvider, ParamProvider paramProvider, ResultCollector resultCollector) {
         int knnParam = paramProvider.provideNumeric("knn_k", 3d).intValue();
+        if (knnParam == -1) {
+            knnParam = Math.abs(2 * secondLevelClassifiers.length);
+            System.out.println("  [[FUTURE LOG]] knn param set to=" + knnParam);
+        }
         if (DMeb2.useLocalClassifier(paramProvider)) {
             List<SVMModel> localClassifier = Collections.singletonList(findLocalClassifier());
             sampleProvider.forEachRemaining(sample -> resultCollector.collect(
@@ -50,8 +54,9 @@ public class GlobalClassifier implements Classifier {
                             localClassifier)));
         } else {
             boolean firstLevelOnly = Boolean.TRUE.toString().equals(paramProvider.provide("use_first_level_only", "false"));
+            int knnParamf = knnParam;
             sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(),
-                    String.valueOf(classify(sample.getNumericAttributes(), knnParam, firstLevelOnly))));
+                    String.valueOf(classify(sample.getNumericAttributes(), knnParamf, firstLevelOnly))));
         }
     }
 

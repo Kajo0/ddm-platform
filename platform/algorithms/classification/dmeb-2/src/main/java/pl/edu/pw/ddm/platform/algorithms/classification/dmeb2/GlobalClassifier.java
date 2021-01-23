@@ -88,6 +88,10 @@ public class GlobalClassifier implements Classifier {
             }
 
             LinearNNSearch knn = knnModelMap.get(predictedByFirstLevelClassifierLabel);
+            if (knn == null) {
+                // should never be here, it may be cause of empty train set when random_percent = 0 for separated data
+                return predictedByFirstLevelClassifierLabel;
+            }
             Instances instances = knn.kNearestNeighbours(WekaUtils.toInstance(features), knnParam);
             List<SVMModel> svmModels = new ArrayList<>();
             for (Instance i : instances) {

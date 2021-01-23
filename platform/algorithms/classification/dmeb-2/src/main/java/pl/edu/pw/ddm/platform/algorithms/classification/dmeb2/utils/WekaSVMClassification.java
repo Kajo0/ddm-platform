@@ -6,7 +6,6 @@ import java.util.Set;
 
 import lombok.Setter;
 import weka.classifiers.functions.SMO;
-import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 import weka.core.SelectedTag;
 
@@ -41,9 +40,12 @@ public class WekaSVMClassification implements Serializable {
         if (Utils.moreThanOneClass(trainSet)) {
             return doTrain(trainSet);
         } else {
-            int target = trainSet.get(0)
-                    .getTarget();
-            return new DummySVMModel(target);
+            return trainSet.stream()
+                    .limit(1)
+                    .map(LabeledObservation::getTarget)
+                    .map(DummySVMModel::new)
+                    .findFirst()
+                    .orElseGet(() -> new DummySVMModel(Integer.MIN_VALUE));
         }
     }
 

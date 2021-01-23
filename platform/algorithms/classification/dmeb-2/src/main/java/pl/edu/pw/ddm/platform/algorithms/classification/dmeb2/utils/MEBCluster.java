@@ -103,15 +103,23 @@ public class MEBCluster implements Serializable {
                 System.out.println("  [[FUTURE LOG]] Random precalculated into " + percent + " value");
             }
         }
-        long limit = Math.max(1, (long) Math.ceil(clusterElementList.size() * percent));
+        if (percent == 0) {
+            clusterElementList.clear();
+        } else {
+            long limit = Math.max(1, (long) Math.ceil(clusterElementList.size() * percent));
+            if (percent == 0) {
+                limit = 0;
+            }
 
-        primaryDensityStats.elements = clusterElementList.size();
-        clusterElementList = clusterElementList.stream()
-                .limit(limit)
-                .collect(Collectors.toList());
-        if (debug) {
-            System.out.println("  [[FUTURE LOG]] Cluster with " + primaryDensityStats.elements + " reduced randomly to " + clusterElementList.size() + " elements");
+            primaryDensityStats.elements = clusterElementList.size();
+            clusterElementList = clusterElementList.stream()
+                    .limit(limit)
+                    .collect(Collectors.toList());
+            if (debug) {
+                System.out.println("  [[FUTURE LOG]] Cluster with " + primaryDensityStats.elements + " reduced randomly to " + clusterElementList.size() + " elements");
+            }
         }
+
         return clusterElementList;
     }
 
@@ -123,34 +131,39 @@ public class MEBCluster implements Serializable {
     public List<LabeledObservation> leaveCloseToSvs(double percent, Collection<LabeledObservation> svs) {
         primaryDensityStats.elements = clusterElementList.size();
 
-        if (percent < 0) {
-            calculateMetrics();
-            percent = clusterDensityPercent();
+        if (percent == 0) {
+            clusterElementList.clear();
+        } else {
+            if (percent < 0) {
+                calculateMetrics();
+                percent = clusterDensityPercent();
+                if (debug) {
+                    System.out.println("  [[FUTURE LOG]] Close to percent precalculated into " + percent + " value");
+                }
+            }
+            double percentf = percent;
+
+            Set<LabeledObservation> clusterSvs = matchInnerSupportVectors(svs);
+            clusterElementList = clusterElementList.stream()
+                    .collect(Collectors.groupingBy(LabeledObservation::getTarget, Collectors.toSet()))
+                    .entrySet()
+                    .stream()
+                    .filter(e -> e.getKey() != -1)
+                    .map(Map.Entry::getValue)
+                    .map(classList -> classList.stream()
+                            .sorted(Comparator.comparingDouble(d -> clusterSvs.stream()
+                                    .map(sv -> distanceFunction.distance(d.getFeatures(), sv.getFeatures()))
+                                    .reduce(Double::sum)
+                                    .orElse(0d)))
+                            .limit((long) Math.max(1, Math.ceil(classList.size() * percentf)))
+                            .collect(Collectors.toSet()))
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
             if (debug) {
-                System.out.println("  [[FUTURE LOG]] Close to percent precalculated into " + percent + " value");
+                System.out.println("  [[FUTURE LOG]] Cluster with " + primaryDensityStats.elements + " reduced by svs close to " + clusterElementList.size() + " elements");
             }
         }
-        double percentf = percent;
 
-        Set<LabeledObservation> clusterSvs = matchInnerSupportVectors(svs);
-        clusterElementList = clusterElementList.stream()
-                .collect(Collectors.groupingBy(LabeledObservation::getTarget, Collectors.toSet()))
-                .entrySet()
-                .stream()
-                .filter(e -> e.getKey() != -1)
-                .map(Map.Entry::getValue)
-                .map(classList -> classList.stream()
-                        .sorted(Comparator.comparingDouble(d -> clusterSvs.stream()
-                                .map(sv -> distanceFunction.distance(d.getFeatures(), sv.getFeatures()))
-                                .reduce(Double::sum)
-                                .orElse(0d)))
-                        .limit((long) Math.max(1, Math.ceil(classList.size() * percentf)))
-                        .collect(Collectors.toSet()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        if (debug) {
-            System.out.println("  [[FUTURE LOG]] Cluster with " + primaryDensityStats.elements + " reduced by svs close to " + clusterElementList.size() + " elements");
-        }
         return clusterElementList;
     }
 

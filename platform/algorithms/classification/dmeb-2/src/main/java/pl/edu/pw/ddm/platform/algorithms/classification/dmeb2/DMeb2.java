@@ -96,7 +96,9 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
         int mebClusters = 0;
         Set<LabeledObservation> representativeList = new HashSet<>(svmModel.getSVs());
 
-        if (Boolean.TRUE.toString().equals(paramProvider.provide("just_random", "false"))) {
+        String localForSvs = paramProvider.provide("local_method_for_svs_clusters", "all_with_svs");
+        System.out.println("  [[FUTURE LOG]] local_method_for_svs_clusters: " + localForSvs);
+        if ("just_random".equals(localForSvs)) {
             System.out.println("  [[FUTURE LOG]] Just random observations from entire data");
             Random rand = Optional.ofNullable(seed(paramProvider))
                     .map(Random::new)
@@ -137,8 +139,6 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                     .perform(labeledObservations, partitionId);
             mebModel.markSupportClusters(svmModel.getSVs());
 
-            String localForSvs = paramProvider.provide("local_method_for_svs_clusters", "all_with_svs");
-            System.out.println("  [[FUTURE LOG]] local_method_for_svs_clusters: " + localForSvs);
             switch (localForSvs) {
                 case "leave_border":
                     mebModel.getClusterList()

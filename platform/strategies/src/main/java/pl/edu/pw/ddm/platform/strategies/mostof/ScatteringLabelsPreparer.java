@@ -20,9 +20,7 @@ class ScatteringLabelsPreparer {
     private void checkParams() {
         Preconditions.checkState(workers > 0, "Workers count cannot be less than 1");
         Preconditions.checkState(labels > 0, "Labels count cannot be less than 1");
-        Preconditions.checkState(additionalClassesNumber >= 0, "Additional classes number cannot be negative");
-        Preconditions.checkState(emptyWorkerFill >= 0,
-                "Empty worker fill type must be equal -1 or greater equal than 0");
+        Preconditions.checkState(emptyWorkerFill >= 0, "Empty worker fill type must be greater equal than 0");
     }
 
     NodeToLabelScattering prepare() {
@@ -52,7 +50,7 @@ class ScatteringLabelsPreparer {
             throw new IllegalArgumentException("Not allowed emptyWorkerFill value = " + emptyWorkerFill);
         }
 
-        if (additionalClassesNumber > 0) {
+        if (additionalClassesNumber != 0) {
             prepareAdditional(scattering);
         }
 
@@ -60,11 +58,16 @@ class ScatteringLabelsPreparer {
     }
 
     void prepareAdditional(NodeToLabelScattering scattering) {
+        int classNumber = Math.abs(additionalClassesNumber);
+        int additionalWorkers = Math.min(labels, workers);
+        if (additionalClassesNumber < 0) {
+            additionalWorkers = workers;
+        }
         int currClass = 0;
-        for (int worker = 0; worker < Math.min(labels, workers); ++worker) {
-            for (int i = 0; i < additionalClassesNumber; ++i) {
+        for (int worker = 0; worker < additionalWorkers; ++worker) {
+            for (int i = 0; i < classNumber; ++i) {
                 var additional = scattering.getAdditional();
-                for (int label = 0; label < labels && additional.size(worker) < additionalClassesNumber;
+                for (int label = 0; label < labels && additional.size(worker) < classNumber;
                         ++label, currClass = (currClass + 1) % labels) {
                     var alreadyHasFull = scattering.getFull()
                             .has(worker, currClass);

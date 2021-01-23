@@ -1,7 +1,5 @@
 package pl.edu.pw.ddm.platform.algorithms.classification.dmeb2;
 
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.summarizingDouble;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -15,12 +13,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import de.lmu.ifi.dbs.elki.data.synthetic.bymodel.GeneratorSingleCluster;
 import de.lmu.ifi.dbs.elki.math.statistics.distribution.NormalDistribution;
-import de.lmu.ifi.dbs.elki.math.statistics.distribution.UniformDistribution;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabeledObservation;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabelledWrapper;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.MEBCluster;
@@ -134,11 +130,10 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                 System.out.println("  [[FUTURE LOG]] MEB clusters calculated=" + mebClusters);
             }
 
-            boolean debug = Boolean.TRUE.toString().equals(paramProvider.provide("debug", "false"));
             String initMethod = paramProvider.provide("init_kmeans_method", "k-means++");
             DistanceFunction distanceFunction = Optional.ofNullable(paramProvider.distanceFunction())
                     .orElseGet(EuclideanDistance::new);
-            MEBModel mebModel = new MEBClustering(mebClusters, initMethod, distanceFunction, debug)
+            MEBModel mebModel = new MEBClustering(mebClusters, initMethod, distanceFunction, debug(paramProvider))
                     .perform(labeledObservations, partitionId);
             mebModel.markSupportClusters(svmModel.getSVs());
 
@@ -263,7 +258,7 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
         System.out.println("  [[FUTURE LOG]] updateGlobal: local trainSet=" + trainingSet.size());
 
         double percent = paramProvider.provideNumeric("global_expand_percent", 0.2);
-        trainingSet.addAll(expandModels(localModels, percent, seed(paramProvider)));
+        trainingSet.addAll(expandModels(localModels, percent, seed(paramProvider), debug(paramProvider)));
         System.out.println("  [[FUTURE LOG]] updateGlobal: expanded trainSet=" + trainingSet.size());
 
         String kernel = paramProvider.provide("kernel");
@@ -298,7 +293,7 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
         return new GlobalClassifier(svmModel, localModelArray, knnModelMap);
     }
 
-    private List<LabeledObservation> expandModels(Collection<LocalRepresentativesModel> localModels, double percent, Long seed) {
+    private List<LabeledObservation> expandModels(Collection<LocalRepresentativesModel> localModels, final double percent, Long seed, boolean debug) {
         Random rand = Optional.ofNullable(seed)
                 .map(Random::new)
                 .orElseGet(Random::new);
@@ -316,7 +311,17 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                     for (int i = 0; i < lw.getFeatures().length; ++i) {
                         gsc.addGenerator(new NormalDistribution(lw.getMean()[i], lw.getStddev()[i], rand));
                     }
-                    for (double[] data : gsc.generate((int) Math.max(1, lw.getElements() * percent))) {
+
+                    double percentf = percent;
+                    if (percentf < 0) {
+                        percentf = lw.getClusterDensityPercent();
+                        if (debug) {
+                            System.out.println("  [[FUTURE LOG]] Expand percent precalculated into " + percentf + " value");
+                        }
+                    }
+
+                    int limit = (int) Math.max(1, Math.ceil(lw.getElements() * percentf));
+                    for (double[] data : gsc.generate(limit)) {
                         generated.add(new LabeledObservation(-1, data, lw.getTarget()));
                     }
 
@@ -340,6 +345,10 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
 
     static boolean performGlobalNormalization(ParamProvider paramProvider) {
         return Boolean.TRUE.toString().equals(paramProvider.provide("global_normalization", Boolean.FALSE.toString()));
+    }
+
+    static boolean debug(ParamProvider paramProvider) {
+        return Boolean.TRUE.toString().equals(paramProvider.provide("debug", "false"));
     }
 
     static Long seed(ParamProvider paramProvider) {

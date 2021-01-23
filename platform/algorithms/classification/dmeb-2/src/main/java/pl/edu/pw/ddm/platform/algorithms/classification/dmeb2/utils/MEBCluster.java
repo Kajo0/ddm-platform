@@ -5,14 +5,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
@@ -98,9 +96,18 @@ public class MEBCluster implements Serializable {
                 .orElseGet(Random::new);
         Collections.shuffle(clusterElementList, rand);
 
+        if (percent < 0) {
+            calculateMetrics();
+            percent = clusterDensityPercent();
+            if (debug) {
+                System.out.println("  [[FUTURE LOG]] Random precalculated into " + percent + " value");
+            }
+        }
+        long limit = Math.max(1, (long) Math.ceil(clusterElementList.size() * percent));
+
         primaryDensityStats.elements = clusterElementList.size();
         clusterElementList = clusterElementList.stream()
-                .limit(Math.max(1, (long) (clusterElementList.size() * percent)))
+                .limit(limit)
                 .collect(Collectors.toList());
         if (debug) {
             System.out.println("  [[FUTURE LOG]] Cluster with " + primaryDensityStats.elements + " reduced randomly to " + clusterElementList.size() + " elements");
@@ -108,8 +115,23 @@ public class MEBCluster implements Serializable {
         return clusterElementList;
     }
 
+    private double clusterDensityPercent() {
+        return (primaryDensityStats.sum / (primaryDensityStats.elements * primaryDensityStats.max)) * (
+                primaryDensityStats.stddev / primaryDensityStats.mean);
+    }
+
     public List<LabeledObservation> leaveCloseToSvs(double percent, Collection<LabeledObservation> svs) {
         primaryDensityStats.elements = clusterElementList.size();
+
+        if (percent < 0) {
+            calculateMetrics();
+            percent = clusterDensityPercent();
+            if (debug) {
+                System.out.println("  [[FUTURE LOG]] Close to percent precalculated into " + percent + " value");
+            }
+        }
+        double percentf = percent;
+
         Set<LabeledObservation> clusterSvs = matchInnerSupportVectors(svs);
         clusterElementList = clusterElementList.stream()
                 .collect(Collectors.groupingBy(LabeledObservation::getTarget, Collectors.toSet()))
@@ -122,7 +144,7 @@ public class MEBCluster implements Serializable {
                                 .map(sv -> distanceFunction.distance(d.getFeatures(), sv.getFeatures()))
                                 .reduce(Double::sum)
                                 .orElse(0d)))
-                        .limit((long) Math.max(1, classList.size() * percent))
+                        .limit((long) Math.max(1, Math.ceil(classList.size() * percentf)))
                         .collect(Collectors.toSet()))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
@@ -201,6 +223,7 @@ public class MEBCluster implements Serializable {
             }
         }
 
+        primaryDensityStats.sum = S;
         primaryDensityStats.mean = S / primaryDensityStats.elements;
         primaryDensityStats.stddev = Math.pow(
                 (SS - (2 * primaryDensityStats.mean * S) + (primaryDensityStats.elements * primaryDensityStats.mean
@@ -227,6 +250,7 @@ public class MEBCluster implements Serializable {
         private int elements;
         private boolean multiClass;
 
+        private double sum;
         private double max;
         private double stddev;
         private double mean;

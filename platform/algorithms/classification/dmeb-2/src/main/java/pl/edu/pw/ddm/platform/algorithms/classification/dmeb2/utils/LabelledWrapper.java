@@ -13,6 +13,7 @@ public class LabelledWrapper extends LabeledObservation {
     private double[] stddev;
     private double[] min;
     private double[] max;
+    private double clusterDensityPercent;
 
     public LabelledWrapper(LabeledObservation observation) {
         super(observation.getIndex(), observation.getFeatures(), observation.getTarget());
@@ -31,6 +32,8 @@ public class LabelledWrapper extends LabeledObservation {
         lw.stddev = stats.getFStddev();
         lw.min = stats.getFMin();
         lw.max = stats.getFMax();
+
+        lw.clusterDensityPercent = (stats.getSum() / (stats.getElements() * stats.getMax())) * (stats.getStddev() / stats.getMean());
 
         return lw;
     }

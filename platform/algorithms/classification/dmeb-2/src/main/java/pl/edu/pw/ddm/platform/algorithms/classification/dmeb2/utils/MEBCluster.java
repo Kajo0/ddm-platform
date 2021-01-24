@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,7 +12,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
@@ -131,6 +129,7 @@ public class MEBCluster implements Serializable {
     public List<LabeledObservation> leaveCloseToSvs(double percent, Collection<LabeledObservation> svs) {
         primaryDensityStats.elements = clusterElementList.size();
 
+        double originPercent = percent;
         if (percent == 0) {
             clusterElementList.clear();
         } else {
@@ -141,12 +140,23 @@ public class MEBCluster implements Serializable {
                     System.out.println("  [[FUTURE LOG]] Close to percent precalculated into " + percent + " value");
                 }
             }
-            double percentf = percent;
 
             Set<LabeledObservation> clusterSvs = matchInnerSupportVectors(svs);
-            clusterElementList = clusterElementList.stream()
-                    .collect(Collectors.groupingBy(LabeledObservation::getTarget, Collectors.toSet()))
-                    .entrySet()
+            Map<Integer, Set<LabeledObservation>> classGroup = clusterElementList.stream()
+                    .collect(Collectors.groupingBy(LabeledObservation::getTarget, Collectors.toSet()));
+
+            double percentf;
+            if (originPercent == -2) {
+                percentf = percent * Math.max(0.02, 1 - 1f / classGroup.size());
+                if (debug) {
+                    System.out.println("  [[FUTURE LOG]] Close to percent precalculated divided by " + classGroup.size()
+                            + " classes into " + percentf + " value");
+                }
+            } else {
+                percentf = percent;
+            }
+
+            clusterElementList = classGroup.entrySet()
                     .stream()
                     .filter(e -> e.getKey() != -1)
                     .map(Map.Entry::getValue)

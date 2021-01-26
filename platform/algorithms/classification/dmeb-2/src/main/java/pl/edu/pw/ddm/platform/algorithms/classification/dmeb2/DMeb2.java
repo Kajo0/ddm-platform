@@ -98,7 +98,9 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
 
         String localForSvs = paramProvider.provide("local_method_for_svs_clusters", "all_with_svs");
         System.out.println("  [[FUTURE LOG]] local_method_for_svs_clusters: " + localForSvs);
-        if ("just_random".equals(localForSvs)) {
+        if ("svs_only".equals(localForSvs)) {
+            System.out.println("  [[FUTURE LOG]] Svs only from entire data");
+        } else if ("just_random".equals(localForSvs)) {
             System.out.println("  [[FUTURE LOG]] Just random observations from entire data");
             Random rand = Optional.ofNullable(seed(paramProvider))
                     .map(Random::new)
@@ -257,8 +259,7 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                 .collect(toList());
         System.out.println("  [[FUTURE LOG]] updateGlobal: local trainSet=" + trainingSet.size());
 
-        double percent = paramProvider.provideNumeric("global_expand_percent", 0.2);
-        trainingSet.addAll(expandModels(localModels, percent, seed(paramProvider), debug(paramProvider)));
+        trainingSet.addAll(expandModels(localModels, paramProvider));
         System.out.println("  [[FUTURE LOG]] updateGlobal: expanded trainSet=" + trainingSet.size());
 
         String kernel = paramProvider.provide("kernel");
@@ -293,8 +294,15 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
         return new GlobalClassifier(svmModel, localModelArray, knnModelMap);
     }
 
-    private List<LabeledObservation> expandModels(Collection<LocalRepresentativesModel> localModels, final double percent, Long seed, boolean debug) {
-        Random rand = Optional.ofNullable(seed)
+    private List<LabeledObservation> expandModels(Collection<LocalRepresentativesModel> localModels, ParamProvider paramProvider) {
+        String localForNonMulti = paramProvider.provide("local_method_for_non_multiclass_clusters", "squash_to_centroid");
+        if (!"metrics_collect".equals(localForNonMulti)) {
+            return Collections.emptyList();
+        }
+
+        double percent = paramProvider.provideNumeric("global_expand_percent", 0.2);
+        boolean debug = debug(paramProvider);
+        Random rand = Optional.ofNullable(seed(paramProvider))
                 .map(Random::new)
                 .orElseGet(Random::new);
 

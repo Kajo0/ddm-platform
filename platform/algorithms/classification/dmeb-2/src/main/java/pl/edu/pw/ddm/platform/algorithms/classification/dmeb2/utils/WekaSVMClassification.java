@@ -52,7 +52,7 @@ public class WekaSVMClassification implements Serializable {
     private SVMModel doTrain(List<LabeledObservation> trainSet) {
         List<String> labels = WekaUtils.convertToLabels(trainSet);
         Instances dataset = WekaUtils.convertToInstances(trainSet, labels);
-        ExposingSVSMO model = classifier(dataset, minAttrValues, maxAttrValues);
+        ExposingSVSMO model = classifier(dataset, labels, minAttrValues, maxAttrValues);
         Instances headers = dataset.stringFreeStructure();
         return new SVMModel() {
             @Override
@@ -62,7 +62,7 @@ public class WekaSVMClassification implements Serializable {
 
             @Override
             public int classify(double[] features) {
-                return WekaUtils.classifyWeka(features, headers, labels, model);
+                return WekaUtils.classifyWeka(features, headers, model.getLabels(), model);
             }
 
             @Override
@@ -72,8 +72,8 @@ public class WekaSVMClassification implements Serializable {
         };
     }
 
-    public ExposingSVSMO classifier(Instances dataset, double[] minAttrValues, double[] maxAttrValues) {
-        ExposingSVSMO model = new ExposingSVSMO(minAttrValues, maxAttrValues);
+    public ExposingSVSMO classifier(Instances dataset, List<String> labels, double[] minAttrValues, double[] maxAttrValues) {
+        ExposingSVSMO model = new ExposingSVSMO(labels, minAttrValues, maxAttrValues);
         try {
             String[] options = weka.core.Utils.splitOptions(kernelOptions);
             model.setOptions(options);

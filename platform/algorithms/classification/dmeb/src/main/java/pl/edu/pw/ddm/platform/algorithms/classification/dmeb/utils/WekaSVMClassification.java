@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
+import lombok.Setter;
 import weka.classifiers.functions.SMO;
 import weka.core.Instances;
 import weka.core.SelectedTag;
@@ -14,6 +15,12 @@ public class WekaSVMClassification implements Serializable {
 
     private final Long seed;
     private final String kernelOptions;
+
+    @Setter
+    private transient double[] minAttrValues;
+
+    @Setter
+    private transient double[] maxAttrValues;
 
     public WekaSVMClassification(String kernel, Long seed) {
         this.seed = seed;
@@ -33,21 +40,24 @@ public class WekaSVMClassification implements Serializable {
         if (Utils.moreThanOneClass(trainSet)) {
             return doTrain(trainSet);
         } else {
-            int target = trainSet.get(0)
-                    .getTarget();
-            return new DummySVMModel(target);
+            return trainSet.stream()
+                    .limit(1)
+                    .map(LabeledObservation::getTarget)
+                    .map(DummySVMModel::new)
+                    .findFirst()
+                    .orElseGet(() -> new DummySVMModel(Integer.MIN_VALUE));
         }
     }
 
     private SVMModel doTrain(List<LabeledObservation> trainSet) {
         List<String> labels = WekaUtils.convertToLabels(trainSet);
         Instances dataset = WekaUtils.convertToInstances(trainSet, labels);
-        ExposingSVSMO model = classifier(dataset);
+        ExposingSVSMO model = classifier(dataset, labels, minAttrValues, maxAttrValues);
         Instances headers = dataset.stringFreeStructure();
         return new SVMModel() {
             @Override
             public int classify(double[] features) {
-                return WekaUtils.classifyWeka(features, headers, labels, model);
+                return WekaUtils.classifyWeka(features, headers, model.getLabels(), model);
             }
 
             @Override
@@ -57,8 +67,8 @@ public class WekaSVMClassification implements Serializable {
         };
     }
 
-    public ExposingSVSMO classifier(Instances dataset) {
-        ExposingSVSMO model = new ExposingSVSMO();
+    public ExposingSVSMO classifier(Instances dataset, List<String> labels, double[] minAttrValues, double[] maxAttrValues) {
+        ExposingSVSMO model = new ExposingSVSMO(labels, minAttrValues, maxAttrValues);
         try {
             String[] options = weka.core.Utils.splitOptions(kernelOptions);
             model.setOptions(options);

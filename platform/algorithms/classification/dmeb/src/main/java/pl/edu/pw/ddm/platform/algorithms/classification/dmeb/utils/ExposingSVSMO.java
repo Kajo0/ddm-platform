@@ -4,9 +4,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import pl.edu.pw.ddm.platform.algorithms.classification.dmeb.CustomizableNormalize;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.Kernel;
 import weka.classifiers.functions.supportVector.PolyKernel;
@@ -20,9 +25,16 @@ import weka.filters.unsupervised.attribute.Normalize;
 import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 import weka.filters.unsupervised.attribute.Standardize;
 
+@RequiredArgsConstructor
 public class ExposingSVSMO extends SMO {
 
     private transient Set<LabeledObservation> svs;
+
+    @Getter
+    private final List<String> labels;
+
+    private final transient double[] minAttrValues;
+    private final transient double[] maxAttrValues;
 
     @Override
     public void buildClassifier(Instances insts) throws Exception {
@@ -87,7 +99,11 @@ public class ExposingSVSMO extends SMO {
             m_Filter.setInputFormat(insts);
             insts = useFilter(insts, m_Filter);
         } else if (m_filterType == FILTER_NORMALIZE) {
-            m_Filter = new Normalize();
+            if (minAttrValues != null && maxAttrValues != null) {
+                m_Filter = new CustomizableNormalize(minAttrValues, maxAttrValues);
+            } else {
+                m_Filter = new Normalize();
+            }
             m_Filter.setInputFormat(insts);
             insts = useFilter(insts, m_Filter);
         } else {
@@ -112,7 +128,7 @@ public class ExposingSVSMO extends SMO {
         }
 
         // Build the binary classifiers
-        Random rand = new Random(); // FIXME pass from params
+        Random rand = new Random(m_randomSeed);
         m_classifiers = new BinarySMO[insts.numClasses()][insts.numClasses()];
         for (int i = 0; i < insts.numClasses(); i++) {
             for (int j = i + 1; j < insts.numClasses(); j++) {
@@ -150,7 +166,7 @@ public class ExposingSVSMO extends SMO {
     }
 
     private static void invokeBuildClassifier(BinarySMO object, Instances insts, int cl1, int cl2, boolean fitCalibrator, int numFolds,
-                                              int randomSeed) {
+            int randomSeed) {
         try {
             Method method = object.getClass().getDeclaredMethod("buildClassifier", Instances.class, Integer.TYPE, Integer.TYPE, Boolean.TYPE, Integer.TYPE, Integer.TYPE);
             method.setAccessible(true);
@@ -171,33 +187,33 @@ public class ExposingSVSMO extends SMO {
                 BinarySMO binarySMO = m_classifiers[i][j];
                 if (binarySMO == null)
                     continue;
-                SMOset m_supportVectors = (SMOset) getSupportVectors(binarySMO, "m_supportVectors");
-                Instances m_data = (Instances) getSupportVectors(binarySMO, "m_data");
+                SMOset m_supportVectors = (SMOset) getFieldValue(binarySMO, "m_supportVectors");
+                Instances m_data = (Instances) getFieldValue(binarySMO, "m_data");
 
-                // FIXME KJ
                 int svCnt = m_supportVectors == null ? 0 : m_supportVectors.numElements();
-//				int svCnt = m_supportVectors.numElements();
-                int index = 0;
-                while (svCnt > 0) {
-                    if (m_supportVectors.contains(index)) {
+                int index = m_data.numInstances() - 1;
+                while (svCnt > 0 || index > 0) {
+                    if (svCnt > 0 && m_supportVectors.contains(index)) {
                         Instance instance = m_data.get(index);
                         if (m_filterType != FILTER_NONE) {
                             instance = ((InstanceWithPreviousVersion) instance).getBefore();
                         }
                         double[] array = Arrays.copyOf(instance.toDoubleArray(), instance.toDoubleArray().length - 1);
                         int targetClass = (int) instance.value(instance.classIndex());
+                        targetClass = Integer.parseInt(labels.get(targetClass)); // FIXME int label/index
                         svs.add(new LabeledObservation(-1, array, targetClass));
-                        svCnt--;
+                        --svCnt;
+                    } else {
+                        m_data.set(index, NullInstance.INSTANCE);
                     }
-                    index++;
+                    --index;
                 }
             }
         }
-
         return svs;
     }
 
-    private static Object getSupportVectors(BinarySMO binarySMO, String fieldName) {
+    private static Object getFieldValue(BinarySMO binarySMO, String fieldName) {
         try {
             Field f = binarySMO.getClass().getDeclaredField(fieldName);
             f.setAccessible(true);

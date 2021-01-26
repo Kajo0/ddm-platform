@@ -4,9 +4,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.CustomizableNormalize;
@@ -27,6 +29,9 @@ import weka.filters.unsupervised.attribute.Standardize;
 public class ExposingSVSMO extends SMO {
 
     private transient Set<LabeledObservation> svs;
+
+    @Getter
+    private final List<String> labels;
 
     private final transient double[] minAttrValues;
     private final transient double[] maxAttrValues;
@@ -171,7 +176,6 @@ public class ExposingSVSMO extends SMO {
         }
     }
 
-
     public Set<LabeledObservation> getSVs() {
         if (svs != null) {
              return svs;
@@ -196,6 +200,7 @@ public class ExposingSVSMO extends SMO {
                         }
                         double[] array = Arrays.copyOf(instance.toDoubleArray(), instance.toDoubleArray().length - 1);
                         int targetClass = (int) instance.value(instance.classIndex());
+                        targetClass = Integer.parseInt(labels.get(targetClass)); // FIXME int label/index
                         svs.add(new LabeledObservation(-1, array, targetClass));
                         --svCnt;
                     } else {

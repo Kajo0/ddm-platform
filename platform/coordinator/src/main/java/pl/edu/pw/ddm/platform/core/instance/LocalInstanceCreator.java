@@ -46,7 +46,8 @@ class LocalInstanceCreator implements InstanceCreator {
     }
 
     @Override
-    public String create(int workers, Integer cpuCores, Integer memoryInGb, Integer diskInGb) {
+    public String create(int workers, Integer cpuCores, Integer workerMemoryInGb, Integer masterMemoryInGb,
+            Integer diskInGb) {
         var instanceId = IdGenerator.instanceId();
         var client = DockerClientBuilder.getInstance()
                 .build();
@@ -69,8 +70,8 @@ class LocalInstanceCreator implements InstanceCreator {
 //            hc.withCpuCount(cpuCores.longValue());
             hc.withCpuShares(DEFAULT_CPU_SHARES * cpuCores);
         }
-        if (memoryInGb != null) {
-            hc.withMemory(memoryInGb.longValue() * GB_BYTE_MULTIPLIER);
+        if (masterMemoryInGb != null) {
+            hc.withMemory(masterMemoryInGb.longValue() * GB_BYTE_MULTIPLIER);
         }
         if (diskInGb != null) {
             hc.withDiskQuota(diskInGb.longValue() * GB_BYTE_MULTIPLIER);
@@ -79,7 +80,7 @@ class LocalInstanceCreator implements InstanceCreator {
         log.debug("Creating master '{}'.", masterName);
         var masterContainer = client.createContainerCmd("ddm-platform-master")
                 .withName(masterName)
-                .withEnv(prepareMasterEnv(cpuCores, memoryInGb))
+                .withEnv(prepareMasterEnv(cpuCores, masterMemoryInGb))
                 .withHostConfig(hc)
                 .exec();
         // FIXME clean on error
@@ -101,7 +102,7 @@ class LocalInstanceCreator implements InstanceCreator {
                 uiPort,
                 agentPort,
                 cpuCores,
-                memoryInGb,
+                masterMemoryInGb,
                 diskInGb)
         );
 
@@ -129,8 +130,8 @@ class LocalInstanceCreator implements InstanceCreator {
 //                hcw.withCpuCount(cpuCores.longValue());
                 hcw.withCpuShares(DEFAULT_CPU_SHARES * cpuCores);
             }
-            if (memoryInGb != null) {
-                hcw.withMemory(memoryInGb.longValue() * GB_BYTE_MULTIPLIER);
+            if (workerMemoryInGb != null) {
+                hcw.withMemory(workerMemoryInGb.longValue() * GB_BYTE_MULTIPLIER);
             }
             if (diskInGb != null) {
                 hcw.withDiskQuota(diskInGb.longValue() * GB_BYTE_MULTIPLIER);
@@ -140,7 +141,7 @@ class LocalInstanceCreator implements InstanceCreator {
             log.debug("Creating worker '{}'.", containerName);
             var container = client.createContainerCmd("ddm-platform-worker")
                     .withName(containerName)
-                    .withEnv(prepareWorkerEnv(masterName, cpuCores, memoryInGb))
+                    .withEnv(prepareWorkerEnv(masterName, cpuCores, workerMemoryInGb))
                     .withHostConfig(hcw)
                     .exec();
             // FIXME clean on error
@@ -162,7 +163,7 @@ class LocalInstanceCreator implements InstanceCreator {
                     null,
                     workerAgentPort,
                     cpuCores,
-                    memoryInGb,
+                    workerMemoryInGb,
                     diskInGb)
             );
         }

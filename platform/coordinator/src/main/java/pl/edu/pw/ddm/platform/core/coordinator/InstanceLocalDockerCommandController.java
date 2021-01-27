@@ -23,13 +23,15 @@ class InstanceLocalDockerCommandController {
     @PostMapping("create/{workers}")
     String createInstance(@PathVariable Integer workers,
                           @RequestParam(value = "cpu", required = false) Integer cpu,
-                          @RequestParam(value = "memory", required = false) Integer memory,
+                          @RequestParam(value = "workerMemory", required = false) Integer workerMemory,
+                          @RequestParam(value = "masterMemory", required = false) Integer masterMemory,
                           @RequestParam(value = "disk", required = false) Integer disk) {
         var req = InstanceFacade.CreateRequest.builder()
                 .ddmModel("central")
                 .workerNodes(workers)
                 .cpuCount(cpu)
-                .memoryInGb(memory)
+                .workerMemoryInGb(workerMemory)
+                .masterMemoryInGb(masterMemory)
                 .diskInGb(disk)
                 .build();
         return instanceFacade.create(req);

@@ -327,14 +327,18 @@ def executionStatus(executionId, debug=True):
     return formatted
 
 
-def createInstance(workers, cpu=2, memory=2, disk=10, debug=True):
+def createInstance(workers, cpu=2, workerMemory=2, masterMemory=2, disk=10, debug=True):
     if debug:
-        print("createInstance workers='{}' cpu='{}' memory='{}' disk='{}'".format(workers, cpu, memory, disk))
+        print("createInstance workers='{}' cpu='{}' workerMemory='{}' masterMemory='{}' disk='{}'".format(workers, cpu,
+                                                                                                          workerMemory,
+                                                                                                          masterMemory,
+                                                                                                          disk))
     url = baseUrl + api['instance']['create'].format(**{'workers': workers})
     instanceId = requests.post(url,
                                data={
                                    'cpu': cpu,
-                                   'memory': memory,
+                                   'workerMemory': workerMemory,
+                                   'masterMemory': masterMemory,
                                    'disk': disk
                                }
                                ).text
@@ -442,7 +446,7 @@ def loadLast(oneNode):
     return dict(config['onenode' if oneNode else 'last'])
 
 
-def setupDefault(workers=2, cpu=2, memory=2, oneNode=False):
+def setupDefault(workers=2, cpu=2, workerMemory=2, masterMemory=2, oneNode=False):
     algorithmId = None
     if oneNode:
         algorithmId = loadJar('./samples/k-means-weka.jar')
@@ -453,7 +457,7 @@ def setupDefault(workers=2, cpu=2, memory=2, oneNode=False):
     testDataId = loadData('./samples/iris.test', 4, ',', None)
     distanceFunctionId = loadDistanceFunction('./samples/equality-distance.jar')
     partitioningStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar')
-    instanceId = createInstance(workers, cpu, memory, 10)  # cpu, memory, disk
+    instanceId = createInstance(workers, cpu, workerMemory, masterMemory, 10)  # cpu, workerMemory, masterMemory disk
 
     print('Wait for setup', end='', flush=True)
     while instanceStatus(instanceId, False) != 200:
@@ -625,12 +629,12 @@ def schedule():
     # adult = (loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.data', 14, ',', None, True, None, False),
     #          loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.test', 14, ',', None, True, None, False))
     data = [irisNumeric]
-    # workers cpus memory
+    # workers cpus workerMemory masterMemory
     instances = [
-        (1, 2, 8),
-        (2, 2, 4),
-        (4, 2, 3),
-        (8, 2, 2)
+        (1, 2, 8, 8),
+        (2, 2, 4, 4),
+        (4, 2, 3, 3),
+        (8, 2, 2, 4)
     ]
     #     strategy seed custom-params multiNode
     strategies = [
@@ -683,12 +687,13 @@ def schedule():
             print('  instance:', instance, 'onenode:', oneNode)
             workers = instance[0]
             cpu = instance[1]
-            memory = instance[2]
+            workerMemory = instance[2]
+            masterMemory = instance[3]
             disk = 10 # not really used for dockers
 
             print('  Clearing previous', end='', flush=True)
             destroyAll(debug)
-            instanceId = createInstance(workers, cpu, memory, disk, debug)
+            instanceId = createInstance(workers, cpu, workerMemory, masterMemory, disk, debug)
 
             print(' and wait for setup', end='', flush=True)
             while instanceStatus(instanceId, False) != 200:
@@ -848,9 +853,9 @@ if len(sys.argv) > 2 and sys.argv[2] == 'onenode':
 
 if command == 'setup':
     if oneNode:
-        setupDefault(1, 2, 4, True)
+        setupDefault(1, 2, 4, 4, True)
     else:
-        setupDefault(2, 2, 2, False)
+        setupDefault(4, 2, 3, 3, False)
 elif command == 'inststatus':
     instStatus(oneNode)
 elif command == 'confupdate':

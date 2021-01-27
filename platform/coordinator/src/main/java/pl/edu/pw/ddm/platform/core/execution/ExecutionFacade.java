@@ -30,7 +30,9 @@ public class ExecutionFacade {
     private final ExecutionStarter executionStarter;
 
     public String start(@NonNull StartRequest request) {
-        InstanceAddrDto masterAddr = findMasterAddress(request.instanceId);
+        var masterAddr = findMasterAddress(request.instanceId);
+        // TODO for spark impl. should find lowest params but currently all workers has the same if created locally in dockers
+        var worker = findAnyWorker(request.instanceId);
 
         String distanceFunctionId = request.executionParams.get("distanceFunctionId");
         String distanceFunctionName = request.executionParams.get("distanceFunctionName");
@@ -48,7 +50,18 @@ public class ExecutionFacade {
         // TODO add precondition to avoid both distance function id and name which does not match id
 
         // TODO handle when cpu/memory not equal for all
-        return executionStarter.start(masterAddr, request.instanceId, request.algorithmId, request.trainDataId, request.testDataId, distanceFunctionId, distanceFunctionName, masterAddr.getCpu(), masterAddr.getMemory(), request.executionParams);
+        return executionStarter.start(
+                masterAddr,
+                request.instanceId,
+                request.algorithmId,
+                request.trainDataId,
+                request.testDataId,
+                distanceFunctionId,
+                distanceFunctionName,
+                worker.getCpu(),
+                worker.getMemory(),
+                request.executionParams
+        );
     }
 
     public String stop(@NonNull StopRequest request) {
@@ -80,6 +93,15 @@ public class ExecutionFacade {
                 .filter(InstanceAddrDto::isMaster)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No master node for instance: " + instanceId));
+    }
+
+    private InstanceAddrDto findAnyWorker(String instanceId) {
+        var req = InstanceFacade.AddressRequest.of(instanceId);
+        return instanceFacade.addresses(req)
+                .stream()
+                .filter(InstanceAddrDto::isWorker)
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("No worker node for instance: " + instanceId));
     }
 
     @Builder

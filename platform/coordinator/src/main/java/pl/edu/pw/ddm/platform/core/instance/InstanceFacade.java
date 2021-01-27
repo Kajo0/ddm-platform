@@ -49,7 +49,8 @@ public class InstanceFacade {
     }
 
     public String create(@NonNull CreateRequest request) {
-        return creator.create(request.workerNodes, request.cpuCount, request.memoryInGb, request.diskInGb);
+        return creator.create(request.workerNodes, request.cpuCount, request.workerMemoryInGb, request.masterMemoryInGb,
+                request.diskInGb);
     }
 
     public String destroy(@NonNull DestroyRequest request) {
@@ -230,7 +231,8 @@ public class InstanceFacade {
         private final Integer workerNodes;
 
         private final Integer cpuCount;
-        private final Integer memoryInGb;
+        private final Integer workerMemoryInGb;
+        private final Integer masterMemoryInGb;
         private final Integer diskInGb;
     }
 

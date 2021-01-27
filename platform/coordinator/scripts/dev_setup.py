@@ -159,16 +159,18 @@ def strategiesInfo(debug=True):
     return formatted
 
 
-def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=False, percentage=None, debug=True):
+def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=False, percentage=None, seed=None,
+             debug=True):
     if debug:
         print(
-            "loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}' vectorizeStrings='{}' percentage='{}'".format(
+            "loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}' vectorizeStrings='{}' percentage='{}' seed='{}'".format(
                 path,
                 idIndex,
                 labelIndex,
                 separator,
                 vectorizeStrings,
-                percentage))
+                percentage,
+                seed))
     url = baseUrl + api['data']['load']
     with open(path, 'rb') as file:
         dataId = requests.post(url,
@@ -179,7 +181,8 @@ def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=Fal
                                    'separator': separator,
                                    'deductType': not vectorizeStrings,
                                    'vectorizeStrings': vectorizeStrings,
-                                   'extractTrainPercentage': percentage
+                                   'extractTrainPercentage': percentage,
+                                   'seed': seed
                                }
                                ).text
         if debug:
@@ -616,6 +619,9 @@ def checkExist(resourceType, id):
 
 
 def schedule():
+    dataSeed = 123
+    strategySeed = 124
+    executionSeed = None
     #   '1334849234' '1333828439' = FULL       -> iris_numeric.data, iris_numeric.test
     #   '1187478398' '238800836'  = 30% train  -> Skin_NonSkin.txt
     #   '519015334'  '405676659'  = FULL       -> poker-hand-training-true.data, poker-hand-testing.data
@@ -623,11 +629,11 @@ def schedule():
     #   '1959356483' '1791383717' = FULL       -> shuttle.trn, shuttle.tst
     #   '1338339913' '1401394455' = FULL       -> adult.data, adult.test
     #       trainId   testId
-    irisNumeric = (loadData('./samples/iris_numeric.data', 4, ',', None, False, None, False),
-                   loadData('./samples/iris_numeric.test', 4, ',', None, False, None, False))
-    # SkinNonSkin = tuple(loadData('/home/kajo/Downloads/2020-12-03-svm-data/Skin_NonSkin.txt', 3, '	', None, False, 30, False).split(','))
-    # adult = (loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.data', 14, ',', None, True, None, False),
-    #          loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.test', 14, ',', None, True, None, False))
+    irisNumeric = (loadData('./samples/iris_numeric.data', 4, ',', None, False, None, dataSeed, False),
+                   loadData('./samples/iris_numeric.test', 4, ',', None, False, None, dataSeed, False))
+    # SkinNonSkin = tuple(loadData('/home/kajo/Downloads/2020-12-03-svm-data/Skin_NonSkin.txt', 3, '	', None, False, 30, dataSeed, False).split(','))
+    # adult = (loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.data', 14, ',', None, True, None, dataSeed, False),
+    #          loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.test', 14, ',', None, True, None, dataSeed, False))
     data = [irisNumeric]
     # workers cpus workerMemory masterMemory
     instances = [
@@ -638,9 +644,9 @@ def schedule():
     ]
     #     strategy seed custom-params multiNode
     strategies = [
-        ('uniform', 11, None, False),
-        ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.99;additionalClassesNumber=0;additionalClassesPercent=0', True),
-        ('most-of-one-plus-some', 11, 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', True)
+        ('most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True), # separated
+        ('most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True),
+        ('uniform', strategySeed, None, False),
     ]
     #   '1859600396' = 'WEKA SVM',
     #   '539897355'  = 'D-MEB'
@@ -649,21 +655,34 @@ def schedule():
     dmeb = loadJar('./samples/dmeb.jar', False)
     dmeb2 = loadJar('./samples/dmeb-2.jar', False)
     # algorithmId    params distanceFunctionName distanceFunctionId multiNode
+    dmeb2Params = {'kernel': 'linear',
+                   'meb_clusters': '-1',
+                   'knn_k': '-1',
+                   'use_local_classifier': 'false',
+                   'use_first_level_only': 'false',
+                   'global_normalization': 'false',
+                   'random_percent': '-0.1',
+                   'close_to_percent': '-2',
+                   'global_expand_percent': '-0.1',
+                   'local_method_for_svs_clusters': 'close_to',
+                   'local_method_for_non_multiclass_clusters': 'random'}
     executions = [
         (wekaSvm, {'kernel': 'linear'}, 'euclidean', None, False),
-        (wekaSvm, {'kernel': 'rbf'}, 'euclidean', None, False),
-        (dmeb, {'kernel': 'linear', 'meb_clusters': '50'}, 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'use_local_classifier': 'true', 'local_method_for_svs_clusters': 'use_local'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'just_random', 'use_first_level_only': 'true', 'random_percent': '0.1'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'svs_only', 'use_first_level_only': 'true'}), 'euclidean', None, True),
         (dmeb, {'kernel': 'linear', 'meb_clusters': '-1'}, 'euclidean', None, True),
-        (dmeb, {'kernel': 'rbf', 'meb_clusters': '50'}, 'euclidean', None, True),
-        (dmeb, {'kernel': 'rbf', 'meb_clusters': '-1'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'false'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'linear', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'linear', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '50', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True),
-        (dmeb2, {'kernel': 'rbf', 'meb_clusters': '-1', 'knn_k': '3', 'use_local_classifier': 'true'}, 'euclidean', None, True)
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'squash_to_centroid', 'use_first_level_only': 'true'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'metrics_collect', 'use_first_level_only': 'true'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'random', 'use_first_level_only': 'true'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'random', 'local_method_for_non_multiclass_clusters': 'random', 'use_first_level_only': 'true'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'svs_only'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'just_random', 'random_percent': '0.05'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'just_random', 'random_percent': '0.1'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'squash_to_centroid'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'metrics_collect'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
+        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'random', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
     ]
 
     # check data
@@ -677,6 +696,8 @@ def schedule():
 
     debug = False
 
+    iter = 1
+    size = len(data) * len(instances) * len(strategies) * len(executions)
     for d in data:
         print(' data:', d)
         trainDataId = d[0]
@@ -725,6 +746,9 @@ def schedule():
                     distanceFunctionId = execution[3]
                     multiNode = execution[4]
 
+                    if executionSeed and 'seed' not in executionParams:
+                        executionParams['seed'] = executionSeed
+
                     if oneNode and multiNode:
                         print('    distributed algorithm requires multiple nodes, so ommit')
                         continue
@@ -733,9 +757,16 @@ def schedule():
                         continue
 
                     broadcastJar(instanceId, algorithmId, debug)
-                    executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionName, executionParams, debug)
+                    executionId = None
+                    while not executionId:
+                        try:
+                            executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionName, executionParams, debug)
+                        except:
+                            print('       !!!! Strange start exec error: ' + str(sys.exc_info()[0]))
 
-                    print('    Wait for finish of: ' + executionId + ' ', end='', flush=True)
+                    progress = '[' + str(iter).rjust(len(str(size))) + ' / ' + str(size) + ']'
+                    iter += 1
+                    print('    ' + progress + ' Wait for finish of: ' + executionId + ' ', end='', flush=True)
                     status = 'UNKNOWN'
                     message = None
                     while status != 'FINISHED' and status != 'FAILED' and status != 'STOPPED':
@@ -767,6 +798,12 @@ def schedule():
                     headers.append('kernel')
                     headers.append('mebClusters')
                     headers.append('use-local')
+                    headers.append('first-level-only')
+                    headers.append('multi-method')
+                    headers.append('single-method')
+                    headers.append('random-percent')
+                    headers.append('close-to-percent')
+                    headers.append('global-expand-percent')
                     headers.append('ARI')
                     headers.append('f-measure')
                     headers.append('accuracy')
@@ -782,19 +819,25 @@ def schedule():
                     values = []
                     values.append(checkExist('data', trainDataId)['originalName'])
                     values.append(workers)
-                    values.append(strategyName)
+                    values.append('separated' if str(strategyParams).startswith('emptyWorkerFill') else strategyName)
                     values.append(str(strategyParams).replace(';', '|'))
                     values.append(checkExist('alg', algorithmId)['algorithmName'])
                     values.append(str(executionParams).replace(';', '|'))
                     values.append(executionParams.get('kernel', ''))
                     values.append(executionParams.get('meb_clusters', ''))
                     values.append(executionParams.get('use_local_classifier', ''))
+                    values.append(executionParams.get('use_first_level_only', ''))
+                    values.append(executionParams.get('local_method_for_svs_clusters', ''))
+                    values.append(executionParams.get('local_method_for_non_multiclass_clusters', ''))
+                    values.append(executionParams.get('random_percent', ''))
+                    values.append(executionParams.get('close_to_percent', ''))
+                    values.append(executionParams.get('global_expand_percent', ''))
                     values.append(metrics.get('ARI', ''))
                     values.append(metrics.get('f-measure', ''))
                     values.append(metrics.get('accuracy', ''))
                     values.append(metrics.get('recall', ''))
                     values.append(metrics.get('precision', ''))
-                    values.append(stats['time']['ddmTotalProcessing'])
+                    values.append(stats['time']['ddmTotalTrainingProcessing'])
                     values.append(handleCustomMetrics(stats['custom']))
                     values.append(stats['transfer']['localBytes'])
                     values.append(stats['transfer']['globalBytes'])

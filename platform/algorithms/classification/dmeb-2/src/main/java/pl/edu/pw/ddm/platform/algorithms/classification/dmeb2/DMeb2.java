@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import de.lmu.ifi.dbs.elki.data.synthetic.bymodel.GeneratorSingleCluster;
 import de.lmu.ifi.dbs.elki.math.statistics.distribution.NormalDistribution;
+import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.DummySVMModel;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabeledObservation;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.LabelledWrapper;
 import pl.edu.pw.ddm.platform.algorithms.classification.dmeb2.utils.MEBCluster;
@@ -82,25 +83,31 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
     public LocalRepresentativesModel repeatLocal(GlobalMinMaxModel globalMinMaxModel, LocalMinMaxModel localMinMaxModel,
             DataProvider dataProvider, ParamProvider paramProvider) {
         List<LabeledObservation> labeledObservations = toLabeledObservation(dataProvider.training());
-
-        String kernel = paramProvider.provide("kernel");
-        WekaSVMClassification wekaClassifier = new WekaSVMClassification(kernel, seed(paramProvider));
-        if (performGlobalNormalization(paramProvider)) {
-            wekaClassifier.setMinAttrValues(globalMinMaxModel.getMinValues().getNumericAttributes());
-            wekaClassifier.setMaxAttrValues(globalMinMaxModel.getMaxValues().getNumericAttributes());
-        }
-        SVMModel svmModel = wekaClassifier.train(labeledObservations);
-        System.out.println("  [[FUTURE LOG]] SVM svs found=" + svmModel.getSVs().size());
-
         int trainingSize = dataProvider.training().size();
-        int mebClusters = 0;
-        Set<LabeledObservation> representativeList = new HashSet<>(svmModel.getSVs());
+        Set<LabeledObservation> representativeList = new HashSet<>();
 
         String localForSvs = paramProvider.provide("local_method_for_svs_clusters", "all_with_svs");
         System.out.println("  [[FUTURE LOG]] local_method_for_svs_clusters: " + localForSvs);
-        if ("svs_only".equals(localForSvs)) {
-            System.out.println("  [[FUTURE LOG]] Svs only from entire data");
-        } else if ("just_random".equals(localForSvs)) {
+
+        SVMModel svmModel = null;
+        int mebClusters = 0;
+
+        if (!"just_random".equals(localForSvs) || !firstLevelOnly(paramProvider)) {
+            String kernel = paramProvider.provide("kernel");
+            WekaSVMClassification wekaClassifier = new WekaSVMClassification(kernel, seed(paramProvider));
+            if (performGlobalNormalization(paramProvider)) {
+                wekaClassifier.setMinAttrValues(globalMinMaxModel.getMinValues().getNumericAttributes());
+                wekaClassifier.setMaxAttrValues(globalMinMaxModel.getMaxValues().getNumericAttributes());
+            }
+            svmModel = wekaClassifier.train(labeledObservations);
+            System.out.println("  [[FUTURE LOG]] SVM svs found=" + svmModel.getSVs().size());
+
+            if (!"just_random".equals(localForSvs)) {
+                representativeList.addAll(svmModel.getSVs());
+            }
+        }
+
+        if ("just_random".equals(localForSvs)) {
             System.out.println("  [[FUTURE LOG]] Just random observations from entire data");
             Random rand = Optional.ofNullable(seed(paramProvider))
                     .map(Random::new)
@@ -114,6 +121,12 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                     .limit(Math.max(1, amount))
                     .forEach(representativeList::add);
             System.out.println("  [[FUTURE LOG]] Randomly chosen " + amount + " of " + trainingSize + " elements");
+
+            if (firstLevelOnly(paramProvider)) {
+                svmModel = new DummySVMModel(Integer.MIN_VALUE);
+            }
+        } else if ("svs_only".equals(localForSvs)) {
+            System.out.println("  [[FUTURE LOG]] Svs only from entire data");
         } else {
             // FIXME unused partitionId?
             int partitionId = 0;
@@ -152,10 +165,11 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
                 case "close_to":
                     double closeToPercent = paramProvider.provideNumeric("close_to_percent", 0.2);
                     double closeRandomPercent = paramProvider.provideNumeric("random_percent", 0.2);
+                    SVMModel finalSvmModel = svmModel;
                     mebModel.getClusterList()
                             .stream()
                             .filter(MEBCluster::isSupportCluster)
-                            .map(cluster -> cluster.leaveCloseToSvs(closeToPercent, svmModel.getSVs()))
+                            .map(cluster -> cluster.leaveCloseToSvs(closeToPercent, finalSvmModel.getSVs()))
                             .forEach(representativeList::addAll);
                     mebModel.multiClassClusters()
                             .stream()
@@ -349,6 +363,10 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
 
     static boolean useLocalClassifier(ParamProvider paramProvider) {
         return Boolean.TRUE.toString().equals(paramProvider.provide("use_local_classifier", Boolean.FALSE.toString()));
+    }
+
+    static boolean firstLevelOnly(ParamProvider paramProvider) {
+        return Boolean.TRUE.toString().equals(paramProvider.provide("use_first_level_only", "false"));
     }
 
     static boolean performGlobalNormalization(ParamProvider paramProvider) {

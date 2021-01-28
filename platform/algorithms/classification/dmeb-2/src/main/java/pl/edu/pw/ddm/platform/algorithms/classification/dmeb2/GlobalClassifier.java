@@ -53,7 +53,7 @@ public class GlobalClassifier implements Classifier {
                 knnParam = Math.abs(2 * secondLevelClassifiers.length);
                 System.out.println("  [[FUTURE LOG]] knn param set to=" + knnParam);
             }
-            boolean firstLevelOnly = Boolean.TRUE.toString().equals(paramProvider.provide("use_first_level_only", "false"));
+            boolean firstLevelOnly = DMeb2.firstLevelOnly(paramProvider);
             int knnParamf = knnParam;
             sampleProvider.forEachRemaining(sample -> resultCollector.collect(sample.getId(),
                     String.valueOf(classify(sample.getNumericAttributes(), knnParamf, firstLevelOnly))));

@@ -71,8 +71,10 @@ class ScatteringLabelsPreparer {
                         ++label, currClass = (currClass + 1) % labels) {
                     var alreadyHasFull = scattering.getFull()
                             .has(worker, currClass);
+                    var alreadyHasEmpty = scattering.getEmpty()
+                            .has(worker, currClass);
                     var alreadyAdded = additional.has(worker, currClass);
-                    if (!alreadyHasFull && !alreadyAdded) {
+                    if (!alreadyHasFull && !alreadyHasEmpty && !alreadyAdded) {
                         additional.add(worker, currClass);
                     }
                 }

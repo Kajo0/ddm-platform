@@ -27,6 +27,14 @@ class NodeToLabelAmountScattering {
         }
     }
 
+    int moveIfPossible(int from, int to, String label, int amount) {
+        if (get(from, label) < amount) {
+            return 0;
+        } else {
+            return move(from, to, label, amount);
+        }
+    }
+
     int move(int from, int to, String label, int amount) {
         int present = get(from, label);
         Preconditions.checkState(present >= amount, "Cannot move more '%s' than present '%s'.", amount, present);

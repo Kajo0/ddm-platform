@@ -66,7 +66,7 @@ class ScatteringAmountsPreparer {
                             emptyWorkers.nodes()
                                     .stream()
                                     .filter(emptyNode -> emptyWorkers.has(emptyNode, fullLabel))
-                                    .forEach(emptyNode -> scattering.move(fullNode, emptyNode, mapLabel(fullLabel),
+                                    .forEach(emptyNode -> scattering.moveIfPossible(fullNode, emptyNode, mapLabel(fullLabel),
                                             amount));
                         }));
 
@@ -84,7 +84,7 @@ class ScatteringAmountsPreparer {
                             additionalWorkers.nodes()
                                     .stream()
                                     .filter(additionalNode -> additionalWorkers.has(additionalNode, fullLabel))
-                                    .forEach(additionalNode -> scattering.move(fullNode, additionalNode,
+                                    .forEach(additionalNode -> scattering.moveIfPossible(fullNode, additionalNode,
                                             mapLabel(fullLabel), amount));
                         }));
 

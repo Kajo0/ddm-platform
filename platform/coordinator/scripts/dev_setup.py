@@ -642,11 +642,11 @@ def schedule():
         (4, 2, 3, 3),
         (8, 2, 2, 4)
     ]
-    #     strategy seed custom-params multiNode
+    #     printAlias strategy seed custom-params multiNode
     strategies = [
-        ('most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True), # separated
-        ('most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True),
-        ('uniform', strategySeed, None, False),
+        ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True),
+        ('most-of-one-plus-some', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True),
+        ('uniform', 'uniform', strategySeed, None, False),
     ]
     #   '1859600396' = 'WEKA SVM',
     #   '539897355'  = 'D-MEB'
@@ -725,10 +725,11 @@ def schedule():
 
             for strategy in strategies:
                 print('   strategy:', strategy)
-                strategyName = strategy[0]
-                strategySeed = strategy[1]
-                strategyParams = strategy[2]
-                multiNode = strategy[3]
+                strategyAlias = strategy[0]
+                strategyName = strategy[1]
+                strategySeed = strategy[2]
+                strategyParams = strategy[3]
+                multiNode = strategy[4]
 
                 if oneNode and multiNode:
                     print('   partitioning strategy requires multiple nodes, so ommit')
@@ -758,7 +759,7 @@ def schedule():
 
                     broadcastJar(instanceId, algorithmId, debug)
                     executionId = None
-                    while not executionId:
+                    while not executionId or 'Error' in executionId or 'Exception' in executionId:
                         try:
                             executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionName, executionParams, debug)
                         except:
@@ -819,7 +820,7 @@ def schedule():
                     values = []
                     values.append(checkExist('data', trainDataId)['originalName'])
                     values.append(workers)
-                    values.append('separated' if str(strategyParams).startswith('emptyWorkerFill') else strategyName)
+                    values.append(strategyAlias)
                     values.append(str(strategyParams).replace(';', '|'))
                     values.append(checkExist('alg', algorithmId)['algorithmName'])
                     values.append(str(executionParams).replace(';', '|'))

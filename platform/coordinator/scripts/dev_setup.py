@@ -642,6 +642,7 @@ def schedule():
         (4, 2, 3, 3),
         (8, 2, 2, 4)
     ]
+    avoidMultiNodeStrategies = ['uniform']
     #     printAlias strategy seed custom-params multiNode
     strategies = [
         ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True),
@@ -655,7 +656,8 @@ def schedule():
     dmeb = loadJar('./samples/dmeb.jar', False)
     dmeb2 = loadJar('./samples/dmeb-2.jar', False)
     # algorithmId    params distanceFunctionName distanceFunctionId multiNode
-    dmeb2Params = {'kernel': 'linear',
+    kernel = 'rbf'
+    dmeb2Params = {'kernel': kernel,
                    'meb_clusters': '-1',
                    'knn_k': '-1',
                    'use_local_classifier': 'false',
@@ -667,11 +669,11 @@ def schedule():
                    'local_method_for_svs_clusters': 'close_to',
                    'local_method_for_non_multiclass_clusters': 'random'}
     executions = [
-        (wekaSvm, {'kernel': 'linear'}, 'euclidean', None, False),
+        (wekaSvm, {'kernel': kernel}, 'euclidean', None, False),
         (dmeb2, dict(dmeb2Params, **{'use_local_classifier': 'true', 'local_method_for_svs_clusters': 'use_local'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'just_random', 'use_first_level_only': 'true', 'random_percent': '0.1'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'svs_only', 'use_first_level_only': 'true'}), 'euclidean', None, True),
-        (dmeb, {'kernel': 'linear', 'meb_clusters': '-1'}, 'euclidean', None, True),
+        (dmeb, {'kernel': kernel, 'meb_clusters': '-1'}, 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'squash_to_centroid', 'use_first_level_only': 'true'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'metrics_collect', 'use_first_level_only': 'true'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'random', 'use_first_level_only': 'true'}), 'euclidean', None, True),
@@ -755,6 +757,9 @@ def schedule():
                         continue
                     elif not oneNode and not multiNode:
                         print('    local algorithm requires one node, so ommit')
+                        continue
+                    if multiNode and strategyAlias in avoidMultiNodeStrategies:
+                        print('    avoiding "' + strategyAlias + '" strategy for multi node, so ommit')
                         continue
 
                     broadcastJar(instanceId, algorithmId, debug)

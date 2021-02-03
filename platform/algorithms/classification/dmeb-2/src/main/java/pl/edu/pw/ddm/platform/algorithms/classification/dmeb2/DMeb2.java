@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -116,11 +117,26 @@ public class DMeb2 implements LocalProcessor<LocalMinMaxModel>,
             Collections.shuffle(labeledObservations, rand);
 
             double randomPercent = paramProvider.provideNumeric("random_percent", 0.2);
-            long amount = (long) (trainingSize * randomPercent);
-            labeledObservations.stream()
-                    .limit(Math.max(1, amount))
-                    .forEach(representativeList::add);
-            System.out.println("  [[FUTURE LOG]] Randomly chosen " + amount + " of " + trainingSize + " elements");
+            if (randomPercent < 0) {
+                // equally classes
+                double percentf = Math.abs(randomPercent);
+                labeledObservations.stream()
+                        .collect(Collectors.groupingBy(LabeledObservation::getTarget, Collectors.toList()))
+                        .entrySet()
+                        .stream()
+                        .filter(e -> e.getKey() != -1)
+                        .map(Map.Entry::getValue)
+                        .map(classList -> classList.stream()
+                                .limit((long) Math.max(1, Math.ceil(classList.size() * percentf)))
+                                .collect(Collectors.toSet()))
+                        .forEach(representativeList::addAll);
+            } else {
+                long amount = (long) (trainingSize * randomPercent);
+                labeledObservations.stream()
+                        .limit(Math.max(1, amount))
+                        .forEach(representativeList::add);
+            }
+            System.out.println("  [[FUTURE LOG]] Randomly chosen " + representativeList.size() + " of " + trainingSize + " elements");
 
             if (firstLevelOnly(paramProvider)) {
                 svmModel = new DummySVMModel(Integer.MIN_VALUE);

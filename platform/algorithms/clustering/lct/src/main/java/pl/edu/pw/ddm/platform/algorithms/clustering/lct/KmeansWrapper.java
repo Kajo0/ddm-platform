@@ -2,6 +2,7 @@ package pl.edu.pw.ddm.platform.algorithms.clustering.lct;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 
 import lombok.SneakyThrows;
 import pl.edu.pw.ddm.platform.interfaces.data.Data;
@@ -33,7 +34,7 @@ class KmeansWrapper {
 
         int groups = paramProvider.provideNumeric("groups").intValue();
         int iterations = paramProvider.provideNumeric("iterations").intValue();
-        int seed = paramProvider.provideNumeric("seed", 1d).intValue();
+        int seed = paramProvider.provideNumeric("seed", (double) new Random().nextInt(Integer.MAX_VALUE)).intValue();
         printConfig(groups, iterations, seed);
 
         SimpleKMeans kmeans = new SimpleKMeans();

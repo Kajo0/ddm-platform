@@ -668,6 +668,7 @@ def schedule():
                    'global_expand_percent': '-0.1',
                    'local_method_for_svs_clusters': 'close_to',
                    'local_method_for_non_multiclass_clusters': 'random'}
+    multiply = 1
     executions = [
         (wekaSvm, {'kernel': kernel}, 'euclidean', None, False),
         (dmeb2, dict(dmeb2Params, **{'use_local_classifier': 'true', 'local_method_for_svs_clusters': 'use_local'}), 'euclidean', None, True),
@@ -685,7 +686,7 @@ def schedule():
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'metrics_collect'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'random', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
-    ]
+    ] * multiply
 
     # check data
     for d in data:
@@ -700,30 +701,30 @@ def schedule():
 
     iter = 1
     size = len(data) * len(instances) * len(strategies) * len(executions)
-    for d in data:
-        print(' data:', d)
-        trainDataId = d[0]
-        testDataId = d[1]
+    for instance in instances:
+        oneNode = instance[0] == 1
+        print('  instance:', instance, 'onenode:', oneNode)
+        workers = instance[0]
+        cpu = instance[1]
+        workerMemory = instance[2]
+        masterMemory = instance[3]
+        disk = 10 # not really used for dockers
 
-        for instance in instances:
-            oneNode = instance[0] == 1
-            print('  instance:', instance, 'onenode:', oneNode)
-            workers = instance[0]
-            cpu = instance[1]
-            workerMemory = instance[2]
-            masterMemory = instance[3]
-            disk = 10 # not really used for dockers
+        print('  Clearing previous', end='', flush=True)
+        destroyAll(debug)
+        instanceId = createInstance(workers, cpu, workerMemory, masterMemory, disk, debug)
 
-            print('  Clearing previous', end='', flush=True)
-            destroyAll(debug)
-            instanceId = createInstance(workers, cpu, workerMemory, masterMemory, disk, debug)
+        print(' and wait for setup', end='', flush=True)
+        while instanceStatus(instanceId, False) != 200:
+            print('.', end='', flush=True)
+            time.sleep(2)
+        print('')
+        instanceConfigUpdate(instanceId, debug)
 
-            print(' and wait for setup', end='', flush=True)
-            while instanceStatus(instanceId, False) != 200:
-                print('.', end='', flush=True)
-                time.sleep(2)
-            print('')
-            instanceConfigUpdate(instanceId, debug)
+        for d in data:
+            print(' data:', d)
+            trainDataId = d[0]
+            testDataId = d[1]
 
             for strategy in strategies:
                 print('   strategy:', strategy)
@@ -787,7 +788,7 @@ def schedule():
                     print('')
 
                     if status != 'FINISHED':
-                        print('        FAILED: ' + message)
+                        print('        FAILED: ' + str(message))
                         continue
 
                     metrics = validateResults(executionId, 'accuracy,recall,precision,f-measure,ARI', debug)
@@ -850,7 +851,7 @@ def schedule():
                     values.append(stats['data']['trainingBytes'])
                     values = list(map(str, values))
                     print('         CSV_READY_VALUES', ';'.join(values))
-    print('  Clearing instances')
+    print('  Clearing instances', flush=True)
     destroyAll(debug)
 
     print('')

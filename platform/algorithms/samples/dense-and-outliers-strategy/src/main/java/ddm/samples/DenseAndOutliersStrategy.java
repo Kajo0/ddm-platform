@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -20,6 +21,7 @@ import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionFileCreator;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
+import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
 
 @Slf4j
 public class DenseAndOutliersStrategy implements PartitionerStrategy {
@@ -42,7 +44,7 @@ public class DenseAndOutliersStrategy implements PartitionerStrategy {
     @Override
     public List<Path> partition(DataDesc dataDesc, StrategyParameters strategyParameters, PartitionFileCreator partitionFileCreator) throws IOException {
         int workers = strategyParameters.getPartitions();
-        Preconditions.checkState(workers == 2, "Strategy applicable for 2 nodes only.");
+        Preconditions.checkState(workers % 2 == 0, "Strategy applicable for even nodes only.");
 
         DistanceFunction func = strategyParameters.getDistanceFunction();
         Preconditions.checkNotNull(func, "Distance function cannot be null.");
@@ -72,7 +74,27 @@ public class DenseAndOutliersStrategy implements PartitionerStrategy {
         write(tempFiles.get(0), dense, dataDesc);
         write(tempFiles.get(1), outliers, dataDesc);
 
-        return tempFiles;
+        if (workers <= 2) {
+            return tempFiles;
+        } else {
+            var uniform = new UniformPartitionerStrategy();
+            strategyParameters.setPartitions(workers / 2);
+            var fl = dataDesc.getFilesLocations();
+
+            dataDesc.getFilesLocations().clear();
+            dataDesc.getFilesLocations().add(tempFiles.get(0).toAbsolutePath().toString());
+            var first = uniform.partition(dataDesc, strategyParameters, partitionFileCreator);
+            dataDesc.getFilesLocations().clear();
+            dataDesc.getFilesLocations().add(tempFiles.get(1).toAbsolutePath().toString());
+            var second = uniform.partition(dataDesc, strategyParameters, partitionFileCreator);
+
+            strategyParameters.setPartitions(workers);
+            dataDesc.setFilesLocations(fl);
+
+            return Stream.of(first, second)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+        }
     }
 
     private void write(Path path, HashMap<String, List<Data>> data, DataDesc dataDesc) {

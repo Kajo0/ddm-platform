@@ -643,11 +643,13 @@ def schedule():
         (8, 2, 2, 4)
     ]
     avoidMultiNodeStrategies = ['uniform']
-    #     printAlias strategy seed custom-params multiNode
+    denseOutliersStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar', False)
+    #     printAlias strategy seed custom-params multiNode distanceFunction
     strategies = [
         ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True),
         ('most-of-one-plus-some', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True),
         ('uniform', 'uniform', strategySeed, None, False),
+        #('dense-outliers', 'dense-and-outliers', strategySeed, '0.6', True, 'euclidean'),
     ]
     #   '1859600396' = 'WEKA SVM',
     #   '539897355'  = 'D-MEB'
@@ -733,12 +735,13 @@ def schedule():
                 strategySeed = strategy[2]
                 strategyParams = strategy[3]
                 multiNode = strategy[4]
+                distanceFunction = strategy[5]
 
                 if oneNode and multiNode:
                     print('   partitioning strategy requires multiple nodes, so ommit')
                     continue
 
-                scatterData(instanceId, trainDataId, strategyName, strategyParams, None, 'train', strategySeed, debug)
+                scatterData(instanceId, trainDataId, strategyName, strategyParams, distanceFunction, 'train', strategySeed, debug)
                 if testDataId:
                     scatterData(instanceId, testDataId, 'dummy', None, None, 'test', strategySeed, debug)
 

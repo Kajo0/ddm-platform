@@ -634,6 +634,11 @@ def schedule():
     # SkinNonSkin = tuple(loadData('/home/kajo/Downloads/2020-12-03-svm-data/Skin_NonSkin.txt', 3, '	', None, False, 30, dataSeed, False).split(','))
     # adult = (loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.data', 14, ',', None, True, None, dataSeed, False),
     #          loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.test', 14, ',', None, True, None, dataSeed, False))
+    # clustGen20dim = (loadData('/home/mmarkiew/Desktop/stud_data/synthetic_sets/in_20dim_20g_1-5.txt', 20, ',', None, False, None, dataSeed, False),
+    #                  irisNumeric[1])
+    # clustGen2dim = (loadData('/home/mmarkiew/Desktop/stud_data/synthetic_sets/in_2dim_4g_1kk_v2-corner.txt', 2, ',', None, False, None, dataSeed, False),
+    #                 irisNumeric[1])
+    # data = [clustGen20dim, clustGen2dim]
     data = [irisNumeric]
     # workers cpus workerMemory masterMemory
     instances = [
@@ -643,13 +648,16 @@ def schedule():
         (8, 2, 2, 4)
     ]
     avoidMultiNodeStrategies = ['uniform']
-    denseOutliersStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar', False)
+    # denseOutliersStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar', False)
     #     printAlias strategy seed custom-params multiNode distanceFunction
     strategies = [
-        ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True),
-        ('most-of-one-plus-some', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True),
-        ('uniform', 'uniform', strategySeed, None, False),
+        ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True, None),
+        ('most-of-one-plus-some', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        ('uniform', 'uniform', strategySeed, None, False, None),
         #('dense-outliers', 'dense-and-outliers', strategySeed, '0.6', True, 'euclidean'),
+        # ('most-plus-all', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-200;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        # ('all-but', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-14;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        # ('all-but', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
     ]
     #   '1859600396' = 'WEKA SVM',
     #   '539897355'  = 'D-MEB'
@@ -657,6 +665,9 @@ def schedule():
     wekaSvm = loadJar('./samples/svm-weka.jar', False)
     dmeb = loadJar('./samples/dmeb.jar', False)
     dmeb2 = loadJar('./samples/dmeb-2.jar', False)
+    # aoptkm = loadJar('./samples/aoptkm.jar', False)
+    # dkm = loadJar('./samples/dkmeans.jar', False)
+    # lct = loadJar('./samples/lct.jar', False)
     # algorithmId    params distanceFunctionName distanceFunctionId multiNode
     kernel = 'rbf'
     dmeb2Params = {'kernel': kernel,
@@ -670,6 +681,13 @@ def schedule():
                    'global_expand_percent': '-0.1',
                    'local_method_for_svs_clusters': 'close_to',
                    'local_method_for_non_multiclass_clusters': 'random'}
+    clusteringParams = {'groups': '20',
+                   'iterations': '20',
+                   'epsilon': '0.002',
+                   'b': '2',
+                   'noOneGroup': 'true',
+                   'init_kmeans_method': 'k-means++', # 'Random'
+                   'distanceFunctionName': 'euclidean'}
     multiply = 1
     executions = [
         (wekaSvm, {'kernel': kernel}, 'euclidean', None, False),
@@ -688,6 +706,9 @@ def schedule():
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'metrics_collect'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
         (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'random', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
+        # (aoptkm, dict(clusteringParams, **{}), 'euclidean', None, True),
+        # (dkm, dict(clusteringParams, **{}), 'euclidean', None, True),
+        # (lct, dict(clusteringParams, **{}), 'euclidean', None, True),
     ] * multiply
 
     # check data

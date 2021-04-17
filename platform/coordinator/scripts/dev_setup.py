@@ -491,6 +491,7 @@ def reload(oneNode=False):
         # algorithmId = loadJar('./samples/lct.jar')
         # algorithmId = loadJar('./samples/dmeb.jar')
         # algorithmId = loadJar('./samples/dmeb-2.jar')
+        # algorithmId = loadJar('./samples/svm-2lvl.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')
 
     vectorizeStrings = False
@@ -665,6 +666,7 @@ def schedule():
     wekaSvm = loadJar('./samples/svm-weka.jar', False)
     dmeb = loadJar('./samples/dmeb.jar', False)
     dmeb2 = loadJar('./samples/dmeb-2.jar', False)
+    svm2lvl = loadJar('./samples/svm-2lvl.jar', False)
     # aoptkm = loadJar('./samples/aoptkm.jar', False)
     # dkm = loadJar('./samples/dkmeans.jar', False)
     # lct = loadJar('./samples/lct.jar', False)

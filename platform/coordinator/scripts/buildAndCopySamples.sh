@@ -34,6 +34,10 @@ cd ../../algorithms/classification/dmeb-2
 ./gradlew clean shadowJar publishToMavenLocal ; checkError
 cd -
 
+cd ../../algorithms/classification/svm-2lvl
+./gradlew clean shadowJar publishToMavenLocal ; checkError
+cd -
+
 cd ../../algorithms/samples/random-classifier
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -
@@ -63,6 +67,7 @@ cp ../../algorithms/clustering/dkmeans/build/libs/dkmeans-*-all.jar ./samples/dk
 cp ../../algorithms/clustering/lct/build/libs/lct-*-all.jar ./samples/lct.jar ; checkError
 cp ../../algorithms/classification/dmeb/build/libs/dmeb-*-all.jar ./samples/dmeb.jar ; checkError
 cp ../../algorithms/classification/dmeb-2/build/libs/dmeb-2-*-all.jar ./samples/dmeb-2.jar ; checkError
+cp ../../algorithms/classification/svm-2lvl/build/libs/svm-2lvl-*-all.jar ./samples/svm-2lvl.jar ; checkError
 cp ../../algorithms/samples/random-classifier/build/libs/random-classifier-*.jar ./samples/random-classifier.jar ; checkError
 cp ../../algorithms/samples/k-means-weka/build/libs/k-means-weka-*-all.jar ./samples/k-means-weka.jar ; checkError
 cp ../../algorithms/samples/svm-weka/build/libs/svm-weka-*-all.jar ./samples/svm-weka.jar ; checkError

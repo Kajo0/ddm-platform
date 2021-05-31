@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;

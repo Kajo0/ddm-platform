@@ -1,0 +1,9 @@
+LABEL_1,1,aaa,bbb,aaa,2,3
+LABEL_1,1,aaa,bba,aab,2,2
+LABEL_1,2,aac,bba,aab,2,2.5
+LABEL_2,11,aaa,wbbb,waaa,12,13
+LABEL_2,11,aaa,wbba,waab,12,12
+LABEL_2,21,aac,wbba,waab,12,12.5
+LABEL_3,1,aaaz,bbb,aaa,2,3
+LABEL_3,1,aaaz,bba,aab,2,2
+LABEL_3,2,aacz,bba,aab,2,2.5

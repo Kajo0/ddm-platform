@@ -26,6 +26,8 @@ class LocalDatasetProcessor {
     private final Integer labelIndex;
 
     private final Map<String, String> labelMapping = new HashMap<>();
+    private final Map<String, String> vectorsMapping = new HashMap<>();
+    private int vectorsMappingCounter = 0;
 
     void process() throws IOException {
         if (processed()) {
@@ -58,7 +60,7 @@ class LocalDatasetProcessor {
                 String label = labelMapping.get(attributes[i]);
                 if (label == null) {
                     if (DataDescriber.isNumeric(attributes[i])) {
-                        // TOOD think about this ints conversion if correct
+                        // TODO think about this ints conversion if correct
                         label = Optional.of(attributes[i])
                                 .map(Doubles::tryParse)
                                 .map(Double::intValue)
@@ -71,8 +73,12 @@ class LocalDatasetProcessor {
                 }
                 attributes[i] = label;
             } else if (!DataDescriber.isNumeric(attributes[i])) {
-                // TODO make it more sophisticated
-                attributes[i] = String.valueOf(attributes[i].hashCode());
+                var value = vectorsMapping.get(attributes[i]);
+                if (value == null) {
+                    value = String.valueOf(vectorsMappingCounter++);
+                    vectorsMapping.put(attributes[i], value);
+                }
+                attributes[i] = value;
             }
         }
         return attributes;

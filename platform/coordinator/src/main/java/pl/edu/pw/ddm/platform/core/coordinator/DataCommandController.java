@@ -34,6 +34,7 @@ class DataCommandController {
                            @RequestParam(required = false, defaultValue = "false") Boolean vectorizeStrings,
                            @RequestParam(required = false, defaultValue = "true") boolean deductType,
                            @RequestParam(required = false) Integer extractTrainPercentage,
+                           @RequestParam(required = false) Integer expandAmount,
                            @RequestParam(required = false) Long seed) {
         // TODO advance parametrization
         var req = DataFacade.LoadRequest.builder()
@@ -44,6 +45,7 @@ class DataCommandController {
                 .deductType(deductType)
                 .vectorizeStrings(vectorizeStrings)
                 .extractTrainPercentage(extractTrainPercentage)
+                .expandAmount(expandAmount)
                 .seed(seed)
                 .build();
         return invokeLoadRequest(extractTrainPercentage, req);
@@ -57,6 +59,7 @@ class DataCommandController {
                         @RequestParam(required = false, defaultValue = "false") Boolean vectorizeStrings,
                         @RequestParam(required = false, defaultValue = "true") boolean deductType,
                         @RequestParam(required = false) Integer extractTrainPercentage,
+                        @RequestParam(required = false) Integer expandAmount,
                         @RequestParam(required = false) Long seed) {
         // TODO advance parametrization eg attr types
         var req = DataFacade.LoadRequest.builder()
@@ -67,6 +70,7 @@ class DataCommandController {
                 .deductType(deductType)
                 .vectorizeStrings(vectorizeStrings)
                 .extractTrainPercentage(extractTrainPercentage)
+                .expandAmount(expandAmount)
                 .seed(seed)
                 .build();
         return invokeLoadRequest(extractTrainPercentage, req);

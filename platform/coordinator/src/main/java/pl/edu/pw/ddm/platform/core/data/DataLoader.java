@@ -31,6 +31,7 @@ interface DataLoader {
         private boolean deductType;
         private boolean vectorizeStrings;
         private Integer extractTrainPercentage;
+        private Integer expandAmount;
         private Long seed;
     }
 

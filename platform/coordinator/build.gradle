@@ -58,6 +58,8 @@ dependencies {
     implementation 'pl.edu.pw.ddm.platform:strategies:0.0.1-SNAPSHOT'
     implementation 'org.reflections:reflections:0.9.12'
 
+    implementation 'de.lmu.ifi.dbs.elki:elki-data-generator:0.7.5'
+
     testImplementation platform('org.spockframework:spock-bom:2.0-M1-groovy-2.5')
     testImplementation 'org.spockframework:spock-core'
 

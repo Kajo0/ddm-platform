@@ -30,7 +30,7 @@ public class DataFacade {
     public LoadExtractTrainResponse loadExtractTrain(@NonNull LoadRequest request) {
         var dataOptions =
                 new DataLoader.DataOptions(request.deductType, request.vectorizeStrings, request.extractTrainPercentage,
-                        request.seed);
+                        request.expandAmount, request.seed);
 
         List<String> ids;
         if (request.uri != null) {
@@ -49,7 +49,7 @@ public class DataFacade {
     public String load(@NonNull LoadRequest request) {
         var dataOptions =
                 new DataLoader.DataOptions(request.deductType, request.vectorizeStrings, request.extractTrainPercentage,
-                        request.seed);
+                        request.expandAmount, request.seed);
 
         if (request.uri != null) {
             return dataLoader.save(request.uri, request.separator, request.idIndex, request.labelIndex, dataOptions);
@@ -136,6 +136,7 @@ public class DataFacade {
 
         private final boolean vectorizeStrings;
         private final Integer extractTrainPercentage;
+        private final Integer expandAmount;
         private final Long seed;
     }
 

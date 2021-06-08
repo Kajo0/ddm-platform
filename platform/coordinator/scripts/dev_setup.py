@@ -160,17 +160,18 @@ def strategiesInfo(debug=True):
 
 
 def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=False, percentage=None, seed=None,
-             debug=True):
+             debug=True, expandAmount=None):
     if debug:
         print(
-            "loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}' vectorizeStrings='{}' percentage='{}' seed='{}'".format(
+            "loadData path='{}' idIndex='{}' labelIndex='{}' separator='{}' vectorizeStrings='{}' percentage='{}' seed='{}' expandAmount='{}'".format(
                 path,
                 idIndex,
                 labelIndex,
                 separator,
                 vectorizeStrings,
                 percentage,
-                seed))
+                seed,
+                expandAmount))
     url = baseUrl + api['data']['load']
     with open(path, 'rb') as file:
         dataId = requests.post(url,
@@ -182,6 +183,7 @@ def loadData(path, labelIndex, separator=',', idIndex=None, vectorizeStrings=Fal
                                    'deductType': not vectorizeStrings,
                                    'vectorizeStrings': vectorizeStrings,
                                    'extractTrainPercentage': percentage,
+                                   'expandAmount': expandAmount,
                                    'seed': seed
                                }
                                ).text

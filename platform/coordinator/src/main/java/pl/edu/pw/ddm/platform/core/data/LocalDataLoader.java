@@ -186,8 +186,15 @@ class LocalDataLoader implements DataLoader {
         Files.write(dataPath, bytes);
 
         boolean addIndex = idIndex == null;
-        new LocalDatasetProcessor(addIndex, dataOptions.isVectorizeStrings(), dataPath, separator, idIndex,
-                labelIndex).process();
+        var processor =
+                new LocalDatasetProcessor(addIndex, dataOptions.isVectorizeStrings(), dataPath, separator, idIndex,
+                        labelIndex);
+        processor.process();
+        if (dataOptions.getExpandAmount() != null) {
+            log.info("Expanding dataset with '{}' sample amount per class.", dataOptions.getExpandAmount());
+            processor.expand(dataOptions.getExpandAmount(), dataOptions.getSeed());
+        }
+
         if (addIndex) {
             idIndex = 0;
             ++labelIndex;

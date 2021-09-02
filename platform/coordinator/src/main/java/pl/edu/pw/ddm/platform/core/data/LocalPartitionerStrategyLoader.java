@@ -22,6 +22,7 @@ import pl.edu.pw.ddm.platform.core.util.IdGenerator;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.PartitionerStrategies;
 import pl.edu.pw.ddm.platform.strategies.SeparateByLabelsPartitionerStrategy;
+import pl.edu.pw.ddm.platform.strategies.UnbalancedPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.mostof.MostOfOnePlusSomePartitionerStrategy;
 
@@ -99,6 +100,8 @@ class LocalPartitionerStrategyLoader implements PartitionerStrategyLoader {
                     return new SeparateByLabelsPartitionerStrategy();
                 case PartitionerStrategies.MOST_OF_ONE_PLUS_SOME:
                     return new MostOfOnePlusSomePartitionerStrategy();
+                case PartitionerStrategies.UNBALANCEDNESS:
+                    return new UnbalancedPartitionerStrategy();
                 default:
                     throw new IllegalStateException("No implementation for predefined strategy: " + strategyNameOrId);
             }

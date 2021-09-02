@@ -1,14 +1,14 @@
 package pl.edu.pw.ddm.platform.strategies.utils;
 
+import com.google.common.collect.Iterables;
+import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.google.common.collect.Iterables;
-import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
 
 public class Utils {
 
@@ -37,6 +37,18 @@ public class Utils {
                 .stream()
                 .map(l -> l.split(dataDesc.getSeparator()))
                 .collect(Collectors.groupingBy(d -> d[dataDesc.getLabelIndex()], Collectors.counting()));
+    }
+
+    // TODO optimize
+    public static Map<Integer, String> mapIndexToLabel(PartitionerStrategy.DataDesc dataDesc) throws IOException {
+        // TODO handle already partitioned
+        var path = Path.of(Iterables.getOnlyElement(dataDesc.getFilesLocations()));
+
+        return Files.readAllLines(path)
+                .stream()
+                .map(l -> l.split(dataDesc.getSeparator()))
+                .collect(Collectors.toMap(d -> Integer.valueOf(d[dataDesc.getIdIndex()]),
+                        d -> d[dataDesc.getLabelIndex()]));
     }
 
 }

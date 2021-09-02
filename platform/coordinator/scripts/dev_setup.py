@@ -522,6 +522,7 @@ def reload(oneNode=False):
         # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', None, 'train', seed)
         # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train', seed)
         # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'unbalancedness', 'proportional=1;nodeThreshold=2;unbalancedness=0.1', None, 'train', seed)
 
     scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)

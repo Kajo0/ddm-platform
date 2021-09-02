@@ -4,11 +4,11 @@ source common-func.sh
 
 set -x
 
-cd ./coordinator/scripts
-./buildAndCopySamples.sh ; checkError
-cd -
-
 java8
+
+cd ./model-interface
+./gradlew clean build publishToMavenLocal ; checkError
+cd -
 
 cd ./metrics
 ./gradlew clean build publishToMavenLocal ; checkError
@@ -22,6 +22,10 @@ java12
 
 cd ./strategies
 ./gradlew clean build publishToMavenLocal ; checkError
+cd -
+
+cd ./coordinator/scripts
+./buildAndCopySamples.sh ; checkError
 cd -
 
 cd ./coordinator/docker

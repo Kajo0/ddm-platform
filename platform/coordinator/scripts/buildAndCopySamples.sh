@@ -6,10 +6,6 @@ set -x
 
 java8
 
-cd ../../model-interface
-./gradlew clean build publishToMavenLocal ; checkError
-cd -
-
 cd ../../distance-functions
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -

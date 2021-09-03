@@ -32,4 +32,8 @@ cd ./coordinator/docker
 ./prepareImages.sh ; checkError
 cd -
 
+cd ./coordinator
+./gradlew clean build ; checkError
+cd -
+
 echo "OK"

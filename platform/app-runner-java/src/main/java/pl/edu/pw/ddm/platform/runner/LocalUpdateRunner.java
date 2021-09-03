@@ -1,10 +1,5 @@
 package pl.edu.pw.ddm.platform.runner;
 
-import java.net.InetAddress;
-import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.Optional;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
@@ -25,6 +20,11 @@ import pl.edu.pw.ddm.platform.runner.utils.MethodPersister;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 import pl.edu.pw.ddm.platform.runner.utils.TransferSizeUtil;
+
+import java.net.InetAddress;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.Optional;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
@@ -47,6 +47,8 @@ class LocalUpdateRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
                 (Class<LocalUpdater<LocalModel, GlobalModel, MiningMethod>>) processor,
                 LocalUpdater.class
         );
+
+        System.out.println(paramProvider.prettyPrintParams());
 
         LocalDateTime start = LocalDateTime.now();
         MiningMethod method = lp.updateLocal(previousModel, iterator.next(), dataProvider, paramProvider);

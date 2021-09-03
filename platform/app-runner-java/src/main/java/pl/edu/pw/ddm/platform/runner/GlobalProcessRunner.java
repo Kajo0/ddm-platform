@@ -1,12 +1,5 @@
 package pl.edu.pw.ddm.platform.runner;
 
-import java.net.InetAddress;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
@@ -21,6 +14,13 @@ import pl.edu.pw.ddm.platform.runner.data.NodeParamProvider;
 import pl.edu.pw.ddm.platform.runner.models.ModelWrapper;
 import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
+
+import java.net.InetAddress;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class GlobalProcessRunner implements FlatMapFunction<Iterator<LocalModel>, ModelWrapper> {
@@ -43,6 +43,8 @@ class GlobalProcessRunner implements FlatMapFunction<Iterator<LocalModel>, Model
                 (Class<GlobalProcessor<LocalModel, GlobalModel>>) processor,
                 GlobalProcessor.class
         );
+
+        System.out.println(paramProvider.prettyPrintParams());
 
         LocalDateTime start = LocalDateTime.now();
         GlobalModel globalModel = gp.processGlobal(models, paramProvider);

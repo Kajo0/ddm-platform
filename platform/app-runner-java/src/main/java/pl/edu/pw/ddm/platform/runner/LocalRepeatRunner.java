@@ -1,10 +1,5 @@
 package pl.edu.pw.ddm.platform.runner;
 
-import java.net.InetAddress;
-import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.Optional;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
@@ -22,6 +17,11 @@ import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 import pl.edu.pw.ddm.platform.runner.utils.TransferSizeUtil;
+
+import java.net.InetAddress;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.Optional;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalRepeatRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelWrapper> {
@@ -44,6 +44,8 @@ class LocalRepeatRunner implements FlatMapFunction<Iterator<GlobalModel>, ModelW
                 (Class<LocalRepeater<LocalModel, LocalModel, GlobalModel>>) processor,
                 LocalRepeater.class
         );
+
+        System.out.println(paramProvider.prettyPrintParams());
 
         LocalDateTime start = LocalDateTime.now();
         LocalModel model = lp.repeatLocal(iterator.next(), previousModel, dataProvider, paramProvider);

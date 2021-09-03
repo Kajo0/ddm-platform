@@ -1,10 +1,5 @@
 package pl.edu.pw.ddm.platform.runner;
 
-import java.net.InetAddress;
-import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.Optional;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections.iterators.SingletonIterator;
@@ -21,6 +16,11 @@ import pl.edu.pw.ddm.platform.runner.utils.AlgorithmProcessorInitializer;
 import pl.edu.pw.ddm.platform.runner.utils.ModelPersister;
 import pl.edu.pw.ddm.platform.runner.utils.PersistentIdStamper;
 import pl.edu.pw.ddm.platform.runner.utils.TransferSizeUtil;
+
+import java.net.InetAddress;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.Optional;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrapper> {
@@ -42,6 +42,8 @@ class LocalProcessRunner implements FlatMapFunction<Iterator<Integer>, ModelWrap
                 (Class<LocalProcessor<LocalModel>>) processor,
                 LocalProcessor.class
         );
+
+        System.out.println(paramProvider.prettyPrintParams());
 
         LocalDateTime start = LocalDateTime.now();
         LocalModel model = lp.processLocal(dataProvider, paramProvider);

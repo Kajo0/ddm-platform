@@ -495,6 +495,7 @@ def reload(oneNode=False):
         # algorithmId = loadJar('./samples/dmeb-2.jar')
         # algorithmId = loadJar('./samples/svm-2lvl.jar')
         # algorithmId = loadJar('./samples/random-classifier.jar')
+        # algorithmId = loadJar('./samples/naive-bayes.jar')
 
     vectorizeStrings = False
     # vectorizeStrings = True

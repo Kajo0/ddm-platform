@@ -11,12 +11,14 @@ public interface PartitionerStrategies {
             PartitionerStrategies.UNIFORM,
             PartitionerStrategies.SEPARATE_LABELS,
             PartitionerStrategies.MOST_OF_ONE_PLUS_SOME,
-            PartitionerStrategies.UNBALANCEDNESS
+            PartitionerStrategies.UNBALANCEDNESS,
+            PartitionerStrategies.COVARIATE_SHIFT
     )));
 
     String UNIFORM = "uniform";
     String SEPARATE_LABELS = "separate-labels";
     String MOST_OF_ONE_PLUS_SOME = "most-of-one-plus-some";
     String UNBALANCEDNESS = "unbalancedness";
+    String COVARIATE_SHIFT = "covariate-shift";
 
 }

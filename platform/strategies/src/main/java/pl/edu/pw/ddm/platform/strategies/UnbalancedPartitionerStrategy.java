@@ -35,8 +35,8 @@ public class UnbalancedPartitionerStrategy implements PartitionerStrategy {
     private Map<String, Integer> largeAmount = new HashMap<>();
     private Map<String, Integer> smallAmount = new HashMap<>();
     private Map<String, Integer> restAmount = new HashMap<>();
-    private Map<Integer, String> indexToLabel;
-    private Map<Integer, Integer> indexToNode;
+    private Map<Integer, String> indexToLabel = new HashMap<>();
+    private Map<Integer, Integer> indexToNode = new HashMap<>();
 
     @Override
     public String name() {
@@ -80,7 +80,7 @@ public class UnbalancedPartitionerStrategy implements PartitionerStrategy {
         }
 
         if (proportional) {
-            calculateProportionalRatioAmounts(samplesCount);
+            calculateProportionalRatioAmounts();
         } else {
             calculateRatioAmounts(samplesCount);
         }
@@ -135,7 +135,6 @@ public class UnbalancedPartitionerStrategy implements PartitionerStrategy {
             Collections.shuffle(indexToWorker, rand);
             return indexToWorker;
         } else {
-            indexToNode = new HashMap<>();
             var labelIndices = new HashMap<String, List<Integer>>();
             indexToLabel.forEach(
                     (index, label) -> labelIndices.computeIfAbsent(label, s -> new ArrayList<>())
@@ -170,7 +169,7 @@ public class UnbalancedPartitionerStrategy implements PartitionerStrategy {
         }
     }
 
-    private void calculateProportionalRatioAmounts(long samplesCount) {
+    private void calculateProportionalRatioAmounts() {
         largeAmount = new HashMap<>();
         smallAmount = new HashMap<>();
         restAmount = new HashMap<>();

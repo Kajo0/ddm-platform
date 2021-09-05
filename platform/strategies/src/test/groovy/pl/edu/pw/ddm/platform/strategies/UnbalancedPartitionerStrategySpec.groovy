@@ -24,7 +24,6 @@ class UnbalancedPartitionerStrategySpec extends Specification {
         (151..200).each { sourceFile.append("$it,D\n") }
     }
 
-
     def cleanupSpec() {
         tempFileCreator.cleanup()
     }
@@ -119,11 +118,8 @@ class UnbalancedPartitionerStrategySpec extends Specification {
         partitioner.workers = workers
         partitioner.labels = labels
 
-        and:
-        def sampleCount = labels.values().sum()
-
         expect:
-        partitioner.calculateProportionalRatioAmounts(sampleCount)
+        partitioner.calculateProportionalRatioAmounts()
         partitioner.largeAmount == large
         partitioner.smallAmount == small
         partitioner.restAmount == rest

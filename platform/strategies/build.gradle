@@ -26,6 +26,7 @@ dependencies {
     implementation 'pl.edu.pw.ddm.platform:model-interface:0.0.1-SNAPSHOT'
 
     implementation 'com.google.guava:guava:29.0-jre'
+    implementation 'org.apache.commons:commons-math3:3.6.1'
     compileOnly 'org.slf4j:slf4j-api:1.7.30'
 
     compileOnly 'org.projectlombok:lombok:1.18.12'
@@ -37,6 +38,8 @@ dependencies {
 
     testImplementation platform('org.spockframework:spock-bom:2.0-M1-groovy-2.5')
     testImplementation 'org.spockframework:spock-core'
+    testImplementation 'de.lmu.ifi.dbs.elki:elki-data-generator:0.7.5'
+    testImplementation 'jfree:jfreechart:1.0.13'
     testRuntime 'net.bytebuddy:byte-buddy:1.9.3'
 }
 

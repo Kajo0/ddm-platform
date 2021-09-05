@@ -1,16 +1,5 @@
 package pl.edu.pw.ddm.platform.core.data;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +13,19 @@ import pl.edu.pw.ddm.platform.strategies.PartitionerStrategies;
 import pl.edu.pw.ddm.platform.strategies.SeparateByLabelsPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.UnbalancedPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
+import pl.edu.pw.ddm.platform.strategies.covariateshift.CovariateShiftPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.mostof.MostOfOnePlusSomePartitionerStrategy;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -102,6 +103,8 @@ class LocalPartitionerStrategyLoader implements PartitionerStrategyLoader {
                     return new MostOfOnePlusSomePartitionerStrategy();
                 case PartitionerStrategies.UNBALANCEDNESS:
                     return new UnbalancedPartitionerStrategy();
+                case PartitionerStrategies.COVARIATE_SHIFT:
+                    return new CovariateShiftPartitionerStrategy();
                 default:
                     throw new IllegalStateException("No implementation for predefined strategy: " + strategyNameOrId);
             }

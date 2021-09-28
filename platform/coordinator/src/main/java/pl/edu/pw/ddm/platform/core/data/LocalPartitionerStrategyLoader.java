@@ -13,6 +13,7 @@ import pl.edu.pw.ddm.platform.strategies.PartitionerStrategies;
 import pl.edu.pw.ddm.platform.strategies.SeparateByLabelsPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.UnbalancedPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
+import pl.edu.pw.ddm.platform.strategies.conceptdrift.ConceptDriftPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.covariateshift.CovariateShiftPartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.mostof.MostOfOnePlusSomePartitionerStrategy;
 
@@ -105,6 +106,8 @@ class LocalPartitionerStrategyLoader implements PartitionerStrategyLoader {
                     return new UnbalancedPartitionerStrategy();
                 case PartitionerStrategies.COVARIATE_SHIFT:
                     return new CovariateShiftPartitionerStrategy();
+                case PartitionerStrategies.CONCEPT_DRIFT:
+                    return new ConceptDriftPartitionerStrategy();
                 default:
                     throw new IllegalStateException("No implementation for predefined strategy: " + strategyNameOrId);
             }

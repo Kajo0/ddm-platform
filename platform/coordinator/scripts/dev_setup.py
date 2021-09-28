@@ -524,6 +524,8 @@ def reload(oneNode=False):
         # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train', seed)
         # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', None, 'train', seed)
         # scatterData(instanceId, trainDataId, 'unbalancedness', 'proportional=1;nodeThreshold=2;unbalancedness=0.1', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'covariate-shift', 'shift=0.2;splits=2;method=0;attribute=1', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'concept-drift', 'drifts=3;discreteRanges=5;label=77', None, 'train', seed)
 
     scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)

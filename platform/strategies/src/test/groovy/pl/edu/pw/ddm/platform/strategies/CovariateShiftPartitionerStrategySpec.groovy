@@ -19,6 +19,8 @@ import java.nio.file.Path
 
 class CovariateShiftPartitionerStrategySpec extends Specification {
 
+    static def DEBUG_PATH = '/tmp/concept-drift/'
+
     @Shared
     def tempFileCreator = new TempFileCreator()
 
@@ -57,7 +59,7 @@ class CovariateShiftPartitionerStrategySpec extends Specification {
         tempFileCreator.cleanup()
     }
 
-    def "should prepare proportional label scattering"() {
+    def "should prepare covariate shift data scattering"() {
         setup:
         def partitioner = new CovariateShiftPartitionerStrategy()
         def dataDesc = new PartitionerStrategy.DataDesc(
@@ -146,8 +148,9 @@ class CovariateShiftPartitionerStrategySpec extends Specification {
                 false,
                 true)
 
-//        ChartUtilities.saveChartAsPNG(new File("/home/mmarkiew/Downloads/histogram.png"), histChart, 600, 400)
-//        ChartUtilities.saveChartAsPNG(new File("/home/mmarkiew/Downloads/distribution.png"), lineChart, 600, 400)
+        Files.createDirectories(Path.of(DEBUG_PATH))
+        ChartUtilities.saveChartAsPNG(new File("${DEBUG_PATH}histogram.png"), histChart, 600, 400)
+        ChartUtilities.saveChartAsPNG(new File("${DEBUG_PATH}distribution.png"), lineChart, 600, 400)
 
         true
     }
@@ -174,7 +177,8 @@ class CovariateShiftPartitionerStrategySpec extends Specification {
                     false,
                     true)
 
-//            ChartUtilities.saveChartAsPNG(new File("/home/mmarkiew/Downloads/histogram_" + splitK + ".png"), chart, 600, 400)
+            Files.createDirectories(Path.of(DEBUG_PATH))
+            ChartUtilities.saveChartAsPNG(new File("${DEBUG_PATH}histogram_" + splitK + ".png"), chart, 600, 400)
         }
 
         true

@@ -12,7 +12,8 @@ public interface PartitionerStrategies {
             PartitionerStrategies.SEPARATE_LABELS,
             PartitionerStrategies.MOST_OF_ONE_PLUS_SOME,
             PartitionerStrategies.UNBALANCEDNESS,
-            PartitionerStrategies.COVARIATE_SHIFT
+            PartitionerStrategies.COVARIATE_SHIFT,
+            PartitionerStrategies.CONCEPT_DRIFT
     )));
 
     String UNIFORM = "uniform";
@@ -20,5 +21,6 @@ public interface PartitionerStrategies {
     String MOST_OF_ONE_PLUS_SOME = "most-of-one-plus-some";
     String UNBALANCEDNESS = "unbalancedness";
     String COVARIATE_SHIFT = "covariate-shift";
+    String CONCEPT_DRIFT = "concept-drift";
 
 }

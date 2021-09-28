@@ -1,6 +1,7 @@
 package pl.edu.pw.ddm.platform.strategies.utils;
 
 import com.google.common.collect.Iterables;
+import com.google.common.primitives.Doubles;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
 
 import java.io.IOException;
@@ -23,7 +24,23 @@ public class Utils {
             if (keyVal.length != 2) {
                 throw new IllegalStateException("Unsupported binding of param: " + str);
             }
-            map.put(keyVal[0], Double.parseDouble(keyVal[1]));
+            var param = Doubles.tryParse(keyVal[1]);
+            if (param != null) {
+                map.put(keyVal[0], Double.parseDouble(keyVal[1]));
+            }
+        }
+        return map;
+    }
+
+    public static Map<String, String> simpleStringParams(String params) {
+        Map<String, String> map = new HashMap<>();
+        String[] separated = params.split(SEPARATION_SIGN);
+        for (String str : separated) {
+            String[] keyVal = str.split(BINDING_SIGN);
+            if (keyVal.length != 2) {
+                throw new IllegalStateException("Unsupported binding of param: " + str);
+            }
+            map.put(keyVal[0], keyVal[1]);
         }
         return map;
     }

@@ -25,7 +25,7 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
     private int attrCount;
     private int drifts;
     private int discreteRanges;
-    private String shiftLabel;
+    private String driftLabel;
 
     private final Map<String, IdValuesPair> oneLabelData = new HashMap<>();
 
@@ -53,8 +53,7 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
                 CustomParamDesc.of("label",
                         Integer.class,
                         "Which class should be drifted, while other will be scattered with uniform distribution",
-                        "A - samples with label 'A' will be drifted",
-                        "null/novalueset - first class will be drifted")
+                        "A - samples with label 'A' will be drifted")
         );
     }
 
@@ -69,7 +68,7 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
         var attrBuckets = prepareAttrBuckets(dataDesc);
         bucketedIdsForTestChart = attrBuckets;
 
-        List<Path> tempFiles = partitionFileCreator.create(workers);
+        var tempFiles = partitionFileCreator.create(workers);
         // TODO handle already partitioned files
         var path = Path.of(Iterables.getOnlyElement(dataDesc.getFilesLocations()));
         Files.readAllLines(path)
@@ -80,7 +79,7 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
                         var label = attrs[dataDesc.getLabelIndex()];
 
                         int fileNumber;
-                        if (shiftLabel.equals(label)) {
+                        if (driftLabel.equals(label)) {
                             fileNumber = attrBuckets.bucketNumber(idx);
                         } else {
                             fileNumber = rand.nextInt(workers);
@@ -105,12 +104,12 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
         Files.readAllLines(path)
                 .stream()
                 .map(l -> l.split(dataDesc.getSeparator()))
-                .filter(attrs -> shiftLabel.equals(attrs[labelCol]))
+                .filter(attrs -> driftLabel.equals(attrs[labelCol]))
                 .map(attrs -> new IdValuesPair(attrs[idCol], collectToArrayBut(attrs, idCol, labelCol)))
                 .forEach(ip -> oneLabelData.put(ip.getId(), ip));
 
         if (oneLabelData.isEmpty()) {
-            throw new IllegalArgumentException("No data samples with label '" + shiftLabel + "' found.");
+            throw new IllegalArgumentException("No data samples with label '" + driftLabel + "' found.");
         }
     }
 
@@ -156,16 +155,16 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
         var strParams = Utils.simpleStringParams(strategyParameters.getCustomParams());
 
         discreteRanges = params.getOrDefault("discreteRanges", -1d).intValue();
-        shiftLabel = strParams.getOrDefault("label", null);
+        driftLabel = strParams.getOrDefault("label", null);
 
         drifts = params.getOrDefault("drifts", -1d).intValue();
         if (drifts < 0) {
-            drifts = -1;
+            drifts = workers;
         }
 
         Preconditions.checkState(drifts <= workers, "drifts must be <= to partitions");
         Preconditions.checkState(drifts > 1, "drifts must be greater than 1");
-        Preconditions.checkNotNull(shiftLabel, "label param cannot be null");
+        Preconditions.checkNotNull(driftLabel, "label param cannot be null");
     }
 
 }

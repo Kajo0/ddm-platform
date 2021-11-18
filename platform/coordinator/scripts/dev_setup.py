@@ -526,6 +526,7 @@ def reload(oneNode=False):
         # scatterData(instanceId, trainDataId, 'unbalancedness', 'proportional=1;nodeThreshold=2;unbalancedness=0.1', None, 'train', seed)
         # scatterData(instanceId, trainDataId, 'covariate-shift', 'shift=0.2;splits=2;method=0;attribute=1', None, 'train', seed)
         # scatterData(instanceId, trainDataId, 'concept-drift', 'drifts=3;discreteRanges=5;label=77', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'concept-shift', 'shifts=3;label=77', None, 'train', seed)
 
     scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)

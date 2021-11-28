@@ -1,8 +1,5 @@
 package pl.edu.pw.ddm.platform.testing.interfaces.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import lombok.SneakyThrows;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.central.Processor;
@@ -18,6 +15,10 @@ import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeDataProvider;
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeParamProvider;
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeResultCollector;
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeSampleProvider;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class DdmPipelineRunner {
 
@@ -133,8 +134,9 @@ public class DdmPipelineRunner {
                     resultCollector
             );
         } else if (firstMethod instanceof Clustering) {
+            AtomicInteger node = new AtomicInteger(0);
             nodeRunners.forEach(n ->
-                    ((Clustering) n.getMiningMethod()).cluster(
+                    ((Clustering) miningMethods.get(node.getAndIncrement())).cluster(
                             NodeSampleProvider.fromData(n.getDataProvider().training()),
                             paramProvider,
                             resultCollector

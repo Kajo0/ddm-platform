@@ -1,6 +1,5 @@
 package pl.edu.pw.ddm.platform.algorithm.classification.naivebayes
 
-
 import pl.edu.pw.ddm.platform.distfunc.EuclideanDistance
 import pl.edu.pw.ddm.platform.interfaces.data.DataProvider
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy

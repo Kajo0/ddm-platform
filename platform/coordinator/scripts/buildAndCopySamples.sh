@@ -22,6 +22,10 @@ cd ../../algorithms/clustering/lct
 ./gradlew clean shadowJar publishToMavenLocal ; checkError
 cd -
 
+cd ../../algorithms/clustering/dbirch
+./gradlew clean shadowJar publishToMavenLocal ; checkError
+cd -
+
 cd ../../algorithms/classification/dmeb
 ./gradlew clean shadowJar publishToMavenLocal ; checkError
 cd -
@@ -65,6 +69,7 @@ rm -rf ./samples/*.jar
 cp ../../algorithms/clustering/aoptkm/build/libs/aoptkm-*-all.jar ./samples/aoptkm.jar ; checkError
 cp ../../algorithms/clustering/dkmeans/build/libs/dkmeans-*-all.jar ./samples/dkmeans.jar ; checkError
 cp ../../algorithms/clustering/lct/build/libs/lct-*-all.jar ./samples/lct.jar ; checkError
+cp ../../algorithms/clustering/dbirch/build/libs/dbirch-*-all.jar ./samples/dbirch.jar ; checkError
 cp ../../algorithms/classification/dmeb/build/libs/dmeb-*-all.jar ./samples/dmeb.jar ; checkError
 cp ../../algorithms/classification/dmeb-2/build/libs/dmeb-2-*-all.jar ./samples/dmeb-2.jar ; checkError
 cp ../../algorithms/classification/svm-2lvl/build/libs/svm-2lvl-*-all.jar ./samples/svm-2lvl.jar ; checkError

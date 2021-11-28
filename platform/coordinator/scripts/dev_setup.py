@@ -491,6 +491,7 @@ def reload(oneNode=False):
         algorithmId = loadJar('./samples/aoptkm.jar')
         # algorithmId = loadJar('./samples/dkmeans.jar')
         # algorithmId = loadJar('./samples/lct.jar')
+        # algorithmId = loadJar('./samples/dbirch.jar')
         # algorithmId = loadJar('./samples/dmeb.jar')
         # algorithmId = loadJar('./samples/dmeb-2.jar')
         # algorithmId = loadJar('./samples/svm-2lvl.jar')

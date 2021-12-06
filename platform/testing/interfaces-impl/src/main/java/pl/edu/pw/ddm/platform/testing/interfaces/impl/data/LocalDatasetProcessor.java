@@ -25,6 +25,8 @@ public class LocalDatasetProcessor {
     private final Integer labelIndex;
 
     private final Map<String, String> labelMapping = new HashMap<>();
+    private final Map<String, String> vectorsMapping = new HashMap<>();
+    private int vectorsMappingCounter = 0;
 
     @Getter
     private Integer attributesAmount;
@@ -81,7 +83,12 @@ public class LocalDatasetProcessor {
                 }
                 attributes[i] = label;
             } else if (!isNumeric(attributes[i])) {
-                attributes[i] = String.valueOf(attributes[i].hashCode());
+                String value = vectorsMapping.get(attributes[i]);
+                if (value == null) {
+                    value = String.valueOf(vectorsMappingCounter++);
+                    vectorsMapping.put(attributes[i], value);
+                }
+                attributes[i] = value;
             }
         }
         return attributes;

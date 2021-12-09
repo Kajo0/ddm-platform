@@ -5,6 +5,7 @@ import pl.edu.pw.ddm.platform.metrics.dto.MetricsSummary;
 public interface Metrics {
 
     String ADJUSTED_RAND_INDEX = "ARI";
+    String ADJUSTED_MUTUAL_INFORMATION = "AMI";
 
     String ACCURACY = "accuracy";
     String PRECISION = "precision";

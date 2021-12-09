@@ -1,15 +1,5 @@
 package pl.edu.pw.ddm.platform.core.results;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -27,6 +17,16 @@ import pl.edu.pw.ddm.platform.metrics.ClusteringMetrics;
 import pl.edu.pw.ddm.platform.metrics.Metrics;
 import pl.edu.pw.ddm.platform.metrics.dto.IdLabel;
 import pl.edu.pw.ddm.platform.metrics.dto.MetricsSummary;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -83,8 +83,13 @@ class LocalResultsValidationService implements ResultsValidationService {
         // TODO improve
         Stream.of(metrics)
                 .forEach(metric -> {
-                    if (Metrics.ADJUSTED_RAND_INDEX.equals(metric)) {
-                        results.adjustedRandIndex();
+                    switch (metric) {
+                        case Metrics.ADJUSTED_RAND_INDEX:
+                            results.adjustedRandIndex();
+                            break;
+                        case Metrics.ADJUSTED_MUTUAL_INFORMATION:
+                            results.adjustedMutualInformation();
+                            break;
                     }
                 });
 

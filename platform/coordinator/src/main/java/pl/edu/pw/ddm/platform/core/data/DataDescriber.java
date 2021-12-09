@@ -126,6 +126,7 @@ class DataDescriber {
     }
 
     static boolean isNumeric(String value) {
+        value = value.trim();
         return Ints.tryParse(value) != null || Doubles.tryParse(value) != null;
     }
 

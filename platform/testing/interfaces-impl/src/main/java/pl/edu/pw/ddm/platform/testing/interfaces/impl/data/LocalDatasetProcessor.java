@@ -89,6 +89,8 @@ public class LocalDatasetProcessor {
                     vectorsMapping.put(attributes[i], value);
                 }
                 attributes[i] = value;
+            } else {
+                attributes[i] = attributes[i].trim();
             }
         }
         return attributes;
@@ -121,6 +123,7 @@ public class LocalDatasetProcessor {
     }
 
     private boolean isNumeric(String value) {
+        value = value.trim();
         try {
             Integer.parseInt(value);
             return true;

@@ -170,6 +170,8 @@ class LocalDatasetProcessor {
                     vectorsMapping.put(attributes[i], value);
                 }
                 attributes[i] = value;
+            } else {
+                attributes[i] = attributes[i].trim();
             }
         }
         return attributes;

@@ -1,12 +1,14 @@
 package pl.edu.pw.ddm.platform.strategies.conceptdrift;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RequiredArgsConstructor
 class DataDiscretizator {
 
@@ -95,7 +97,12 @@ class DataDiscretizator {
     private void findThresholds() {
         // TODO more sophisticated thresholds according to value densities
         for (int i = 0; i < attrs; ++i) {
-            var thresh = findThresholds(mins[i], maxes[i], discreteRanges);
+            var ranges = discreteRanges;
+            if (discreteRanges == -1) {
+                ranges = (int) Math.floor(Math.max(Math.log1p(maxes[i] - mins[i]) * 2, 4));
+                log.info("Discretize ranges of attr {} into {} ranges.", i, ranges);
+            }
+            var thresh = findThresholds(mins[i], maxes[i], ranges);
             thresholds.add(thresh);
         }
     }

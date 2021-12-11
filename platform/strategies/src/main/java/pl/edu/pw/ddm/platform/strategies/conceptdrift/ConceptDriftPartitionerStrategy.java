@@ -49,9 +49,9 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
                         Integer.class,
                         "On how many ranges data should be discretized for numerical attributes",
                         "2 - eg. <0, 10> => <0, 5), <5, 10>",
-                        "-1 - number of ranges is equal to log(max - min)"),
+                        "-1 - number of ranges is equal to max(2 * ln(max - min), 4) on every attr separately"),
                 CustomParamDesc.of("label",
-                        Integer.class,
+                        String.class,
                         "Which class should be drifted, while other will be scattered with uniform distribution",
                         "A - samples with label 'A' will be drifted")
         );
@@ -136,8 +136,7 @@ public class ConceptDriftPartitionerStrategy implements PartitionerStrategy {
         }
 
         var oneLabelDataDiscretized = oneLabelData;
-        if (discreteRanges > 1) {
-
+        if (discreteRanges > 1 || discreteRanges == -1) {
             oneLabelDataDiscretized = new DataDiscretizator(oneLabelData,
                     attrCount,
                     numericAttrs,

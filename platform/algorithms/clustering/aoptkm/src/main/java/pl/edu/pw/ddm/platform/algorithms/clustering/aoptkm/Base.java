@@ -3,19 +3,6 @@ package pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,6 +15,23 @@ import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distance.Distan
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distance.EuclideanHammingFunction;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distributed.DistributedCentroidData;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.point.ObjectPoint;
+import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
+import weka.clusterers.SimpleKMeans;
+import weka.core.Instance;
+
+import javax.annotation.Nullable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class Base {
 
@@ -281,6 +285,41 @@ public abstract class Base {
     }
 
     protected List<ObjectKmeansCluster> runKmeans(List<ObjectPoint> points, List<ObjectPoint> centroids) {
+        return runKmeans(points, centroids, false, null);
+    }
+
+    protected List<ObjectKmeansCluster> runKmeans(List<ObjectPoint> points,
+                                                  List<ObjectPoint> centroids,
+                                                  boolean wekaInit,
+                                                  @Nullable ParamProvider paramProvider) {
+        if (wekaInit && paramProvider != null) {
+            System.out.println("  [[FUTURE LOG]] wekaInit so transforming data to doubles.");
+            List<double[]> training = points.stream()
+                    .map(a -> a.values)
+                    .map(values -> {
+                        double[] vals = new double[values.length];
+                        for (int i = 0; i < values.length; ++i) {
+                            vals[i] = (double) values[i];
+                        }
+                        return vals;
+                    })
+                    .collect(Collectors.toList());
+            System.out.println("  [[FUTURE LOG]] wekaInit start.");
+            SimpleKMeans kmeans = new WekaKmeansWrapper().performKmeans(training, paramProvider);
+            centroids = kmeans.getClusterCentroids()
+                    .stream()
+                    .map(Instance::toDoubleArray)
+                    .map(values -> {
+                        Object[] vals = new Object[values.length];
+                        for (int i = 0; i < values.length; ++i) {
+                            vals[i] = values[i];
+                        }
+                        return vals;
+                    })
+                    .map(ObjectPoint::new)
+                    .collect(Collectors.toList());
+            System.out.println("  [[FUTURE LOG]] wekaInit finished.");
+        }
         Kmeans kmeans = new Kmeans(epsilon, centroids != null ? centroids.size() : groups, iterations, points);
         kmeans.kmeans(centroids);
         return kmeans.getClusters();

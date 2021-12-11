@@ -1,10 +1,5 @@
 package pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.AutoOpticsKm;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.point.ObjectPoint;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.DdmPipeline;
@@ -17,6 +12,11 @@ import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.ResultCollector;
 import pl.edu.pw.ddm.platform.interfaces.data.SampleProvider;
 import pl.edu.pw.ddm.platform.interfaces.mining.Clustering;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class AoptkmDDM implements LocalProcessor<LModel, GModel, AoptkmDDM>,
         GlobalProcessor<LModel, GModel>,
@@ -32,7 +32,11 @@ public class AoptkmDDM implements LocalProcessor<LModel, GModel, AoptkmDDM>,
     public LModel processLocal(DataProvider dataProvider, ParamProvider paramProvider) {
         AutoOpticsKm algorithm = new AutoOpticsKm(paramProvider);
         List<ObjectPoint> pts = toObjectPoints(dataProvider.training());
-        return algorithm.localClustering("dummy", pts);
+        boolean wekaInit = dataProvider.getDataDescription()
+                .hasOnlyNumericAttributes()
+                && paramProvider.provide("init_kmeans_method") != null;
+        System.out.println("  [[FUTURE LOG]] Decided to wekaInit?: " + wekaInit);
+        return algorithm.localClustering("dummy", pts, wekaInit, paramProvider);
     }
 
     @Override

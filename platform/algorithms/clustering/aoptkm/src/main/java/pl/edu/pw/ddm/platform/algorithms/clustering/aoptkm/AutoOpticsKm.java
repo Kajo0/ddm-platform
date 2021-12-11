@@ -1,10 +1,5 @@
 package pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.google.common.collect.Lists;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.GModel;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.impl.LModel;
@@ -16,6 +11,11 @@ import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distributed.Dis
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.distributed.DistributedUtils;
 import pl.edu.pw.ddm.platform.algorithms.clustering.aoptkm.utils.point.ObjectPoint;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AutoOpticsKm extends OpticsDkm {
 
@@ -100,9 +100,16 @@ public class AutoOpticsKm extends OpticsDkm {
     }
 
     public LModel localClustering(String nodeName, List<ObjectPoint> pts) {
+        return localClustering(nodeName, pts, false, null);
+    }
+
+    public LModel localClustering(String nodeName,
+                                  List<ObjectPoint> pts,
+                                  boolean wekaInit,
+                                  ParamProvider paramProvider) {
         // step 1.3 : run clustering alg. on local data
         startLog("AOPTKM local kmeans");
-        List<ObjectKmeansCluster> calcClusters = runKmeans(pts, null);
+        List<ObjectKmeansCluster> calcClusters = runKmeans(pts, null, wekaInit, paramProvider);
         stopLog(null);
 //        writePreLocalResult(nodeName, calcClusters);
 

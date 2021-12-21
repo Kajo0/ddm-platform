@@ -40,7 +40,9 @@ public class GlobalClassifier implements Classifier {
         double[] attrs = sample.getNumericAttributes();
         for (int i = 0; i < attrs.length; ++i) {
             StatisticalSummaryValues stats = model.getLabelCol(label, i);
-            result *= distribution.probability(attrs[i], stats.getMean(), stats.getStandardDeviation());
+            result *= distribution.probability(attrs[i],
+                    stats.getMean(),
+                    stats.getStandardDeviation());
         }
 
         return result;

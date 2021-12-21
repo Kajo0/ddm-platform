@@ -7,7 +7,6 @@ import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy
 import pl.edu.pw.ddm.platform.metrics.ClassificationMetrics
 import pl.edu.pw.ddm.platform.metrics.dto.IdLabel
 import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy
-import pl.edu.pw.ddm.platform.strategies.mostof.MostOfOnePlusSomePartitionerStrategy
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.DdmExecutionConfig
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.DdmPipelineRunner
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.LocalDatasetTrainExtractor
@@ -15,7 +14,6 @@ import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.NodeDataProvider
 import pl.edu.pw.ddm.platform.testing.interfaces.impl.data.strategy.TempFileCreator
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
@@ -29,7 +27,6 @@ class NaiveBayesSpec extends Specification {
         tempFileCreator.cleanup()
     }
 
-    @Unroll
     def "should classify data"() {
         setup:
         def separator = '\t'

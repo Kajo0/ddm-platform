@@ -1,19 +1,5 @@
 package pl.edu.pw.ddm.platform.algorithm.classification.svm2lvl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import de.lmu.ifi.dbs.elki.data.synthetic.bymodel.GeneratorSingleCluster;
 import de.lmu.ifi.dbs.elki.math.statistics.distribution.NormalDistribution;
 import pl.edu.pw.ddm.platform.algorithm.classification.svm2lvl.filterers.ConvexHullLabeledFilter;
@@ -37,6 +23,20 @@ import pl.edu.pw.ddm.platform.interfaces.data.DataProvider;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 import pl.edu.pw.ddm.platform.interfaces.data.ParamProvider;
 import weka.core.neighboursearch.LinearNNSearch;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Svm2Lvl implements LocalProcessor<LocalMinMaxModel>,
         GlobalProcessor<LocalMinMaxModel, GlobalMinMaxModel>,
@@ -380,8 +380,14 @@ public class Svm2Lvl implements LocalProcessor<LocalMinMaxModel>,
                 labels.add("" + i);
             }
             Map<Integer, LinearNNSearch> knnModelMap = new HashMap<>();
-            for (Map.Entry<Integer, List<LabeledObservation>> entry : classToLocalModel.entrySet()) {
-                knnModelMap.put(entry.getKey(), new LinearNNSearch(WekaUtils.convertToInstances(entry.getValue(), labels)));
+            if (!firstLevelClassificationResult(paramProvider)) {
+                for (Map.Entry<Integer, List<LabeledObservation>> entry : classToLocalModel.entrySet()) {
+                    knnModelMap.put(entry.getKey(),
+                            new LinearNNSearch(WekaUtils.convertToInstances(entry.getValue(), labels)));
+                }
+            } else {
+                System.out.println(
+                        "  [[FUTURE LOG]] updateGlobal: not filling knnModelMap due to 'first_level_classification_result'");
             }
 
             Arrays.stream(localModelArray)
@@ -449,11 +455,17 @@ public class Svm2Lvl implements LocalProcessor<LocalMinMaxModel>,
     }
 
     static boolean firstGlobalLevelOnly(ParamProvider paramProvider) {
-        return Boolean.TRUE.toString().equals(paramProvider.provide("use_first_global_level_only", "false"));
+        return Boolean.TRUE.toString().equals(paramProvider.provide("use_first_global_level_only",
+                Boolean.FALSE.toString()));
     }
 
     static boolean performGlobalNormalization(ParamProvider paramProvider) {
         return Boolean.TRUE.toString().equals(paramProvider.provide("global_normalization", Boolean.FALSE.toString()));
+    }
+
+    static boolean firstLevelClassificationResult(ParamProvider paramProvider) {
+        return Boolean.TRUE.toString().equals(paramProvider.provide("first_level_classification_result",
+                Boolean.FALSE.toString()));
     }
 
     static boolean debug(ParamProvider paramProvider) {

@@ -102,7 +102,8 @@ def dataInfo(debug=True):
 
 def broadcastDistanceFunction(instanceId, distanceFunctionId, debug=True):
     if debug:
-        print("broadcastDistanceFunction instanceId='{}' distanceFunctionId='{}'".format(instanceId, distanceFunctionId))
+        print(
+            "broadcastDistanceFunction instanceId='{}' distanceFunctionId='{}'".format(instanceId, distanceFunctionId))
     url = baseUrl + api['data']['distance-function-broadcast'].format(**{
         'instanceId': instanceId,
         'distanceFunctionId': distanceFunctionId
@@ -277,7 +278,8 @@ def collectResults(executionId, debug=True):
     return response
 
 
-def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distanceFuncName='none', params=None, debug=True):
+def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distanceFuncName='none', params=None,
+                   debug=True):
     if debug:
         print(
             "startExecution instanceId='{}' algorithmId='{}' trainDataId='{}' testDataId='{}' distanceFuncName='{}' params='{}'".format(
@@ -304,16 +306,16 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
             'preCalcCentroids': 'true',
             'b': '2',
             'meb_clusters': '-1',
-            'kernel': 'rbf', #rbf #linear # svm's
+            'kernel': 'rbf',  # rbf #linear # svm's
             'knn_k': '3',
-            'init_kmeans_method': 'k-means++', # 'Random'
-            'use_local_classifier': 'false', # 2lvl-svm
-            'branching_factor': '50', # dbirch
-            'threshold': '0.01', # dbirch
-            'g_groups': '3', # dbirch
-            'g_threshold': '0.01', # dbirch
-            'local_method_name': 'only_with_svs', # 2lvl-svm
-            'first_level_classification_result': 'true', # 2lvl-svm
+            'init_kmeans_method': 'k-means++',  # 'Random'
+            'use_local_classifier': 'false',  # 2lvl-svm
+            'branching_factor': '50',  # dbirch
+            'threshold': '0.01',  # dbirch
+            'g_groups': '3',  # dbirch
+            'g_threshold': '0.01',  # dbirch
+            'local_method_name': 'only_with_svs',  # 2lvl-svm
+            'first_level_classification_result': 'true',  # 2lvl-svm
             # 'noOneGroup': 'true', # aoptkm
             # 'minKGroups': 'true', # aoptkm
             # 'exactKGroups': 'true' # aoptkm
@@ -534,10 +536,10 @@ def reload(oneNode=False):
         # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', None, 'train', seed)
         # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train', seed)
         # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'unbalancedness', 'proportional=1;nodeThreshold=2;unbalancedness=0.1', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'covariate-shift', 'shift=0.2;splits=2;method=0;attribute=1', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'concept-drift', 'drifts=3;discreteRanges=5;label=77', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'concept-shift', 'shifts=3;label=77', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'unbalancedness', 'proportional=0;nodeThreshold=2;unbalancedness=0.1', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'covariate-shift', 'shift=0.3;splits=3;method=0;attribute=0', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'concept-drift', 'drifts=2;discreteRanges=40;label=77', None, 'train', seed)
+        # scatterData(instanceId, trainDataId, 'concept-shift', 'shifts=3;label=1', None, 'train', seed)
 
     scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
@@ -650,23 +652,8 @@ def schedule():
     dataSeed = 123
     strategySeed = 124
     executionSeed = None
-    #   '1334849234' '1333828439' = FULL       -> iris_numeric.data, iris_numeric.test
-    #   '1187478398' '238800836'  = 30% train  -> Skin_NonSkin.txt
-    #   '519015334'  '405676659'  = FULL       -> poker-hand-training-true.data, poker-hand-testing.data
-    #   '2026464871' '1043020749' = FULL       -> creditcard.csv
-    #   '1959356483' '1791383717' = FULL       -> shuttle.trn, shuttle.tst
-    #   '1338339913' '1401394455' = FULL       -> adult.data, adult.test
-    #       trainId   testId
     irisNumeric = (loadData('./samples/iris_numeric.data', 4, ',', None, False, None, dataSeed, False),
                    loadData('./samples/iris_numeric.test', 4, ',', None, False, None, dataSeed, False))
-    # SkinNonSkin = tuple(loadData('/home/kajo/Downloads/2020-12-03-svm-data/Skin_NonSkin.txt', 3, '	', None, False, 30, dataSeed, False).split(','))
-    # adult = (loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.data', 14, ',', None, True, None, dataSeed, False),
-    #          loadData('/home/kajo/Downloads/2020-12-03-svm-data/adult.test', 14, ',', None, True, None, dataSeed, False))
-    # clustGen20dim = (loadData('/home/mmarkiew/Desktop/stud_data/synthetic_sets/in_20dim_20g_1-5.txt', 20, ',', None, False, None, dataSeed, False),
-    #                  irisNumeric[1])
-    # clustGen2dim = (loadData('/home/mmarkiew/Desktop/stud_data/synthetic_sets/in_2dim_4g_1kk_v2-corner.txt', 2, ',', None, False, None, dataSeed, False),
-    #                 irisNumeric[1])
-    # data = [clustGen20dim, clustGen2dim]
     data = [irisNumeric]
     # workers cpus workerMemory masterMemory
     instances = [
@@ -679,75 +666,79 @@ def schedule():
     # denseOutliersStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar', False)
     #     printAlias strategy seed custom-params multiNode distanceFunction
     strategies = [
-        ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True, None),
-        ('most-of-one-plus-some', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
         ('uniform', 'uniform', strategySeed, None, False, None),
-        #('dense-outliers', 'dense-and-outliers', strategySeed, '0.6', True, 'euclidean'),
-        # ('most-plus-all', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-200;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
-        # ('all-but', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-14;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
-        # ('all-but', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        # ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True, None),
+        # ('most-of-one-plus-some', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        # ('dense-outliers', 'dense-and-outliers', strategySeed, '0.6', True, 'euclidean'),
+        # ('all-but=-14', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-14;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        # ('all-but=-2', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        # ('most-plus-all(prior-probability)', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-200;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
+        # ('unbalancedness=1', 'unbalancedness', strategySeed, 'proportional=1;unbalancedness=0.1', True, None),
+        # ('unbalancedness=0', 'unbalancedness', strategySeed, 'proportional=0;unbalancedness=0.1', True, None),
+        # ('covariate=0.3', 'covariate-shift', strategySeed, 'shift=0.3;splits=3;method=0;attribute=0', True, None),
+        # ('concept-drift=3', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=77', True, None),
+        # ('concept-shift=2', 'concept-shift', strategySeed, 'shifts=2;label=77', True, None),
     ]
-    #   '1859600396' = 'WEKA SVM',
-    #   '539897355'  = 'D-MEB'
-    #   '1826773956' = 'D-MEB-2'
+    # onenode
     wekaSvm = loadJar('./samples/svm-weka.jar', False)
-    dmeb = loadJar('./samples/dmeb.jar', False)
-    dmeb2 = loadJar('./samples/dmeb-2.jar', False)
+    wekaKmeans = loadJar('./samples/k-means-weka.jar', False)
+
+    # multinode - classification
+    bayes = loadJar('./samples/naive-bayes.jar', False)
     svm2lvl = loadJar('./samples/svm-2lvl.jar', False)
-    # aoptkm = loadJar('./samples/aoptkm.jar', False)
-    # dkm = loadJar('./samples/dkmeans.jar', False)
-    # lct = loadJar('./samples/lct.jar', False)
-    # dbirch = loadJar('./samples/dbirch.jar', False)
-    # algorithmId    params distanceFunctionName distanceFunctionId multiNode
+    # dmeb = loadJar('./samples/dmeb.jar', False)
+    # dmeb2 = loadJar('./samples/dmeb-2.jar', False)
+
+    # multinode - clustering
+    aoptkm = loadJar('./samples/aoptkm.jar', False)
+    dkm = loadJar('./samples/dkmeans.jar', False)
+    lct = loadJar('./samples/lct.jar', False)
+    dbirch = loadJar('./samples/dbirch.jar', False)
+
+    # default params
     kernel = 'rbf'
     groups = 3
-    dmeb2Params = {'kernel': kernel,
-                   'meb_clusters': '-1',
-                   'knn_k': '-1',
-                   'use_local_classifier': 'false',
-                   'use_first_level_only': 'false',
-                   'global_normalization': 'false',
-                   'random_percent': '-0.1',
-                   'close_to_percent': '-2',
-                   'global_expand_percent': '-0.1',
-                   'local_method_for_svs_clusters': 'close_to',
-                   'local_method_for_non_multiclass_clusters': 'random',
-                   'local_method_name': 'only_with_svs',
-                   'first_level_classification_result': 'true'
-                   }
-    clusteringParams = {'groups': groups,
-                   'iterations': '20',
-                   'epsilon': '0.002',
-                   'branching_factor': '50',
-                   'threshold': '0.01',
-                   'g_groups': groups,
-                   'g_threshold': '0.01',
-                   'b': '2',
-                   'noOneGroup': 'true',
-                   'init_kmeans_method': 'k-means++', # 'Random'
-                   'distanceFunctionName': 'euclidean'}
-    multiply = 1
-    executions = [
-        (wekaSvm, {'kernel': kernel}, 'euclidean', None, False),
-        (dmeb2, dict(dmeb2Params, **{'use_local_classifier': 'true', 'local_method_for_svs_clusters': 'use_local'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'just_random', 'use_first_level_only': 'true', 'random_percent': '0.1'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'svs_only', 'use_first_level_only': 'true'}), 'euclidean', None, True),
-        (dmeb, {'kernel': kernel, 'meb_clusters': '-1'}, 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'squash_to_centroid', 'use_first_level_only': 'true'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'metrics_collect', 'use_first_level_only': 'true'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'random', 'use_first_level_only': 'true'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'random', 'local_method_for_non_multiclass_clusters': 'random', 'use_first_level_only': 'true'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'svs_only'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'just_random', 'random_percent': '0.05'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'just_random', 'random_percent': '0.1'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'squash_to_centroid'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'metrics_collect'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'close_to', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
-        (dmeb2, dict(dmeb2Params, **{'local_method_for_svs_clusters': 'random', 'local_method_for_non_multiclass_clusters': 'random'}), 'euclidean', None, True),
-        # (aoptkm, dict(clusteringParams, **{}), 'euclidean', None, True),
-        # (dkm, dict(clusteringParams, **{}), 'euclidean', None, True),
-        # (lct, dict(clusteringParams, **{}), 'euclidean', None, True),
+    classificationDefaultParams = {'kernel': kernel,
+                                   'meb_clusters': '-1',
+                                   'knn_k': '-1',
+                                   'use_local_classifier': 'false',
+                                   'use_first_level_only': 'false',
+                                   'global_normalization': 'false',
+                                   'random_percent': '-0.1',
+                                   'close_to_percent': '-2',
+                                   'global_expand_percent': '-0.1',
+                                   'local_method_for_svs_clusters': 'close_to',
+                                   'local_method_for_non_multiclass_clusters': 'random',
+                                   'local_method_name': 'only_with_svs',
+                                   'first_level_classification_result': 'true'}
+    clusteringDefaultParams = {'groups': groups,
+                               'iterations': '20',
+                               'epsilon': '0.002',
+                               'branching_factor': '50',
+                               'threshold': '0.01',
+                               'g_groups': groups,
+                               'g_threshold': '0.01',
+                               'b': '2',
+                               'noOneGroup': 'true',
+                               'init_kmeans_method': 'k-means++',
+                               'distanceFunctionName': 'euclidean'}
+    multiply = 30
+    executionsMultiplied = [
+        # (wekaKmeans, {'groups': groups, 'iterations': '20', 'preCalcCentroids': 'true'}, 'euclidean', None, False)
+
+        # (svm2lvl, dict(classificationDefaultParams, **{}), 'euclidean', None, True),
+
+        # (aoptkm, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
+        # (dkm, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
+        # (lct, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
     ] * multiply
+    executions = [
+        # (wekaSvm, {'kernel': kernel}, 'euclidean', None, False),
+
+        # (bayes, dict({}, **{}), 'euclidean', None, True),
+
+        # (dbirch, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
+    ] + executionsMultiplied
 
     # check data
     for d in data:
@@ -769,7 +760,7 @@ def schedule():
         cpu = instance[1]
         workerMemory = instance[2]
         masterMemory = instance[3]
-        disk = 10 # not really used for dockers
+        disk = 10  # not really used for dockers
 
         print('  Clearing previous', end='', flush=True)
         destroyAll(debug)
@@ -800,7 +791,8 @@ def schedule():
                     print('   [I] partitioning strategy requires multiple nodes, so ommit')
                     continue
 
-                scatterResp = scatterData(instanceId, trainDataId, strategyName, strategyParams, distanceFunction, 'train', strategySeed, debug)
+                scatterResp = scatterData(instanceId, trainDataId, strategyName, strategyParams, distanceFunction,
+                                          'train', strategySeed, debug)
                 if checkIsResponseError(scatterResp):
                     print('   [E] scatter train data failed', scatterResp)
                     continue
@@ -835,7 +827,8 @@ def schedule():
                     executionId = None
                     while not executionId or 'Error' in executionId or 'Exception' in executionId:
                         try:
-                            executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionName, executionParams, debug)
+                            executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId,
+                                                         distanceFunctionName, executionParams, debug)
                         except:
                             print('       [E] !!!! Strange start exec error: ' + str(sys.exc_info()[0]))
 

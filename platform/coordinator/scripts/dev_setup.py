@@ -2,10 +2,10 @@
 import configparser
 import json
 import pprint
+import re
 import requests
 import sys
 import time
-import re
 
 lastExecFile = './last_exec.properties'
 baseUrl = 'http://localhost:7000'
@@ -304,9 +304,19 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
             'preCalcCentroids': 'true',
             'b': '2',
             'meb_clusters': '-1',
-            'kernel': 'linear', #rbf #linear
+            'kernel': 'rbf', #rbf #linear # svm's
             'knn_k': '3',
-            'use_local_classifier': 'false'
+            'init_kmeans_method': 'k-means++', # 'Random'
+            'use_local_classifier': 'false', # 2lvl-svm
+            'branching_factor': '50', # dbirch
+            'threshold': '0.01', # dbirch
+            'g_groups': '3', # dbirch
+            'g_threshold': '0.01', # dbirch
+            'local_method_name': 'only_with_svs', # 2lvl-svm
+            'first_level_classification_result': 'true', # 2lvl-svm
+            # 'noOneGroup': 'true', # aoptkm
+            # 'minKGroups': 'true', # aoptkm
+            # 'exactKGroups': 'true' # aoptkm
         }
     jsonParams = json.dumps(params)
 
@@ -608,7 +618,8 @@ def stats(oneNode=False):
 
 def validate(oneNode=False):
     last = loadLast(oneNode)
-    validateResults(last.get('execution_id'), 'accuracy,recall,precision,f-measure,ARI')
+    validateResults(last.get('execution_id'),
+                    'accuracy,recall,precision,f-measure,ARI')  # AMI - long time calculation when more data
 
 
 def clear():
@@ -625,6 +636,14 @@ def checkExist(resourceType, id):
             raise ValueError('Unknown resource type ' + resourceType)
     except KeyError:
         raise ValueError('Not found ' + resourceType + ' with id: ' + id)
+
+
+def checkIsResponseError(response):
+    # TODO make it more sophisticated
+    if response == 'ok_process-id':
+        return False
+    formatted = json.loads(response)
+    return formatted['status'] == 500
 
 
 def schedule():
@@ -678,8 +697,10 @@ def schedule():
     # aoptkm = loadJar('./samples/aoptkm.jar', False)
     # dkm = loadJar('./samples/dkmeans.jar', False)
     # lct = loadJar('./samples/lct.jar', False)
+    # dbirch = loadJar('./samples/dbirch.jar', False)
     # algorithmId    params distanceFunctionName distanceFunctionId multiNode
     kernel = 'rbf'
+    groups = 3
     dmeb2Params = {'kernel': kernel,
                    'meb_clusters': '-1',
                    'knn_k': '-1',
@@ -690,10 +711,17 @@ def schedule():
                    'close_to_percent': '-2',
                    'global_expand_percent': '-0.1',
                    'local_method_for_svs_clusters': 'close_to',
-                   'local_method_for_non_multiclass_clusters': 'random'}
-    clusteringParams = {'groups': '20',
+                   'local_method_for_non_multiclass_clusters': 'random',
+                   'local_method_name': 'only_with_svs',
+                   'first_level_classification_result': 'true'
+                   }
+    clusteringParams = {'groups': groups,
                    'iterations': '20',
                    'epsilon': '0.002',
+                   'branching_factor': '50',
+                   'threshold': '0.01',
+                   'g_groups': groups,
+                   'g_threshold': '0.01',
                    'b': '2',
                    'noOneGroup': 'true',
                    'init_kmeans_method': 'k-means++', # 'Random'
@@ -769,12 +797,18 @@ def schedule():
                 distanceFunction = strategy[5]
 
                 if oneNode and multiNode:
-                    print('   partitioning strategy requires multiple nodes, so ommit')
+                    print('   [I] partitioning strategy requires multiple nodes, so ommit')
                     continue
 
-                scatterData(instanceId, trainDataId, strategyName, strategyParams, distanceFunction, 'train', strategySeed, debug)
+                scatterResp = scatterData(instanceId, trainDataId, strategyName, strategyParams, distanceFunction, 'train', strategySeed, debug)
+                if checkIsResponseError(scatterResp):
+                    print('   [E] scatter train data failed', scatterResp)
+                    continue
                 if testDataId:
-                    scatterData(instanceId, testDataId, 'dummy', None, None, 'test', strategySeed, debug)
+                    scatterResp = scatterData(instanceId, testDataId, 'dummy', None, None, 'test', strategySeed, debug)
+                    if checkIsResponseError(scatterResp):
+                        print('   [E] scatter test data failed', scatterResp)
+                        continue
 
                 for execution in executions:
                     print('    execution:', execution)
@@ -788,13 +822,13 @@ def schedule():
                         executionParams['seed'] = executionSeed
 
                     if oneNode and multiNode:
-                        print('    distributed algorithm requires multiple nodes, so ommit')
+                        print('    [I] distributed algorithm requires multiple nodes, so ommit')
                         continue
                     elif not oneNode and not multiNode:
-                        print('    local algorithm requires one node, so ommit')
+                        print('    [I] local algorithm requires one node, so ommit')
                         continue
                     if multiNode and strategyAlias in avoidMultiNodeStrategies:
-                        print('    avoiding "' + strategyAlias + '" strategy for multi node, so ommit')
+                        print('    [I] avoiding "' + strategyAlias + '" strategy for multi node, so ommit')
                         continue
 
                     broadcastJar(instanceId, algorithmId, debug)
@@ -803,7 +837,7 @@ def schedule():
                         try:
                             executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionName, executionParams, debug)
                         except:
-                            print('       !!!! Strange start exec error: ' + str(sys.exc_info()[0]))
+                            print('       [E] !!!! Strange start exec error: ' + str(sys.exc_info()[0]))
 
                     progress = '[' + str(iter).rjust(len(str(size))) + ' / ' + str(size) + ']'
                     iter += 1
@@ -822,10 +856,11 @@ def schedule():
                     print('')
 
                     if status != 'FINISHED':
-                        print('        FAILED: ' + str(message))
+                        print('        [E] FAILED: ' + str(message))
                         continue
 
-                    metrics = validateResults(executionId, 'accuracy,recall,precision,f-measure,ARI', debug)
+                    metrics = validateResults(executionId, 'accuracy,recall,precision,f-measure,ARI',
+                                              debug)  # AMI - long time calculation when more data
                     print('     METRICS:', metrics)
                     stats = resultsStats(executionId, debug)
 
@@ -846,6 +881,7 @@ def schedule():
                     headers.append('close-to-percent')
                     headers.append('global-expand-percent')
                     headers.append('ARI')
+                    headers.append('AMI')
                     headers.append('f-measure')
                     headers.append('accuracy')
                     headers.append('recall')
@@ -855,6 +891,7 @@ def schedule():
                     headers.append('allSamples')
                     headers.append('localBytes')
                     headers.append('globalBytes')
+                    headers.append('globalMethodBytes')
                     headers.append('trainingBytes')
                     print('         CSV_READY_HEADER', ';'.join(headers))
                     values = []
@@ -874,6 +911,7 @@ def schedule():
                     values.append(executionParams.get('close_to_percent', ''))
                     values.append(executionParams.get('global_expand_percent', ''))
                     values.append(metrics.get('ARI', ''))
+                    values.append(metrics.get('AMI', ''))
                     values.append(metrics.get('f-measure', ''))
                     values.append(metrics.get('accuracy', ''))
                     values.append(metrics.get('recall', ''))
@@ -882,6 +920,7 @@ def schedule():
                     values.append(handleCustomMetrics(stats['custom']))
                     values.append(stats['transfer']['localBytes'])
                     values.append(stats['transfer']['globalBytes'])
+                    values.append(stats['transfer']['globalMethodBytes'])
                     values.append(stats['data']['trainingBytes'])
                     values = list(map(str, values))
                     print('         CSV_READY_VALUES', ';'.join(values))

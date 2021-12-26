@@ -45,7 +45,7 @@ public class CovariateShiftPartitionerStrategy implements PartitionerStrategy {
     public List<CustomParamDesc> availableParameters() {
         return List.of(
                 // TODO add more features/shifts eg. 0.1|0.2 for features 2|4
-                CustomParamDesc.of("shift", Double.class, "shift ratio between next splits with range (0, 0.5>"),
+                CustomParamDesc.of("shift", Double.class, "shift ratio between next splits with range (0, 1/splits>"),
                 CustomParamDesc.of("splits",
                         Integer.class,
                         "how split data attribute distributions among nodes",
@@ -176,10 +176,19 @@ public class CovariateShiftPartitionerStrategy implements PartitionerStrategy {
         method = params.getOrDefault("method", 0d).intValue();
 
         Preconditions.checkState(splits == -1 || splits > 1, "splits amount must be greater than 1 or equal to -1");
+        double maxShift = 1d / splits;
         if (splits == -1) {
             splits = Math.max(workers / 2, 2);
+            maxShift = 1d / splits;
+            log.info("splits=-1 so calculated={} due to {} workers", splits, workers);
+            if (shift > maxShift) {
+                double newShift = Math.min(shift, maxShift);
+                log.info("shift={} > 1/splits={} so set max available shift={}", shift, maxShift, newShift);
+                shift = newShift;
+            }
         }
-        Preconditions.checkState(shift > 0 && shift <= 0.5, "shift must be in range (0, 0.5>");
+        Preconditions.checkState(shift > 0 && shift <= maxShift,
+                "shift must be in range (0, 1/splits=%s>", maxShift);
 
         int attrCol = getAttributeCol(dataDesc);
         Preconditions.checkState(attribute >= 0, "attribute col must be provided");

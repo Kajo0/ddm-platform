@@ -1,6 +1,7 @@
 package pl.edu.pw.ddm.platform.strategies.covariateshift;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 class CovariateShifter {
 
@@ -81,6 +83,8 @@ class CovariateShifter {
             lastCalc = calcObjective(splits);
         } while (lastCalc > OBJECTIVE_THRESHOLD && i++ < MAX_ITERATIONS);
 
+        log.info("Covariate shifter final objective={} while target={}, so final diff={}",
+                lastCalc + targetShift, targetShift, lastCalc);
         return splits;
     }
 

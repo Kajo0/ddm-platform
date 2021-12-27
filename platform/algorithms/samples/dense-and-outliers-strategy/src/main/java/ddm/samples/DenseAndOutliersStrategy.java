@@ -44,7 +44,7 @@ public class DenseAndOutliersStrategy implements PartitionerStrategy {
     @Override
     public List<Path> partition(DataDesc dataDesc, StrategyParameters strategyParameters, PartitionFileCreator partitionFileCreator) throws IOException {
         int workers = strategyParameters.getPartitions();
-        Preconditions.checkState(workers % 2 == 0, "Strategy applicable for even nodes only.");
+        Preconditions.checkState(workers >= 2, "Strategy not applicable for less than 2 nodes.");
 
         DistanceFunction func = strategyParameters.getDistanceFunction();
         Preconditions.checkNotNull(func, "Distance function cannot be null.");
@@ -70,22 +70,24 @@ public class DenseAndOutliersStrategy implements PartitionerStrategy {
             outliers.put(entry.getKey(), extract.getOutliers());
         }
 
-        List<Path> tempFiles = partitionFileCreator.create(workers);
+        List<Path> tempFiles = partitionFileCreator.create(2);
         write(tempFiles.get(0), dense, dataDesc);
         write(tempFiles.get(1), outliers, dataDesc);
 
-        if (workers <= 2) {
+        if (workers == 2) {
             return tempFiles;
         } else {
             var uniform = new UniformPartitionerStrategy();
-            strategyParameters.setPartitions(workers / 2);
-            var fl = dataDesc.getFilesLocations();
+            var fl = dataDesc.getFilesLocations(); // TODO deep copy check
 
             dataDesc.getFilesLocations().clear();
             dataDesc.getFilesLocations().add(tempFiles.get(0).toAbsolutePath().toString());
+            strategyParameters.setPartitions(workers / 2 + workers % 2);
             var first = uniform.partition(dataDesc, strategyParameters, partitionFileCreator);
+
             dataDesc.getFilesLocations().clear();
             dataDesc.getFilesLocations().add(tempFiles.get(1).toAbsolutePath().toString());
+            strategyParameters.setPartitions(workers / 2);
             var second = uniform.partition(dataDesc, strategyParameters, partitionFileCreator);
 
             strategyParameters.setPartitions(workers);

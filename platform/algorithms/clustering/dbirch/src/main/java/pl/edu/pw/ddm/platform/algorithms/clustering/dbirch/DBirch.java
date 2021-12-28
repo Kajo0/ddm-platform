@@ -67,6 +67,18 @@ public class DBirch implements LocalProcessor<LModel>, GlobalUpdater<LModel, Clu
     public Clustering updateGlobal(Collection<LModel> models, ParamProvider paramProvider) {
         System.out.println("  [[FUTURE LOG]] updateGlobal");
 
+        if (models.size() == 1) {
+            System.out.println("  [[FUTURE LOG]] updateGlobal: one local model only");
+            AtomicInteger in = new AtomicInteger(0);
+            Map<Integer, double[]> res = new HashMap<>();
+            models.iterator()
+                    .next()
+                    .getMeans()
+                    .forEach(m -> res.put(in.getAndIncrement(), m));
+            GModel global = new GModel(res);
+            return new DBirchClusterer(global);
+        }
+
         List<double[]> newD = models.stream()
                 .map(LModel::getMeans)
                 .flatMap(Collection::stream)
@@ -94,6 +106,11 @@ public class DBirch implements LocalProcessor<LModel>, GlobalUpdater<LModel, Clu
         db.initialize();
         de.lmu.ifi.dbs.elki.data.Clustering<MeanModel> result = birch.run(db);
 
+        GModel global = buildGlobalModelFromResult(result);
+        return new DBirchClusterer(global);
+    }
+
+    private GModel buildGlobalModelFromResult(de.lmu.ifi.dbs.elki.data.Clustering<MeanModel> result) {
         AtomicInteger in = new AtomicInteger(0);
         Map<Integer, double[]> res = new HashMap<>(result.getAllClusters().size());
         result.getAllClusters()
@@ -101,9 +118,7 @@ public class DBirch implements LocalProcessor<LModel>, GlobalUpdater<LModel, Clu
                 .map(Cluster::getModel)
                 .map(MeanModel::getMean)
                 .forEach(m -> res.put(in.getAndIncrement(), m));
-
-        GModel global = new GModel(res);
-        return new DBirchClusterer(global);
+        return new GModel(res);
     }
 
 }

@@ -35,7 +35,22 @@ class SeparatedFinder {
                     });
                 });
 
+        mergeBuckets();
+
         return separatedBuckets;
+    }
+
+    int findLowestEntropyColumn() {
+        Preconditions.checkState(!buckets.getAttrToValueToIds().isEmpty(), "No buckets to find in.");
+
+        var other = buckets.getAttrToValueToIds()
+                .values()
+                .stream()
+                .sorted(Comparator.comparingInt(a -> a.getValueToIds().size()))
+                .collect(Collectors.toList());
+        selected = other.remove(0);
+
+        return selected.getColumn();
     }
 
     private SeparatedBucket getSeparatedBucket(IdValuesPair pair) {
@@ -50,17 +65,23 @@ class SeparatedFinder {
         return bucket;
     }
 
-    int findLowestEntropyColumn() {
-        Preconditions.checkState(!buckets.getAttrToValueToIds().isEmpty(), "No buckets to find in.");
+    private void mergeBuckets() {
+        while (true) {
+            for (var bucket : separatedBuckets) {
+                var others = separatedBuckets.stream()
+                        .filter(s -> s != bucket)
+                        .filter(bucket::shouldMerge)
+                        .collect(Collectors.toList());
 
-        var other = buckets.getAttrToValueToIds()
-                .values()
-                .stream()
-                .sorted(Comparator.comparingInt(a -> a.getValueToIds().size()))
-                .collect(Collectors.toList());
-        selected = other.remove(0);
+                if (others.isEmpty()) {
+                    return;
+                }
 
-        return selected.getColumn();
+                bucket.merge(others);
+                separatedBuckets.removeAll(others);
+                break;
+            }
+        }
     }
 
 }

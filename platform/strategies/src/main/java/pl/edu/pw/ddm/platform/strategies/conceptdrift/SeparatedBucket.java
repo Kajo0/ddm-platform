@@ -71,6 +71,32 @@ class SeparatedBucket {
         return valueToIds.size();
     }
 
+    boolean shouldMerge(SeparatedBucket other) {
+        if (valuesInside.size() != other.getValuesInside().size()) {
+            return false;
+        }
+
+        for (int i = 0; i < valuesInside.size(); ++i) {
+            for (var v : other.valuesInside.get(i)) {
+                if (valuesInside.get(i).contains(v)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    void merge(List<SeparatedBucket> others) {
+        others.forEach(o -> valueToIds.addAll(o.getValueToIds()));
+
+        others.forEach(other -> {
+            for (int i = 0; i < valuesInside.size(); ++i) {
+                valuesInside.get(i)
+                        .addAll(other.valuesInside.get(i));
+            }
+        });
+    }
+
     double sortValue() {
         var a = Iterables.getFirst(valuesInside, Collections.<String>emptySet());
         var b = Iterables.getFirst(a, String.valueOf(Double.MAX_VALUE));
@@ -83,4 +109,5 @@ class SeparatedBucket {
     public String toString() {
         return valueToIds.size() + " ids of " + valuesInside;
     }
+
 }

@@ -115,7 +115,7 @@ class DriftBucketsPreparer {
         int i = 0;
         for (var sing : independentSingularities) {
             // if all numeric, find the closest group, random otherwise
-            var allNumerical = sing.getNumericAttrs()
+            var allNumerical = !sing.getNumericAttrs().isEmpty() && sing.getNumericAttrs()
                     .stream()
                     .allMatch(Pair::getValue);
             if (allNumerical) {

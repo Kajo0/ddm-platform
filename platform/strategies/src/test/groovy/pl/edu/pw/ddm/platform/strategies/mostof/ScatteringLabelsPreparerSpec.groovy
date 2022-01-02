@@ -140,4 +140,66 @@ class ScatteringLabelsPreparerSpec extends Specification {
         additional << [4, 5, 6]
     }
 
+    def "should prepare scattering when labels > workers with negative additional classes"() {
+        when:
+        def scattering = new ScatteringLabelsPreparer(3, 9, -1, 0).prepare()
+
+        then:
+        scattering.full.map == [0: [0, 3, 6] as Set,
+                                1: [1, 4, 7] as Set,
+                                2: [2, 5, 8] as Set]
+        scattering.empty.map == [:]
+        scattering.additional.map == [0: [1, 2, 4, 5, 7] as Set,
+                                      1: [0, 2, 3, 5, 8] as Set,
+                                      2: [0, 1, 3, 6, 7] as Set]
+
+        when:
+        scattering = new ScatteringLabelsPreparer(3, 9, -5, 0).prepare()
+
+        then:
+        scattering.full.map == [0: [0, 3, 6] as Set,
+                                1: [1, 4, 7] as Set,
+                                2: [2, 5, 8] as Set]
+        scattering.empty.map == [:]
+        scattering.additional.map == [0: [1] as Set,
+                                      1: [2] as Set,
+                                      2: [3] as Set]
+
+        when:
+        scattering = new ScatteringLabelsPreparer(3, 9, -6, 0).prepare()
+
+        then:
+        scattering.full.map == [0: [0, 3, 6] as Set,
+                                1: [1, 4, 7] as Set,
+                                2: [2, 5, 8] as Set]
+        scattering.empty.map == [:]
+        scattering.additional.map == [:]
+    }
+
+    def "should prepare scattering when labels < workers with negative additional classes"() {
+        when:
+        def scattering = new ScatteringLabelsPreparer(5, 3, -1, 0).prepare()
+
+        then:
+        scattering.full.map == [0: [0] as Set,
+                                1: [1] as Set,
+                                2: [2] as Set]
+        scattering.empty.map == [3: [0, 1, 2] as Set,
+                                 4: [0, 1, 2] as Set]
+        scattering.additional.map == [0: [1] as Set,
+                                      1: [2] as Set,
+                                      2: [0] as Set]
+
+        when:
+        scattering = new ScatteringLabelsPreparer(5, 3, -2, 0).prepare()
+
+        then:
+        scattering.full.map == [0: [0] as Set,
+                                1: [1] as Set,
+                                2: [2] as Set]
+        scattering.empty.map == [3: [0, 1, 2] as Set,
+                                 4: [0, 1, 2] as Set]
+        scattering.additional.map == [:]
+    }
+
 }

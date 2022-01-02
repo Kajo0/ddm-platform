@@ -66,8 +66,13 @@ class ScatteringLabelsPreparer {
         int currClass = 0;
         for (int worker = 0; worker < additionalWorkers; ++worker) {
             for (int i = 0; i < classNumber; ++i) {
+                int classNumberToAdd = Math.abs(additionalClassesNumber);
+                if (additionalClassesNumber < 0) {
+                    classNumberToAdd = labels - scattering.getFull().size(worker) - classNumber;
+                }
+
                 var additional = scattering.getAdditional();
-                for (int label = 0; label < labels && additional.size(worker) < classNumber;
+                for (int label = 0; label < labels && additional.size(worker) < classNumberToAdd;
                         ++label, currClass = (currClass + 1) % labels) {
                     var alreadyHasFull = scattering.getFull()
                             .has(worker, currClass);

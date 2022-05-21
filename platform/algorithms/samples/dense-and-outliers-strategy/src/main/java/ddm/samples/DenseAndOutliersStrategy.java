@@ -65,7 +65,7 @@ public class DenseAndOutliersStrategy implements PartitionerStrategy {
         var dense = new HashMap<String, List<Data>>();
         var outliers = new HashMap<String, List<Data>>();
         for (var entry : groupped.entrySet()) {
-            var extract = new DenseExtractor(entry.getValue(), func, densePercent).extract();
+            var extract = new MoreSophisticatedDenseExtractor(entry.getValue(), func, densePercent, 0.9).extract();
             dense.put(entry.getKey(), extract.getDense());
             outliers.put(entry.getKey(), extract.getOutliers());
         }

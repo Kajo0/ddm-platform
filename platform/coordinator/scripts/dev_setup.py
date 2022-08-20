@@ -25,6 +25,7 @@ api = {
         'loadUri': '/coordinator/command/data/load/uri',
         'partitioning-strategy-load': '/coordinator/command/data/partitioning-strategy/load/file',
         'scatter': '/coordinator/command/data/scatter/{instanceId}/{dataId}',
+        'partitioning': '/coordinator/command/data/partitioning/{dataId}',
     },
     'execution': {
         'info': '/coordinator/command/execution/info',
@@ -221,6 +222,38 @@ def scatterData(instanceId, dataId, strategy='uniform', strategyParams=None, dis
     if debug:
         print('  response: ' + response)
     return response
+
+
+def partitionData(dataId, partitions, strategy='uniform', strategyParams=None, distanceFunction=None, seed=None,
+                  debug=True):
+    if debug:
+        print(
+            "partitionData dataId='{}' partitions='{}' strategy='{}' strategyParams='{}' distanceFunction='{}' seed='{}'".format(
+                dataId, partitions, strategy, strategyParams, distanceFunction, seed))
+    url = baseUrl + api['data']['partitioning'].format(**{
+        'dataId': dataId
+    })
+    response = requests.post(url,
+                             data={
+                                 'partitions': partitions,
+                                 'strategy': strategy,
+                                 'strategyParams': strategyParams,
+                                 'distanceFunction': None if distanceFunction == 'None' else distanceFunction,
+                                 'seed': None if seed == 'None' else seed
+                             }
+                             ).text
+    if debug:
+        print('  response: ' + response)
+    return response
+
+
+def partition(partitions, strategy, strategyParams, distanceFunction, seed, oneNode=False, debug=True):
+    if debug:
+        print('partition')
+    last = loadLast(oneNode)
+    trainDataId = last.get('train_data_id')
+
+    partitionData(trainDataId, partitions, strategy, strategyParams, distanceFunction, seed, debug)
 
 
 def executionInfo(debug=True):
@@ -1016,5 +1049,10 @@ elif command == 'info':
         instanceInfo()
     else:
         print('  Unknown info to show')
+elif command == 'partition':
+    if len(sys.argv) < 7:
+        print('  Provide info args: partitions, strategy, strategyParams, distanceFunction, seed')
+        sys.exit(1)
+    partition(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], oneNode)
 else:
     print('  Unknown command')

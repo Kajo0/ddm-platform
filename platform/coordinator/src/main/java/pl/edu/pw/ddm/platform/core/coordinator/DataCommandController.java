@@ -15,6 +15,8 @@ import pl.edu.pw.ddm.platform.core.data.DataFacade;
 import pl.edu.pw.ddm.platform.core.data.DistanceFunctionFacade;
 import pl.edu.pw.ddm.platform.core.data.PartitioningStrategyFacade;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("coordinator/command/data")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -74,6 +76,24 @@ class DataCommandController {
                 .seed(seed)
                 .build();
         return invokeLoadRequest(extractTrainPercentage, req);
+    }
+
+    @PostMapping("partitioning/{dataId}")
+    List<String> partitionFile(@PathVariable String dataId,
+                               @RequestParam String strategy,
+                               @RequestParam int partitions,
+                               @RequestParam(required = false) String strategyParams,
+                               @RequestParam(required = false) String distanceFunction,
+                               @RequestParam(required = false) Long seed) {
+        var req = DataFacade.PartitionRequest.builder()
+                .dataId(dataId)
+                .strategy(strategy)
+                .partitions(partitions)
+                .distanceFunction(distanceFunction)
+                .strategyParams(strategyParams)
+                .seed(seed)
+                .build();
+        return dataFacade.partitionData(req);
     }
 
     @PostMapping("distance-function/load/file")

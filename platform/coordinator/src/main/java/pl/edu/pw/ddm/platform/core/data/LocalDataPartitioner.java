@@ -1,10 +1,5 @@
 package pl.edu.pw.ddm.platform.core.data;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,6 +21,11 @@ import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.PartitionerStrategies;
 import pl.edu.pw.ddm.platform.strategies.UniformPartitionerStrategy;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
@@ -37,8 +37,52 @@ class LocalDataPartitioner implements DataPartitioner {
 
     @SneakyThrows
     @Override
-    public String scatterTrain(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String strategy, String distanceFunctionId, String params, Long seed) {
-        log.info("Scattering train data '{}' with strategy '{}' and distance func '{}' into nodes '{}' with seed '{}'.", dataDesc, strategy, distanceFunctionId, addresses, seed);
+    public List<String> partitionData(DataLoader.DataDesc dataDesc,
+                                      String strategy,
+                                      String distanceFunction,
+                                      String params,
+                                      int nodes,
+                                      Long seed) {
+        log.info("Perform data {}='{}' partitioning using strategy '{}' with params '{}' and distance func '{}'" +
+                        " into nodes '{}' with seed '{}'.",
+                dataDesc.getId(),
+                dataDesc.getOriginalName(),
+                strategy,
+                params,
+                distanceFunction,
+                nodes,
+                seed);
+        var fileCreator = new TempFileCreator();
+        var strategyParams = PartitionerStrategy.StrategyParameters.builder()
+                .partitions(nodes)
+                .customParams(params)
+                .distanceFunction(loadDistanceFunction(distanceFunction))
+                .seed(seed)
+                .build();
+        List<Path> tempFiles = deductStrategy(strategy)
+                .partition(DataDescMapper.INSTANCE.mapStrategy(dataDesc), strategyParams, fileCreator);
+
+        // TODO FIXME return archive instead of non cleaned up temporary paths
+//        fileCreator.cleanup();
+        return tempFiles.stream()
+                .map(Path::toString)
+                .collect(Collectors.toList());
+    }
+
+    @SneakyThrows
+    @Override
+    public String scatterTrain(List<InstanceAddrDto> addresses,
+                               DataLoader.DataDesc dataDesc,
+                               String strategy,
+                               String distanceFunction,
+                               String params,
+                               Long seed) {
+        log.info("Scattering train data '{}' with strategy '{}' and distance func '{}' into nodes '{}' with seed '{}'.",
+                dataDesc,
+                strategy,
+                distanceFunction,
+                addresses,
+                seed);
         log.info("User params for '{}' partitioning strategy: '{}'", strategy, params);
         // TODO if data with same params already scattered - do not send again but think about naming that use only id without params
 
@@ -50,7 +94,7 @@ class LocalDataPartitioner implements DataPartitioner {
         var strategyParams = PartitionerStrategy.StrategyParameters.builder()
                 .partitions(workers.size())
                 .customParams(params)
-                .distanceFunction(loadDistanceFunction(distanceFunctionId))
+                .distanceFunction(loadDistanceFunction(distanceFunction))
                 .seed(seed)
                 .build();
         List<Path> tempFiles = deductStrategy(strategy)
@@ -67,7 +111,10 @@ class LocalDataPartitioner implements DataPartitioner {
 
     @SneakyThrows
     @Override
-    public String scatterTestEqually(List<InstanceAddrDto> addresses, DataLoader.DataDesc dataDesc, String distanceFunctionId, Long seed) {
+    public String scatterTestEqually(List<InstanceAddrDto> addresses,
+                                     DataLoader.DataDesc dataDesc,
+                                     String distanceFunction,
+                                     Long seed) {
         log.info("Scattering test data '{}' equally into nodes '{}'.", dataDesc, addresses);
 
         List<InstanceAddrDto> workers = addresses.stream()
@@ -77,7 +124,7 @@ class LocalDataPartitioner implements DataPartitioner {
         var fileCreator = new TempFileCreator();
         var strategyParams = PartitionerStrategy.StrategyParameters.builder()
                 .partitions(workers.size())
-                .distanceFunction(loadDistanceFunction(distanceFunctionId))
+                .distanceFunction(loadDistanceFunction(distanceFunction))
                 .customParams(null)
                 .seed(seed)
                 .build();
@@ -114,7 +161,10 @@ class LocalDataPartitioner implements DataPartitioner {
         }
     }
 
-    private void sendDataToNodes(List<InstanceAddrDto> workers, DataLoader.DataDesc dataDesc, List<Path> tempFiles, String typeCode) {
+    private void sendDataToNodes(List<InstanceAddrDto> workers,
+                                 DataLoader.DataDesc dataDesc,
+                                 List<Path> tempFiles,
+                                 String typeCode) {
         // TODO optimize
         for (int i = 0; i < workers.size(); ++i) {
             InstanceAddrDto addressDto = workers.get(i);
@@ -135,7 +185,9 @@ class LocalDataPartitioner implements DataPartitioner {
             body.add("typeCode", typeCode);
 
             String url = InstanceAgentAddressFactory.sendData(addressDto);
-            ResponseEntity<String> response = restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(url,
+                    new HttpEntity<>(body, headers),
+                    String.class);
             log.debug("Scattering data post response: '{}'.", response.getBody());
         }
     }

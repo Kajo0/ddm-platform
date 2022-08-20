@@ -3,9 +3,10 @@ import configparser
 import json
 import pprint
 import re
-import requests
 import sys
 import time
+
+import requests
 
 lastExecFile = './last_exec.properties'
 baseUrl = 'http://localhost:7000'
@@ -329,9 +330,10 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
     })
 
     if not params:
+        # FIXME setup default params
         params = {
             'seed': str(int(round(time.time()))),
-            'groups': '3',
+            'groups': '6',
             'iterations': '20',
             'epsilon': '0.002',
             'distanceFunctionName': distanceFuncName,
@@ -345,7 +347,7 @@ def startExecution(instanceId, algorithmId, trainDataId, testDataId=None, distan
             'use_local_classifier': 'false',  # 2lvl-svm
             'branching_factor': '50',  # dbirch
             'threshold': '0.01',  # dbirch
-            'g_groups': '3',  # dbirch
+            'g_groups': '7',  # dbirch
             'g_threshold': '0.01',  # dbirch
             'local_method_name': 'only_with_svs',  # 2lvl-svm
             'first_level_classification_result': 'true',  # 2lvl-svm
@@ -497,16 +499,21 @@ def loadLast(oneNode):
 
 
 def setupDefault(workers=2, cpu=2, workerMemory=2, masterMemory=2, oneNode=False):
+    # FIXME setup some algorithm to check that loading works
     algorithmId = None
     if oneNode:
         algorithmId = loadJar('./samples/k-means-weka.jar')
     else:
-        algorithmId = loadJar('./samples/aoptkm.jar')
+        algorithmId = loadJar('./samples/dkmeans.jar')
 
+    # FIXME setup some data to check that loading works
     trainDataId = loadData('./samples/iris.data', 4, ',', None)
     testDataId = loadData('./samples/iris.test', 4, ',', None)
+    # FIXME setup some distance function to check that loading works
     distanceFunctionId = loadDistanceFunction('./samples/equality-distance.jar')
+    # FIXME setup some partitioning strategy to check that loading works
     partitioningStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar')
+
     instanceId = createInstance(workers, cpu, workerMemory, masterMemory, 10)  # cpu, workerMemory, masterMemory disk
 
     print('Wait for setup', end='', flush=True)
@@ -533,8 +540,8 @@ def reload(oneNode=False):
         algorithmId = loadJar('./samples/k-means-weka.jar')
         # algorithmId = loadJar('./samples/svm-weka.jar')
     else:
-        algorithmId = loadJar('./samples/aoptkm.jar')
-        # algorithmId = loadJar('./samples/dkmeans.jar')
+        algorithmId = loadJar('./samples/dkmeans.jar')
+        # algorithmId = loadJar('./samples/aoptkm.jar')
         # algorithmId = loadJar('./samples/lct.jar')
         # algorithmId = loadJar('./samples/dbirch.jar')
         # algorithmId = loadJar('./samples/dmeb.jar')
@@ -543,36 +550,74 @@ def reload(oneNode=False):
         # algorithmId = loadJar('./samples/random-classifier.jar')
         # algorithmId = loadJar('./samples/naive-bayes.jar')
 
+    # FIXME setup default reload string vectorization
     vectorizeStrings = False
     # vectorizeStrings = True
+
+    # FIXME setup default reload training percentage
     trainPercentage = None
     # trainPercentage = 10
     if not trainPercentage:
+        # FIXME setup default reload training sample numerical data
         # trainDataId = loadData('./samples/iris.data', 4, ',', None, vectorizeStrings, trainPercentage)
         trainDataId = loadData('./samples/iris_numeric.data', 4, ',', None, vectorizeStrings, trainPercentage)
         # testDataId = loadData('./samples/iris.test', 4, ',', None, vectorizeStrings, trainPercentage)
         testDataId = loadData('./samples/iris_numeric.test', 4, ',', None, vectorizeStrings, trainPercentage)
     else:
+        # FIXME setup default reload training sample nominal data
         ids = loadData('./samples/iris.data', 4, ',', None, vectorizeStrings, trainPercentage)
         trainDataId, testDataId = ids.split(',')
 
+    # FIXME setup non-default one-time data for reload
+    trainDataId = loadData(
+        './samples/iris_numeric.data',  # path
+        1,  # label index
+        ',',  # separator
+        0,  # identifier index
+        False,  # vectorization flag
+        None,  # train percentage
+        2022,  # seed
+        False,  # debug flag
+        None  # expand amount
+    )
+    testDataId = loadData(
+        './samples/iris_numeric.test',  # path
+        1,  # label index
+        ',',  # separator
+        0,  # identifier index
+        False,  # vectorization flag
+        None,  # train percentage
+        2022,  # seed
+        False,  # debug flag
+        None  # expand amount
+    )
+
+    # FIXME setup non-default one-time distance function for reload
     distanceFunctionId = loadDistanceFunction('./samples/equality-distance.jar')
+    # FIXME setup non-default one-time partitioning strategy for reload
     partitioningStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar')
 
     broadcastJar(instanceId, algorithmId)
+
+    # FIXME setup non-default seed for partitioning scatter when non-deterministic
     seed = None
     # seed = 8008135
+
     if oneNode:
         scatterData(instanceId, trainDataId, 'uniform', None, None, 'train', seed)
     else:
-        scatterData(instanceId, trainDataId, 'uniform', None, None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'separate-labels', 'Iris-setosa|Iris-virginica,Iris-versicolor', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.6', 'euclidean', 'train', seed)
-        # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'fillEmptyButPercent=0.8;additionalClassesNumber=2;additionalClassesPercent=0.05', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'unbalancedness', 'proportional=0;nodeThreshold=2;unbalancedness=0.1', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'covariate-shift', 'shift=0.3;splits=3;method=0;attribute=0', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'concept-drift', 'drifts=2;discreteRanges=40;label=77', None, 'train', seed)
-        # scatterData(instanceId, trainDataId, 'concept-shift', 'shifts=3;label=1', None, 'train', seed)
+        # FIXME setup non-default partitioning data scattering
+        scatterData(instanceId, trainDataId, 'uniform', '', None, 'train', seed)  # 'iid-u'
+        # scatterData(instanceId, trainDataId, 'dense-and-outliers', '0.7', 'euclidean', 'train', seed)  # 'cs-dao'
+        # scatterData(instanceId, trainDataId, 'covariate-shift', 'attribute=0;shift=0.3;splits=3;method=0', None, 'train', seed)  # 'cs-dsad'
+        # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', None, 'train', seed)  # 'pps-s'
+        # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'additionalClassesNumber=-1;emptyWorkerFill=9;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', None, 'train', seed)  # 'pps-ab'
+        # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'additionalClassesNumber=10;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', None, 'train', seed)  # 'pps-mpa'
+        # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'additionalClassesNumber=-3;emptyWorkerFill=7;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', None, 'train', seed)  # 'pps-ms'
+        # scatterData(instanceId, trainDataId, 'most-of-one-plus-some', 'additionalClassesNumber=2;emptyWorkerFill=8;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', None, 'train', seed)  # 'pps-mps'
+        # scatterData(instanceId, trainDataId, 'concept-drift', 'drifts=3;discreteRanges=40;label=1', None, 'train', seed)  # 'cd-sba'
+        # scatterData(instanceId, trainDataId, 'concept-shift', 'shifts=2;label=1', None, 'train', seed)  # 'cs-cl'
+        # scatterData(instanceId, trainDataId, 'unbalancedness', 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', None, 'train', seed)  # 'u-ul'
 
     scatterData(instanceId, testDataId, 'dummy', None, None, 'test')
     broadcastDistanceFunction(instanceId, distanceFunctionId)
@@ -603,6 +648,7 @@ def execute(oneNode=False):
     distanceFunctionId = last.get('distance_function_id')
     partitioningStrategyId = last.get('partitioning_strategy_id')
 
+    # FIXME setup non-default one-time execution distance function by name or identifier
     executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId)
     # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, 'euclidean')
     # executionId = startExecution(instanceId, algorithmId, trainDataId, testDataId, distanceFunctionId)
@@ -634,7 +680,7 @@ def lastlog(oneNode=False):
         n = nodes[nodeId]
         logs[nodeId] = {}
         logs[nodeId]['type'] = n['type']
-        logs[nodeId]['log'] = fetchLogs(executionId, nodeId, -10)
+        logs[nodeId]['log'] = fetchLogs(executionId, nodeId, 0)
 
     for log in logs:
         print('\n\n     =====================================================> ' + logs[log]['type'] + ' [' + log + ']')
@@ -682,55 +728,191 @@ def checkIsResponseError(response):
 
 
 def schedule():
-    dataSeed = 123
-    strategySeed = 124
+    dataSeed = 2022
+    strategySeed = 2022
     executionSeed = None
+
+    # FIXME setup schedule data
+    # train data id, test data id, groups number
     irisNumeric = (loadData('./samples/iris_numeric.data', 4, ',', None, False, None, dataSeed, False),
-                   loadData('./samples/iris_numeric.test', 4, ',', None, False, None, dataSeed, False))
+                   loadData('./samples/iris_numeric.test', 4, ',', None, False, None, dataSeed, False),
+                   3)
+
     data = [irisNumeric]
+
+    # FIXME setup schedule instances
     # workers cpus workerMemory masterMemory
     instances = [
-        (1, 2, 8, 8),
-        (2, 2, 4, 4),
-        (4, 2, 3, 3),
-        (8, 2, 2, 4)
+        # (1, 2, 8, 8),
+        (3, 2, 4, 4),
+        # (6, 2, 3, 4),
+        # (12, 1, 2, 4)
     ]
-    avoidMultiNodeStrategies = ['uniform']
-    # denseOutliersStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar', False)
+
+    # FIXME setup schedule partitioning strategies to avoid in multi node execution
+    avoidMultiNodeStrategiesAlias = []
+    # FIXME setup schedule load external partitioning strategy
+    denseOutliersStrategyId = loadPartitioningStrategy('./samples/dense-and-outliers-strategy.jar', False)
+
     #     printAlias strategy seed custom-params multiNode distanceFunction
     strategies = [
-        ('uniform', 'uniform', strategySeed, None, False, None),
-        # ('separated', 'most-of-one-plus-some', strategySeed, 'emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesNumber=0;additionalClassesPercent=0', True, None),
-        # ('most-of-one-plus-some', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.8;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
-        # ('dense-outliers', 'dense-and-outliers', strategySeed, '0.6', True, 'euclidean'),
-        # ('all-but=-14', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-14;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
-        # ('all-but=-2', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-2;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
-        # ('most-plus-all(prior-probability)', 'most-of-one-plus-some', strategySeed, 'fillEmptyButPercent=0.6;additionalClassesNumber=-200;additionalClassesPercent=0.05;emptyWorkerFill=1', True, None),
-        # ('unbalancedness=1', 'unbalancedness', strategySeed, 'proportional=1;unbalancedness=0.1', True, None),
-        # ('unbalancedness=0', 'unbalancedness', strategySeed, 'proportional=0;unbalancedness=0.1', True, None),
-        # ('covariate=0.3', 'covariate-shift', strategySeed, 'shift=0.3;splits=3;method=0;attribute=0', True, None),
-        # ('concept-drift=3', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=77', True, None),
-        # ('concept-shift=2', 'concept-shift', strategySeed, 'shifts=2;label=77', True, None),
-    ]
-    # onenode
-    wekaSvm = loadJar('./samples/svm-weka.jar', False)
-    wekaKmeans = loadJar('./samples/k-means-weka.jar', False)
+        # FIXME setup schedule uniform as default
+        # ('iid-u', 'uniform', strategySeed, '', False, None),
 
+        # ### for dataset: iris_numeric.data
+        ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=0;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=2;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=3;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-2;emptyWorkerFill=1;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=1;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=77', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=77', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: 28_mnist_train.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=0;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=9;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=10;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-3;emptyWorkerFill=7;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=8;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=1', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=1', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: 28_fashion-mnist_train.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=20;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=46;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=47;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-3;emptyWorkerFill=44;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=45;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=2', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=2', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: shuttle-train.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=7;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=6;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=7;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-3;emptyWorkerFill=4;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=5;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=1', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=1', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: adult-train_numeric.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=2;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=1;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=1;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=0', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=0', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: cure-t1-2000n-2D_plus50k.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=0;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=5;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=6;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-3;emptyWorkerFill=3;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=4;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=0', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=0', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: diamond9_plus50k.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=0;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=8;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=9;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-3;emptyWorkerFill=6;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=7;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=4', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=4', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: synthetic-kdd-like-7g-100k_over.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=0;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=6;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=7;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-3;emptyWorkerFill=4;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=5;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=0', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=0', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+
+        # ### for dataset: synthetic-kdd-like-12g-100k.csv
+        # ('iid-u', 'uniform', strategySeed, '', True, None),
+        # ('cs-dao', 'dense-and-outliers', strategySeed, '0.7', True, 'euclidean'),
+        # ('cs-dsad', 'covariate-shift', strategySeed, 'attribute=0;shift=0.3;splits=3;method=0', True, None),
+        # ('pps-s', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=0;emptyWorkerFill=1;fillEmptyButPercent=0.4;additionalClassesPercent=0', True, None),
+        # ('pps-ab', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-1;emptyWorkerFill=11;fillEmptyButPercent=0.5;additionalClassesPercent=0.1', True, None),
+        # ('pps-mpa', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=12;emptyWorkerFill=0;fillEmptyButPercent=0.6;additionalClassesPercent=0.05', True, None),
+        # ('pps-ms', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=-3;emptyWorkerFill=9;fillEmptyButPercent=0.6;additionalClassesPercent=0.1', True, None),
+        # ('pps-mps', 'most-of-one-plus-some', strategySeed, 'additionalClassesNumber=2;emptyWorkerFill=10;fillEmptyButPercent=0.8;additionalClassesPercent=0.05', True, None),
+        # ('cd-sba', 'concept-drift', strategySeed, 'drifts=3;discreteRanges=40;label=11', True, None),
+        # ('cs-cl', 'concept-shift', strategySeed, 'shifts=2;label=11', True, None),
+        # ('u-ul', 'unbalancedness', strategySeed, 'unbalancedness=0.1;nodeThreshold=2;proportional=0;', True, None),
+    ]
+
+    # FIXME setup schedule one-node sample algorithms
+    # onenode
+    # wekaKmeans = loadJar('./samples/k-means-weka.jar', False)
+    # wekaSvm = loadJar('./samples/svm-weka.jar', False)
+
+    # FIXME setup schedule multinode-node sample clustering algorithms
+    # multinode - clustering
+    dkm = loadJar('./samples/dkmeans.jar', False)
+    # aoptkm = loadJar('./samples/aoptkm.jar', False)
+    # lct = loadJar('./samples/lct.jar', False)
+    # dbirch = loadJar('./samples/dbirch.jar', False)
+
+    # FIXME setup schedule multinode-node sample classification algorithms
     # multinode - classification
-    bayes = loadJar('./samples/naive-bayes.jar', False)
-    svm2lvl = loadJar('./samples/svm-2lvl.jar', False)
+    # bayes = loadJar('./samples/naive-bayes.jar', False)
+    # svm2lvl = loadJar('./samples/svm-2lvl.jar', False)
     # dmeb = loadJar('./samples/dmeb.jar', False)
     # dmeb2 = loadJar('./samples/dmeb-2.jar', False)
 
-    # multinode - clustering
-    aoptkm = loadJar('./samples/aoptkm.jar', False)
-    dkm = loadJar('./samples/dkmeans.jar', False)
-    lct = loadJar('./samples/lct.jar', False)
-    dbirch = loadJar('./samples/dbirch.jar', False)
-
+    # FIXME setup schedule default set of parameters to override
     # default params
     kernel = 'rbf'
     groups = 3
+    clusteringDefaultParams = {'groups': groups,
+                               'iterations': '20',
+                               'epsilon': '0.002',
+                               'branching_factor': '50',
+                               'threshold': '0.01',
+                               'g_groups': groups,
+                               'g_threshold': '0.01',
+                               'b': '2',
+                               'noOneGroup': 'false',
+                               'minKGroups': 'true',
+                               'exactKGroups': 'false',
+                               'init_kmeans_method': 'k-means++',
+                               'distanceFunctionName': 'euclidean'}
     classificationDefaultParams = {'kernel': kernel,
                                    'meb_clusters': '-1',
                                    'knn_k': '-1',
@@ -744,34 +926,26 @@ def schedule():
                                    'local_method_for_non_multiclass_clusters': 'random',
                                    'local_method_name': 'only_with_svs',
                                    'first_level_classification_result': 'true'}
-    clusteringDefaultParams = {'groups': groups,
-                               'iterations': '20',
-                               'epsilon': '0.002',
-                               'branching_factor': '50',
-                               'threshold': '0.01',
-                               'g_groups': groups,
-                               'g_threshold': '0.01',
-                               'b': '2',
-                               'noOneGroup': 'true',
-                               'init_kmeans_method': 'k-means++',
-                               'distanceFunctionName': 'euclidean'}
-    multiply = 30
-    executionsMultiplied = [
-        # (wekaKmeans, {'groups': groups, 'iterations': '20', 'preCalcCentroids': 'true'}, 'euclidean', None, False)
 
-        # (svm2lvl, dict(classificationDefaultParams, **{}), 'euclidean', None, True),
+    # FIXME setup schedule default execution multiplier
+    multiply = 3
+    executionsMultiplied = [  # alg, params, distance func. name, distance func. id, isMultinode
+                               # (wekaKmeans, {'groups': groups, 'iterations': '20', 'preCalcCentroids': 'true'}, 'euclidean', None, False),
+                               # (wekaSvm, {'kernel': kernel}, 'euclidean', None, False),
+                               # (bayes, dict({}, **{}), 'euclidean', None, False),
+                               # (dbirch, dict(clusteringDefaultParams, **{}), 'euclidean', None, False),
 
-        # (aoptkm, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
-        # (dkm, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
-        # (lct, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
-    ] * multiply
-    executions = [
-        # (wekaSvm, {'kernel': kernel}, 'euclidean', None, False),
+                               # (bayes, dict({}, **{}), 'euclidean', None, True),
+                               # (svm2lvl, dict(classificationDefaultParams, **{}), 'euclidean', None, True),
+                               (dkm, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
+                               # (aoptkm, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
+                               # (lct, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
+                               # (dbirch, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
 
-        # (bayes, dict({}, **{}), 'euclidean', None, True),
-
-        # (dbirch, dict(clusteringDefaultParams, **{}), 'euclidean', None, True),
-    ] + executionsMultiplied
+                               # FIXME setup schedule sample extend & override default params
+                               # (aoptkm, dict(clusteringDefaultParams, **{'minKGroups': 'true', 'noOneGroup': 'false'}), 'euclidean', None, True), # shuttle
+                           ] * multiply
+    executions = executionsMultiplied
 
     # check data
     for d in data:
@@ -787,8 +961,8 @@ def schedule():
     iter = 1
     size = len(data) * len(instances) * len(strategies) * len(executions)
     for instance in instances:
-        oneNode = instance[0] == 1
-        print('  instance:', instance, 'onenode:', oneNode)
+        oneNodeInstance = instance[0] == 1
+        print('  instance:', instance, 'onenode:', oneNodeInstance)
         workers = instance[0]
         cpu = instance[1]
         workerMemory = instance[2]
@@ -817,22 +991,29 @@ def schedule():
                 strategyName = strategy[1]
                 strategySeed = strategy[2]
                 strategyParams = strategy[3]
-                multiNode = strategy[4]
+                multiNodeStrategy = strategy[4]
                 distanceFunction = strategy[5]
 
-                if oneNode and multiNode:
-                    print('   [I] partitioning strategy requires multiple nodes, so ommit')
+                if oneNodeInstance and multiNodeStrategy:
+                    print('   [I] multinode partitioning strategy requires multiple nodes, so omit')
+                    iter += len(strategies)
+                    continue
+                elif not oneNodeInstance and not multiNodeStrategy:
+                    print('   [I] non-multinode partitioning strategy requires single node, so omit')
+                    iter += len(strategies)
                     continue
 
                 scatterResp = scatterData(instanceId, trainDataId, strategyName, strategyParams, distanceFunction,
                                           'train', strategySeed, debug)
                 if checkIsResponseError(scatterResp):
                     print('   [E] scatter train data failed', scatterResp)
+                    iter += len(executions)
                     continue
                 if testDataId:
                     scatterResp = scatterData(instanceId, testDataId, 'dummy', None, None, 'test', strategySeed, debug)
                     if checkIsResponseError(scatterResp):
                         print('   [E] scatter test data failed', scatterResp)
+                        iter += len(executions)
                         continue
 
                 for execution in executions:
@@ -841,19 +1022,25 @@ def schedule():
                     executionParams = execution[1]
                     distanceFunctionName = execution[2]
                     distanceFunctionId = execution[3]
-                    multiNode = execution[4]
+                    multiNodeStrategy = execution[4]
+
+                    executionParams['groups'] = d[2]
+                    executionParams['g_groups'] = d[2]
 
                     if executionSeed and 'seed' not in executionParams:
                         executionParams['seed'] = executionSeed
 
-                    if oneNode and multiNode:
+                    if oneNodeInstance and multiNodeStrategy:
                         print('    [I] distributed algorithm requires multiple nodes, so ommit')
+                        iter += 1
                         continue
-                    elif not oneNode and not multiNode:
+                    elif not oneNodeInstance and not multiNodeStrategy:
                         print('    [I] local algorithm requires one node, so ommit')
+                        iter += 1
                         continue
-                    if multiNode and strategyAlias in avoidMultiNodeStrategies:
+                    if multiNodeStrategy and strategyAlias in avoidMultiNodeStrategiesAlias:
                         print('    [I] avoiding "' + strategyAlias + '" strategy for multi node, so ommit')
+                        iter += 1
                         continue
 
                     broadcastJar(instanceId, algorithmId, debug)
@@ -871,7 +1058,7 @@ def schedule():
                     status = 'UNKNOWN'
                     message = None
                     while status != 'FINISHED' and status != 'FAILED' and status != 'STOPPED':
-                        time.sleep(30)
+                        time.sleep(5)
                         try:
                             execStatus = executionStatus(executionId, False)
                             status = execStatus['status']
@@ -883,6 +1070,7 @@ def schedule():
 
                     if status != 'FINISHED':
                         print('        [E] FAILED: ' + str(message))
+                        iter += 1
                         continue
 
                     metrics = validateResults(executionId, 'accuracy,recall,precision,f-measure,ARI',
@@ -943,7 +1131,21 @@ def schedule():
                     values.append(workers)
                     values.append(strategyAlias)
                     values.append(str(strategyParams).replace(';', '|'))
-                    values.append(checkExist('alg', algorithmId)['algorithmName'])
+
+                    algAliases = {
+                        'Naive Bayes': 'naive-bayes',
+                        'WEKA SVM': 'svm',
+                        'WEKA K-means': 'k-means',
+                        'BIRCH': 'birch',
+                        'SVN-2-LVL': 'dn-svm',
+                        'DK-means': 'dk-means',
+                        'Opt-DKM': 'opt-dkm',
+                        'LCT': 'lct',
+                        'Distributed BIRCH': 'dp-birch'
+                    }
+                    algName = checkExist('alg', algorithmId)['algorithmName']
+                    values.append(('s_' if oneNodeInstance else 'd_') + algAliases[algName])
+
                     values.append(str(executionParams).replace(';', '|'))
                     values.append(executionParams.get('kernel', ''))
                     values.append(executionParams.get('meb_clusters', ''))
@@ -1040,7 +1242,7 @@ if command == 'setup':
     if oneNode:
         setupDefault(1, 2, 4, 4, True)
     else:
-        setupDefault(4, 2, 3, 3, False)
+        setupDefault(12, 1, 2, 4, False)
 elif command == 'inststatus':
     instStatus(oneNode)
 elif command == 'confupdate':

@@ -2,7 +2,9 @@ package pl.edu.pw.ddm.platform.core.data;
 
 import static pl.edu.pw.ddm.platform.core.data.DataLoader.DataDesc;
 
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -13,6 +15,9 @@ import com.google.common.primitives.Ints;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FilenameUtils;
 
 @Slf4j
@@ -58,6 +63,16 @@ class DataDescriber {
                 .map(c -> c.length)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Cannot count attributes by splitting first line using separator: " + separator));
+//        int count;
+//        try (Reader in = new FileReader(path.toFile())) {
+//            Iterable<CSVRecord> records = CSVFormat.DEFAULT
+//                    .withSkipHeaderRecord()
+//                    .withRecordSeparator(separator.charAt(0)) // TODO FIXME write proper CSV data reader
+//                    .parse(in);
+//            count = records.iterator()
+//                    .next()
+//                    .size();
+//        }
 
         if (idIndex != null) {
             --count;

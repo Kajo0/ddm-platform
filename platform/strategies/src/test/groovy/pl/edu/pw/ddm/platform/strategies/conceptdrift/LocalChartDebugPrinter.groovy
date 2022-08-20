@@ -16,7 +16,7 @@ import java.nio.file.Path
 
 trait LocalChartDebugPrinter {
 
-    static def DEBUG_PATH = '/tmp/concept-drift/'
+    static def DEBUG_PATH = '/home/mmarkiew/Downloads/'
 
     static def printXYChart(def splits, def x, def y) {
         def dataset = new XYSeriesCollection()
@@ -44,8 +44,8 @@ trait LocalChartDebugPrinter {
                 true,
                 false,
                 true)
-//        chart.getXYPlot().getDomainAxis().setRange(-500, 500)
-//        chart.getXYPlot().getRangeAxis().setRange(-500, 500)
+        chart.getXYPlot().getDomainAxis().setRange(4000, 6000)
+        chart.getXYPlot().getRangeAxis().setRange(0, 10000)
 
         Files.createDirectories(Path.of(DEBUG_PATH))
         ChartUtilities.saveChartAsPNG(new File("${DEBUG_PATH}distribution_${x}-${y}.png"), chart, 600, 400)

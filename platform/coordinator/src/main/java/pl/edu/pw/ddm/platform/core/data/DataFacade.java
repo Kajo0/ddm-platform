@@ -1,9 +1,5 @@
 package pl.edu.pw.ddm.platform.core.data;
 
-import java.io.File;
-import java.util.List;
-import java.util.Optional;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
@@ -13,6 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import pl.edu.pw.ddm.platform.core.data.dto.DataDescDto;
 import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
+
+import java.io.File;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DataFacade {
@@ -58,6 +58,15 @@ public class DataFacade {
         } else {
             throw new IllegalStateException("No URI or file provided to load.");
         }
+    }
+
+    public List<String> partitionData(@NonNull PartitionRequest request) {
+        var data = dataLoader.getDataDesc(request.dataId);
+        if (data == null) {
+            throw new IllegalArgumentException("No data with id: " + request.dataId);
+        }
+        return dataPartitioner.partitionData(data, request.strategy, request.distanceFunction,
+                request.strategyParams, request.partitions, request.seed);
     }
 
     public String scatter(@NonNull ScatterRequest request) {
@@ -148,6 +157,24 @@ public class DataFacade {
 
         @NonNull
         private final String testDataId;
+    }
+
+    @Builder
+    public static class PartitionRequest {
+
+        @NonNull
+        private final String dataId;
+
+        private final int partitions;
+
+        @NonNull
+        private final String strategy;
+
+        // name or id
+        private final String distanceFunction;
+        private final String strategyParams;
+
+        private final Long seed;
     }
 
     @Builder

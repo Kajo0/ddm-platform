@@ -34,6 +34,7 @@ public class DenseAndOutliersStrategy implements PartitionerStrategy {
         var nodeDataProviderClass = NodeDataProvider.class;
         var nodeDataClass = NodeData.class;
         var numericCenterFinderClass = NumericCenterFinder.class;
+        var moreSophisticatedDenseExtractorClass = MoreSophisticatedDenseExtractor.class;
     }
 
     @Override

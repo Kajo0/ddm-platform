@@ -105,6 +105,7 @@ public class CovariateShiftPartitionerStrategy implements PartitionerStrategy {
         List<Path> tempFiles = partitionFileCreator.create(workers);
         // TODO handle already partitioned files
         var path = Path.of(Iterables.getOnlyElement(dataDesc.getFilesLocations()));
+        var i = new int[]{0};
         Files.readAllLines(path)
                 .forEach(l -> {
                     try {
@@ -117,6 +118,9 @@ public class CovariateShiftPartitionerStrategy implements PartitionerStrategy {
                                 .orElseThrow();
                         splitToId.get(splitKey)
                                 .remove(idx);
+                        if (++i[0] % 50000 == 0) {
+                            log.info("Next 50k and already {} of {} in total", i, dataDesc.getNumberOfSamples());
+                        }
 
                         var entry = splitMap.get(splitKey);
                         var lastPut = entry.getLastPut();

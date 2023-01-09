@@ -1,2 +1,2 @@
-/home/mmarkiew/stud/ddm-platform/platform/coordinator/scripts/samples/iris_numeric.data
-/home/mmarkiew/stud/ddm-platform/platform/coordinator/scripts/samples/iris_numeric.data
+./coordinator/scripts/samples/iris_numeric.data
+./coordinator/scripts/samples/iris_numeric.data

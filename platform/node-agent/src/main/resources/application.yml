@@ -14,7 +14,7 @@ coordinator:
     addresses: /coordinator/command/instance/info/
 
 spark:
-  home: ${SPARK_HOME:/home/mmarkiew/dev/spark}
+  home: ${SPARK_HOME}
   master-host:
   master-port: 7077
   driver-port: 11000
@@ -23,10 +23,10 @@ spark:
 # TODO AppAlgorithmsConfig include as dependency and run
 apps:
   runner:
-    path: /home/mmarkiew/stud/ddm-platform/platform/app-runner-java/build/libs/app-runner-java-0.0.1-SNAPSHOT-all.jar
+    path: ./app-runner-java/build/libs/app-runner-java-0.0.1-SNAPSHOT-all.jar
     main-class: pl.edu.pw.ddm.platform.runner.CentralRunner
   algorithms:
-    - /home/mmarkiew/stud/ddm-platform/platform/algorithms/clustering/aoptkm/build/libs/aoptkm-1.0-SNAPSHOT-all.jar
+    - ./algorithms/clustering/aoptkm/build/libs/aoptkm-1.0-SNAPSHOT-all.jar
 
 paths:
   root: /ddm

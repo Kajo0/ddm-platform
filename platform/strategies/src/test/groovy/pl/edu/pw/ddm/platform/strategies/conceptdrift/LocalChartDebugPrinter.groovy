@@ -16,7 +16,7 @@ import java.nio.file.Path
 
 trait LocalChartDebugPrinter {
 
-    static def DEBUG_PATH = '/home/mmarkiew/Downloads/'
+    static def DEBUG_PATH = '/tmp/TODO/FIXME/plots/'
 
     static def printXYChart(def splits, def x, def y) {
         def dataset = new XYSeriesCollection()

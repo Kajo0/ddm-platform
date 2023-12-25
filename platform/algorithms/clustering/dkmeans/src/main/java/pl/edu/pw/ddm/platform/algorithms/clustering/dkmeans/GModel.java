@@ -6,11 +6,13 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import lombok.ToString;
 import lombok.Value;
 import pl.edu.pw.ddm.platform.interfaces.model.GlobalModel;
 
 @Getter
 @Builder
+@ToString
 public class GModel implements GlobalModel {
 
     @Singular("centroid")

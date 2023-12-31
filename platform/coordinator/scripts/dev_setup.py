@@ -571,9 +571,9 @@ def reload(oneNode=False):
     # FIXME setup non-default one-time data for reload
     trainDataId = loadData(
         './samples/iris_numeric.data',  # path
-        1,  # label index
+        4,  # label index
         ',',  # separator
-        0,  # identifier index
+        None,  # identifier index
         False,  # vectorization flag
         None,  # train percentage
         2022,  # seed
@@ -582,9 +582,9 @@ def reload(oneNode=False):
     )
     testDataId = loadData(
         './samples/iris_numeric.test',  # path
-        1,  # label index
+        4,  # label index
         ',',  # separator
-        0,  # identifier index
+        None,  # identifier index
         False,  # vectorization flag
         None,  # train percentage
         2022,  # seed
@@ -1242,7 +1242,7 @@ if command == 'setup':
     if oneNode:
         setupDefault(1, 2, 4, 4, True)
     else:
-        setupDefault(12, 1, 2, 4, False)
+        setupDefault(4, 2, 3, 3, False)
 elif command == 'inststatus':
     instStatus(oneNode)
 elif command == 'confupdate':

@@ -1,0 +1,20 @@
+$color-dark: #000;
+$color-light: #fff;
+$color-gray-1: #f4f4f4;
+$color-gray-2: #cfcbca;
+$color-gray-3: #918e8c;
+$color-gray-4: #494745;
+$color-gray-5: #272422;
+
+$color-outline: rgba(255, 0, 0, 0.2);
+$color-ok-green: #0a0;
+$color-not-ok-red: #a00;
+$color-unknown-gray: $color-gray-4;
+
+@function contrast-color($color) {
+  @return if(lightness($color) < 25, $color-dark, $color-light);
+}
+
+@function disabled-color($color) {
+  @return lighten($color, 50%);
+}

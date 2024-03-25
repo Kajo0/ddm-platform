@@ -1,0 +1,301 @@
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Broadcast
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <form *ngIf="instances.length !== 0"
+        [formGroup]="broadcastDistanceFunctionForm">
+    <div class="form-fields">
+      <mat-form-field>
+        <mat-label>Instance</mat-label>
+        <mat-select [formControl]="broadcastDistanceFunctionForm.controls.instanceId">
+          <mat-option *ngFor="let instance of instances"
+                      [value]="instance.id">
+            [{{instance.id}}] - {{instance.type}}, n={{instanceNodes(instance).length - 1}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Distance function</mat-label>
+        <mat-select [formControl]="broadcastDistanceFunctionForm.controls.distanceFunctionId">
+          <mat-option *ngFor="let distanceFunction of distanceFunctions"
+                      [value]="distanceFunction.id">
+            [{{distanceFunction.id}}] {{distanceFunction.functionName}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button
+            color="primary"
+            [disabled]="broadcastDistanceFunctionForm.invalid"
+            (click)="broadcastDistanceFunction()">
+      Broadcast to instance workers
+    </button>
+  </form>
+
+</mat-expansion-panel>
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Scatter data
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <form *ngIf="instances.length !== 0"
+        [formGroup]="scatterDataForm">
+    <div class="form-fields form-fields__w40">
+      <mat-form-field>
+        <mat-label>Instance</mat-label>
+        <mat-select [formControl]="scatterDataForm.controls.instanceId">
+          <mat-option *ngFor="let instance of instances"
+                      [value]="instance.id">
+            [{{instance.id}}] - {{instance.type}}, n={{instanceNodes(instance).length - 1}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Data</mat-label>
+        <mat-select [formControl]="scatterDataForm.controls.dataId">
+          <mat-option *ngFor="let d of data"
+                      [value]="d.id">
+            [{{d.id}}] {{d.type}} - {{d.originalName}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Partitioning strategy</mat-label>
+        <mat-select [formControl]="scatterDataForm.controls.strategy">
+          <mat-option value="uniform">uniform</mat-option>
+          <mat-option value="covariate-shift">covariate-shift</mat-option>
+          <mat-option value="most-of-one-plus-some">most-of-one-plus-some</mat-option>
+          <mat-option value="concept-drift">concept-drift</mat-option>
+          <mat-option value="concept-shift">concept-shift</mat-option>
+          <mat-option value="unbalancedness">unbalancedness</mat-option>
+
+          <mat-option value="dense-and-outliers">dense-and-outliers</mat-option>
+          <!--          <mat-option value="loaded">TODO FIXME LOADED..</mat-option>-->
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Strategy params</mat-label>
+        <input [formControl]="scatterDataForm.controls.strategyParams"
+               matInput>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Distance function</mat-label>
+        <mat-select [formControl]="scatterDataForm.controls.distanceFunction">
+          <mat-option value="none">None</mat-option>
+          <mat-option value="euclidean">Euclidean</mat-option>
+          <mat-option value="cosine">Cosine</mat-option>
+          <!--          <mat-option value="loaded">TODO FIXME LOADED..</mat-option>-->
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Scattering data type</mat-label>
+        <mat-select [formControl]="scatterDataForm.controls.type"
+                    value="train">
+          <mat-option value="train">Training</mat-option>
+          <mat-option value="test">Test</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Seed</mat-label>
+        <input [formControl]="scatterDataForm.controls.seed"
+               matInput
+               type="number">
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button
+            color="primary"
+            [disabled]="scatterDataForm.invalid"
+            (click)="scatterData()">
+      Scatter data to instance workers
+    </button>
+  </form>
+</mat-expansion-panel>
+
+<mat-expansion-panel expanded="true">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Operations
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <button mat-raised-button
+          (click)="loadData()">
+    Reload data config info
+  </button>
+  <button mat-raised-button
+          (click)="loadDistanceFunctions()">
+    Reload distance functions config info
+  </button>
+  <button mat-raised-button
+          (click)="loadPartitioningStrategies()">
+    Reload partitioning strategies config info
+  </button>
+
+  <hr/>
+
+  <span class="bold">Upload CSV data</span>
+
+  <form [formGroup]="uploadDataForm">
+    <div class="form-fields form-fields__w30">
+      <mat-form-field>
+        <ngx-mat-file-input placeholder="File (.jar)"
+                            [formControl]="uploadDataForm.controls.file"/>
+        <mat-icon matIconSuffix>folder</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>ID index</mat-label>
+        <input [formControl]="uploadDataForm.controls.idIndex"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Label index</mat-label>
+        <input [formControl]="uploadDataForm.controls.labelIndex"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Separator character</mat-label>
+        <input [formControl]="uploadDataForm.controls.separator"
+               matInput>
+      </mat-form-field>
+
+      <mat-checkbox [formControl]="uploadDataForm.controls.deductType">
+        Deduct column data type
+      </mat-checkbox>
+
+      <mat-checkbox [formControl]="uploadDataForm.controls.vectorizeStrings">
+        Vectorize non-numeric data
+      </mat-checkbox>
+
+      <mat-form-field>
+        <mat-label>Extract train %</mat-label>
+        <input [formControl]="uploadDataForm.controls.extractTrainPercentage"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Expand amount</mat-label>
+        <input [formControl]="uploadDataForm.controls.expandAmount"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Seed</mat-label>
+        <input [formControl]="uploadDataForm.controls.seed"
+               matInput
+               type="number">
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button
+            color="primary"
+            [disabled]="uploadDataForm.invalid"
+            (click)="uploadData()">
+      Upload data
+    </button>
+  </form>
+
+  <hr/>
+
+  <span class="bold">Upload data related artifacts</span>
+
+  <form [formGroup]="uploadForm">
+    <div class="form-fields">
+      <button mat-raised-button
+              color="primary"
+              [disabled]="uploadForm.invalid"
+              (click)="uploadDistanceFunctionOrPartitioningStrategy()">
+        Upload
+      </button>
+
+      <mat-form-field>
+        <ngx-mat-file-input placeholder="File (.jar)"
+                            [formControl]="uploadForm.controls.file"/>
+        <mat-icon matIconSuffix>folder</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Type</mat-label>
+        <mat-select [formControl]="uploadForm.controls.type">
+          <mat-option value="distance-function">Distance Function</mat-option>
+          <mat-option value="partitioning-strategy">Partitioning Strategy</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-expansion-panel>
+
+<mat-expansion-panel [expanded]="!emptyDataConfig">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Data config info
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <mat-list>
+    <ng-container *ngFor="let d of data">
+      <mat-list-item>
+        <span class="bold">[{{d.id}}] {{d.type}} - {{d.originalName}}:</span>
+      </mat-list-item>
+
+      <!--      {{ algId }} <span *ngIf="algorithm(algId)">({{ algorithm(algId).algorithmName }})</span>-->
+      <mat-list-item>size: {{d.sizeInBytes}}b</mat-list-item>
+      <mat-list-item>number of samples: {{d.numberOfSamples}}</mat-list-item>
+      <mat-list-item>separator: {{d.separator}}</mat-list-item>
+      <mat-list-item>id index: {{d.idIndex}}</mat-list-item>
+      <mat-list-item>label index: {{d.labelIndex}}</mat-list-item>
+      <mat-list-item>attributes: {{d.attributesAmount}}</mat-list-item>
+      <mat-list-item>colTypes: {{d.colTypes}}</mat-list-item>
+    </ng-container>
+
+    <mat-divider></mat-divider>
+  </mat-list>
+</mat-expansion-panel>
+
+<mat-expansion-panel [expanded]="!emptyDistanceFunctionConfig">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Distance function config info
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <mat-list>
+    <mat-list-item *ngFor="let distanceFunction of distanceFunctions">
+      [{{distanceFunction.id}}] {{distanceFunction.functionName}}
+    </mat-list-item>
+  </mat-list>
+</mat-expansion-panel>
+
+<mat-expansion-panel [expanded]="!emptyPartitioningStrategyConfig">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Partitioning strategy config info
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <mat-list>
+    <mat-list-item *ngFor="let strategy of partitioningStrategies">
+      [{{strategy.id}}] {{strategy.strategyName}}
+    </mat-list-item>
+  </mat-list>
+</mat-expansion-panel>

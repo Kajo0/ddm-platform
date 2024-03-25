@@ -1,0 +1,153 @@
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Setup new
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <form [formGroup]="setupForm">
+    <div class="form-fields">
+      <mat-form-field>
+        <mat-label>Nodes</mat-label>
+        <input [formControl]="setupForm.controls.workers"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>CPUs</mat-label>
+        <input [formControl]="setupForm.controls.cpu"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Master memory [Gb]</mat-label>
+        <input [formControl]="setupForm.controls.masterMemory"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Worker memory [Gb]</mat-label>
+        <input [formControl]="setupForm.controls.workerMemory"
+               matInput
+               type="number">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Disk space [Gb]</mat-label>
+        <input [formControl]="setupForm.controls.disk"
+               matInput
+               type="number">
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button
+            color="primary"
+            [disabled]="setupForm.invalid"
+            (click)="setupInstance()">
+      Create instance
+    </button>
+  </form>
+</mat-expansion-panel>
+
+<mat-expansion-panel expanded="true">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Operations
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <button mat-raised-button
+          (click)="loadInstances()">
+    Reload config info
+  </button>
+  <button mat-raised-button
+          color="warn"
+          [disabled]="emptyConfig"
+          (click)="destroyAll()">
+    Clear instances
+  </button>
+</mat-expansion-panel>
+
+<mat-expansion-panel [expanded]="!emptyConfig">
+  <mat-expansion-panel-header>
+    <mat-panel-title>
+      Config info
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <ng-container *ngIf="!emptyConfig">
+    <div *ngFor="let instance of instances">
+      <div>
+        <button mat-icon-button
+                color="warn"
+                class="delete-instance"
+                [matTooltip]="'Destroy instance'"
+                (click)="destroyInstance(instance)">
+          <mat-icon>delete</mat-icon>
+        </button>
+        <button mat-icon-button
+                [matTooltip]="'Select as current'"
+                [color]="isCurrent(instance) ? 'accent': 'primary'"
+                (click)="selectInstance(instance)">
+          <mat-icon>favorite</mat-icon>
+        </button>
+        <button mat-icon-button
+                [matTooltip]="'Check health status of nodes'"
+                [class]="getHealthStatus(instance) ? getHealthStatus(instance) : 'unknown'"
+                (click)="checkHealthStatus(instance)">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <span class="bold">[{{instance.id}}] - {{instance.type}}:</span>
+      </div>
+
+      <mat-list>
+        <mat-list-item *ngFor="let node of instanceNodes(instance)">
+          {{node.type}} / {{node.localhostIp}}:{{node.agentPort}} cpu={{node.cpu}}, memory={{node.memory}}GB,
+          disk={{node.disk}}GB
+        </mat-list-item>
+
+        <mat-list>
+          <mat-list-item>
+            <span class="bold">Data:</span>
+          </mat-list-item>
+
+          <ng-container *ngFor="let ds of instance.info.dataScatter | keyvalue">
+            <mat-list-item class="bold indent-2">
+              {{ds.key}} <span *ngIf="data(ds.key)">({{data(ds.key).originalName}})</span>
+            </mat-list-item>
+
+            <mat-list-item class="indent-4">strategy: {{ds.value.strategyName}}</mat-list-item>
+            <mat-list-item class="indent-4">params: {{ds.value.strategyParams}}</mat-list-item>
+            <mat-list-item class="indent-4">distance func: {{ds.value.distanceFunction}}</mat-list-item>
+            <mat-list-item class="indent-4">seed: {{ds.value.seed}}</mat-list-item>
+          </ng-container>
+        </mat-list>
+
+        <mat-list>
+          <mat-list-item>
+            <span class="bold">Algorithms:</span>
+          </mat-list-item>
+          <mat-list-item *ngFor="let algId of instance.info.algorithmScatter"
+                         class="indent-2">
+            {{algId}} <span *ngIf="algorithm(algId)">({{algorithm(algId).algorithmName}})</span>
+          </mat-list-item>
+        </mat-list>
+
+        <!--        TODO distance function scatter-->
+        <!--        <mat-list>-->
+        <!--          <mat-list-item>-->
+        <!--            <span class="bold">Distance functions:</span>-->
+        <!--          </mat-list-item>-->
+        <!--          <mat-list-item *ngFor="let distanceFunctionId of instance.info.distanceFunctionScatter">-->
+        <!--            {{distanceFunctionId}} <span *ngIf="distanceFunction(distanceFunctionId)">({{distanceFunction(distanceFunctionId).distanceFunctionName}})</span>-->
+        <!--          </mat-list-item>-->
+        <!--        </mat-list>-->
+
+        <mat-divider></mat-divider>
+      </mat-list>
+    </div>
+  </ng-container>
+</mat-expansion-panel>

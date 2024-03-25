@@ -1,0 +1,15 @@
+@import 'colors';
+@import 'variables';
+
+:host {
+  main {
+    padding: $gap-l;
+    display: flex;
+
+    .left-side, .right-side {
+      outline: 1px solid $color-outline;
+      flex-grow: 1;
+      max-width: 50%;
+    }
+  }
+}

@@ -1,0 +1,82 @@
+// ---- Typography ----
+$font-size-base: 16px;
+
+$font-size-xxs: 0.625rem; //  10
+$font-size-xs: 0.75rem; //    12
+$font-size-s: 0.875rem; //    14
+$font-size-default: 1rem; //  16
+$font-size-m1: 1.125rem; //   18
+$font-size-m2: 1.25rem; //    20
+$font-size-l: 1.5rem; //      24
+$font-size-xl: 1.75rem; //    28
+$font-size-xxl: 2rem; //      32
+$font-size-xxxl: 2.5rem; //   40
+
+$font-weight-normal: 400;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$font-weight-mm-bold: 800;
+
+$font-line-height: 1.25em;
+// ---- Border Radius ----
+$border-radius-s: 0.25rem;
+$border-radius-m: 0.5rem;
+$border-radius-l: 1rem;
+
+// ---- Padding / margin / gap ----
+$gap-xxs: 0.25rem;
+$gap-xs: 0.5rem;
+$gap-s: 0.75rem;
+$gap-m: 1rem;
+$gap-l: 1.5rem;
+$gap-xl: 2rem;
+$gap-xxl: 3rem;
+$gap-xxxl: 4rem;
+
+// ---- Sizes ----
+$icon-s: 1rem;
+$icon-m: 1.5rem;
+$icon-l: 2.5rem;
+
+$form-field-height: 3.5rem;
+$button-height-xs: 2rem;
+$button-height-s: 2.5rem;
+$button-height-m: 3rem;
+$button-height-l: 3.5rem;
+$process-stepper-icon-size: 1.5rem;
+$slider-input-width: 8rem;
+$border-width-m: 1px;
+$border-width-l: 2px;
+
+// ---- Media breakpoints ----
+$breakpoint-mobile-small: 480px;
+$breakpoint-mobile: 768px;
+$breakpoint-tablet: 1024px;
+
+// ---- Dynamic height/width ----
+:root {
+  --header-height: 5.5rem;
+  --footer-height: 3.5rem;
+  --proposal-guide-width: 8rem;
+  --decision-stepper-icon-size: 4rem;
+  --decision-stepper-icon-gap: 0.5rem;
+}
+
+@media (max-width: $breakpoint-tablet) {
+  :root {
+    --header-height: 5rem;
+    --proposal-guide-width: 7rem;
+    --decision-stepper-icon-size: 2.5rem;
+    --decision-stepper-icon-gap: 0.25rem;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  :root {
+    --header-height: 4.5rem;
+    --footer-height: 3rem;
+    --proposal-guide-width: 6rem;
+    --decision-stepper-icon-size: 2.5rem;
+    --decision-stepper-icon-gap: 0.25rem;
+  }
+}

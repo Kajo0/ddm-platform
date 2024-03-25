@@ -1,0 +1,29 @@
+@import 'variables';
+
+.form-fields {
+  margin: $gap-m;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  &__w30 {
+    & mat-form-field {
+      width: 30%;
+    }
+  }
+
+  &__w40 {
+    & mat-form-field {
+      width: 40%;
+    }
+  }
+}
+
+.form-fields mat-form-field + mat-form-field, .form-fields button + mat-form-field {
+  flex-grow: 1;
+  margin-left: 8px;
+}
+
+button {
+  margin: 0.5rem;
+}

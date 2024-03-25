@@ -1,0 +1,9 @@
+@import 'colors';
+
+div.color-even:nth-child(even) {
+  background-color: $color-gray-2;
+}
+
+.separator {
+  margin: 2rem 0;
+}

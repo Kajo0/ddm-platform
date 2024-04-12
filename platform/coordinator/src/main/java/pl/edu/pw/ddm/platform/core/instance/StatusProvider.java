@@ -20,10 +20,14 @@ class StatusProvider {
         var url = InstanceAgentAddressFactory.healthCheckStatus(addr);
 
         log.debug("Checking health for: '{}'.", addr);
-        var response = restTemplate.getForEntity(url, Void.class);
-        log.info("Health of node status by code: '{}'", response.getStatusCodeValue());
-
-        return response.getStatusCode() == HttpStatus.OK;
+        try {
+            var response = restTemplate.getForEntity(url, Void.class);
+            log.info("Health of node status by code: '{}'", response.getStatusCodeValue());
+            return response.getStatusCode() == HttpStatus.OK;
+        } catch (Exception e) {
+            log.error("Health of node status unknown");
+            return false;
+        }
     }
 
     NodeConfiguration collectConfig(InstanceConfig.InstanceNode node) {

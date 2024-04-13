@@ -1,11 +1,9 @@
 package pl.edu.pw.ddm.platform.core.execution;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,10 +18,22 @@ import pl.edu.pw.ddm.platform.core.instance.InstanceFacade;
 import pl.edu.pw.ddm.platform.core.instance.dto.InstanceAddrDto;
 import pl.edu.pw.ddm.platform.interfaces.data.DistanceFunction;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 @Slf4j
 @Service
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class ExecutionFacade {
+
+    private static final ObjectMapper OBJECT_MAPPER;
+
+    static {
+        OBJECT_MAPPER = new ObjectMapper();
+        OBJECT_MAPPER.registerModule(new JSR310Module());
+        OBJECT_MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
 
     private final InstanceFacade instanceFacade;
     private final DistanceFunctionFacade distanceFunctionFacade;
@@ -79,7 +89,7 @@ public class ExecutionFacade {
     // TODO remove debug
     public String info() {
         try {
-            return new ObjectMapper().writeValueAsString(executionStarter.allExecutionsInfo());
+            return OBJECT_MAPPER.writeValueAsString(executionStarter.allExecutionsInfo());
         } catch (JsonProcessingException e) {
             return executionStarter.allExecutionsInfo()
                     .toString();

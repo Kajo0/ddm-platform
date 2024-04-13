@@ -1,8 +1,8 @@
 package pl.edu.pw.ddm.platform.core.execution.dto;
 
-import java.time.LocalDateTime;
-
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 public class ExecutionDescDto {
@@ -17,6 +17,7 @@ public class ExecutionDescDto {
     private String status;
     private String message;
     private String appId;
+    private String executionParams;
     private LocalDateTime started;
     private LocalDateTime updated;
     private LocalDateTime stopped;

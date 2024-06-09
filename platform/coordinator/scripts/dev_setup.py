@@ -3,10 +3,9 @@ import configparser
 import json
 import pprint
 import re
+import requests
 import sys
 import time
-
-import requests
 
 lastExecFile = './last_exec.properties'
 baseUrl = 'http://localhost:7000'
@@ -458,7 +457,7 @@ def validateResults(executionId, metrics, debug=True):
 
 def resultsStats(executionId, debug=True):
     if debug:
-        print("resultsStats executionId='{}' ".format(executionId))
+        print("resultsStats executionId='{}'".format(executionId))
 
     if isinstance(collectResults(executionId, False), ValueError):
         return
@@ -535,6 +534,7 @@ def reload(oneNode=False):
     last = loadLast(oneNode)
     instanceId = last.get('instance_id')
 
+    # FIXME setup default reload algorithm
     algorithmId = None
     if oneNode:
         algorithmId = loadJar('./samples/k-means-weka.jar')
@@ -680,7 +680,7 @@ def lastlog(oneNode=False):
         n = nodes[nodeId]
         logs[nodeId] = {}
         logs[nodeId]['type'] = n['type']
-        logs[nodeId]['log'] = fetchLogs(executionId, nodeId, 0)
+        logs[nodeId]['log'] = fetchLogs(executionId, nodeId, -100)  # FIXME setup by default fetch all logs, negative value means last 'n' lines
 
     for log in logs:
         print('\n\n     =====================================================> ' + logs[log]['type'] + ' [' + log + ']')
@@ -700,7 +700,7 @@ def stats(oneNode=False):
 def validate(oneNode=False):
     last = loadLast(oneNode)
     validateResults(last.get('execution_id'),
-                    'accuracy,recall,precision,f-measure,ARI')  # AMI - long time calculation when more data
+                    'accuracy,recall,precision,f-measure,ARI')  # AMI - long time calculation when more data  # FIXME setup default all measures
 
 
 def clear():
@@ -1230,7 +1230,7 @@ def handleCustomMetrics(metrics):
 
 if len(sys.argv) < 2:
     print(
-        '  Provide command! [setup, inststatus, confupdate, clear, reload, execute, status, logs, lastlog, results, validate, stats, info [data, alg, func, strgy, exec, inst]]')
+        '  Provide command! [setup, inststatus, confupdate, clear, reload, execute, status, logs, lastlog, results, validate, stats, schedule, partition, info [data, alg, func, strgy, exec, inst]]')
     sys.exit(1)
 
 command = sys.argv[1]
@@ -1240,8 +1240,10 @@ if len(sys.argv) > 2 and sys.argv[2] == 'onenode':
 
 if command == 'setup':
     if oneNode:
+        # FIXME setup default single node instance parameters
         setupDefault(1, 2, 4, 4, True)
     else:
+        # FIXME setup default multi node instance parameters
         setupDefault(4, 2, 3, 3, False)
 elif command == 'inststatus':
     instStatus(oneNode)

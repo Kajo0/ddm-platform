@@ -1,18 +1,18 @@
 package pl.edu.pw.ddm.platform.strategies.mostof;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.List;
-import java.util.Random;
-
 import com.google.common.collect.Iterables;
 import lombok.extern.slf4j.Slf4j;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionFileCreator;
 import pl.edu.pw.ddm.platform.interfaces.data.strategy.PartitionerStrategy;
 import pl.edu.pw.ddm.platform.strategies.PartitionerStrategies;
 import pl.edu.pw.ddm.platform.strategies.utils.Utils;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
+import java.util.Random;
 
 @Slf4j
 public class MostOfOnePlusSomePartitionerStrategy implements PartitionerStrategy {
@@ -23,8 +23,32 @@ public class MostOfOnePlusSomePartitionerStrategy implements PartitionerStrategy
     }
 
     @Override
+    public List<CustomParamDesc> availableParameters() {
+        return List.of(
+                CustomParamDesc.of("additionalClassesNumber",
+                        Integer.class,
+                        "how many additional classes should exist in the partition despite the initial number of labels present in the partition",
+                        "0 - no additional classes",
+                        "> 0 - number of additional classes to add",
+                        "< 0 - number of additional classes to remove"),
+                CustomParamDesc.of("emptyWorkerFill",
+                        Integer.class,
+                        "how many labels add to the empty partitions",
+                        "0 - empty workers left empty"),
+                CustomParamDesc.of("fillEmptyButPercent",
+                        Double.class,
+                        "1 - fillEmptyButPercent = maximum percentage of the data that should be used to fill empty partitions",
+                        "eg. 0.8 - will use 20% of data to fill empty partitions"),
+                CustomParamDesc.of("additionalClassesPercent",
+                        Double.class,
+                        "how much data should be used as additional padding for other partitions, except it will be trimmed to be less than half of (1 - fillEmptyButPercent)",
+                        "eg. 0.1 - will use 10% of data to fill with additional classes")
+        );
+    }
+
+    @Override
     public List<Path> partition(DataDesc dataDesc, StrategyParameters strategyParameters,
-            PartitionFileCreator partitionFileCreator) throws IOException {
+                                PartitionFileCreator partitionFileCreator) throws IOException {
         var labels = Utils.countLabels(dataDesc);
         var params = Utils.simpleNumericParams(strategyParameters.getCustomParams());
 

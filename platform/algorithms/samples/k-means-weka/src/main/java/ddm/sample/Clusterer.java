@@ -133,4 +133,9 @@ public class Clusterer implements Clustering,
                 .onlyLocal(KmeansWeka.class);
     }
 
+    @Override
+    public boolean onlySingleNode() {
+        return true;
+    }
+
 }

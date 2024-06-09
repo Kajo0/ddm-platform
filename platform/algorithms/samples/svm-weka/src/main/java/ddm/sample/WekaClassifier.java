@@ -1,10 +1,5 @@
 package ddm.sample;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import pl.edu.pw.ddm.platform.interfaces.algorithm.AlgorithmConfig;
@@ -20,6 +15,11 @@ import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @NoArgsConstructor
 public class WekaClassifier extends SMO implements Classifier, AlgorithmConfig {
@@ -65,6 +65,11 @@ public class WekaClassifier extends SMO implements Classifier, AlgorithmConfig {
     public DdmPipeline pipeline() {
         return CentralDdmPipeline.builder()
                 .onlyLocal(SvmWeka.class);
+    }
+
+    @Override
+    public boolean onlySingleNode() {
+        return true;
     }
 
 }

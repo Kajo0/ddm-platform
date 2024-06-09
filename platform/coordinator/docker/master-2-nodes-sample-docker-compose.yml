@@ -1,11 +1,11 @@
-version: '2.2'
+version: '3.9'
 
 networks:
   platform-network-0:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.19.0.0/24
+        - subnet: 172.18.0.0/24
 
 services:
   spark-master:

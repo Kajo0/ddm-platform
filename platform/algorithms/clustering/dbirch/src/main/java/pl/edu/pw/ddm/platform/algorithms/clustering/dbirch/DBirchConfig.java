@@ -40,7 +40,7 @@ public class DBirchConfig implements AlgorithmConfig {
                 Integer.class,
                 "50",
                 "Maximum number of CF sub-cluster in each node",
-                "50 - when new sample occurs and 51. sub-cluster should be created, then split of the node is performed "));
+                "50 - when new sample occurs and 51. sub-cluster should be created, then split of the node is performed"));
         params.add(CustomParamDesc.of("threshold",
                 Double.class,
                 "0.5",

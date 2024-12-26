@@ -14,6 +14,11 @@ cd ./metrics
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -
 
+# build single sample required in testing interfaces-impl
+cd ./algorithms/clustering/aoptkm
+./gradlew clean shadowJar publishToMavenLocal ; checkError
+cd -
+
 cd ./testing/interfaces-impl
 ./gradlew clean build publishToMavenLocal ; checkError
 cd -
